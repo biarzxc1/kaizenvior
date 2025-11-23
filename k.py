@@ -123,22 +123,20 @@ def show_menu():
         print(f" {key('02', 'B')} {G}REGISTER{RESET}")
         print(f" {key('00', 'X')} {R}EXIT{RESET}")
     elif user_data and user_data.get('isAdmin'):
-        print(f" {key('01', 'A')} {G}SHARE BOT{RESET}     {W}➤{RESET} {G}[ {BG_G}\033[30mPAGE & NORM{RESET}{G} ]{RESET}")
-        print(f" {key('02', 'B')} {C}SHARE BOT V2{RESET}  {W}➤{RESET} {C}[ {BG_C}\033[30mNORM{RESET}{C} ]{RESET}")
-        print(f" {key('03', 'C')} {G}COOKIE TO TOKEN{RESET}") 
-        print(f" {key('04', 'D')} {G}MANAGE COOKIE & TOKEN{RESET}")
-        print(f" {key('05', 'E')} {G}MY STATS{RESET}")
-        print(f" {key('06', 'F')} {M}ADMIN PANEL{RESET}")
-        print(f" {key('07', 'G')} {G}UPDATE TOOL{RESET}")
-        print(f" {key('00', 'X')} {R}LOGOUT{RESET}")
+        print(f" {key('01', 'A')} {G}SHARE BOT{RESET}     {W}➤{RESET} {G}[ \033[47m\033[30mPAGE & NORM{RESET}{G} ]{RESET}")
+        print(f" {key('02', 'B')} {C}SHARE BOT V2{RESET}  {W}➤{RESET} {C}[ \033[47m\033[30mNORM{RESET}{C} ]{RESET}")
+        print(f" {key('03', 'C')} {Y}CONVERT{RESET}       {W}➤{RESET} {Y}[ \033[47m\033[30mCOOKIE TO TOKEN{RESET}{Y} ]{RESET}") 
+        print(f" {key('04', 'D')} {M}MANAGE{RESET}        {W}➤{RESET} {M}[ \033[47m\033[30mCOOKIE & TOKEN{RESET}{M} ]{RESET}")
+        print(f" {key('05', 'E')} {B}MY STATS{RESET}      {W}➤{RESET} {B}[ \033[47m\033[30mINFO{RESET}{B} ]{RESET}")
+        print(f" {key('06', 'F')} {R}ADMIN PANEL{RESET}   {W}➤{RESET} {R}[ \033[47m\033[30mCUSTOMIZE USER{RESET}{R} ]{RESET}")
+        print(f" {key('00', 'X')} {R}LOGOUT{RESET}        {W}➤{RESET} {R}[ \033[47m\033[30mEXIT ACC{RESET}{R} ]{RESET}")
     else:
-        print(f" {key('01', 'A')} {G}SHARE BOT{RESET}     {W}➤{RESET} {G}[ {BG_G}\033[30mPAGE & NORM{RESET}{G} ]{RESET}")
-        print(f" {key('02', 'B')} {C}SHARE BOT V2{RESET}  {W}➤{RESET} {C}[ {BG_C}\033[30mNORM{RESET}{C} ]{RESET}")
-        print(f" {key('03', 'C')} {G}COOKIE TO TOKEN{RESET}") 
-        print(f" {key('04', 'D')} {G}MANAGE COOKIE & TOKEN{RESET}")
-        print(f" {key('05', 'E')} {G}MY STATS{RESET}")
-        print(f" {key('06', 'F')} {G}UPDATE TOOL{RESET}")
-        print(f" {key('00', 'X')} {R}LOGOUT{RESET}")
+        print(f" {key('01', 'A')} {G}SHARE BOT{RESET}     {W}➤{RESET} {G}[ \033[47m\033[30mPAGE & NORM{RESET}{G} ]{RESET}")
+        print(f" {key('02', 'B')} {C}SHARE BOT V2{RESET}  {W}➤{RESET} {C}[ \033[47m\033[30mNORM{RESET}{C} ]{RESET}")
+        print(f" {key('03', 'C')} {Y}CONVERT{RESET}       {W}➤{RESET} {Y}[ \033[47m\033[30mCOOKIE TO TOKEN{RESET}{Y} ]{RESET}") 
+        print(f" {key('04', 'D')} {M}MANAGE{RESET}        {W}➤{RESET} {M}[ \033[47m\033[30mCOOKIE & TOKEN{RESET}{M} ]{RESET}")
+        print(f" {key('05', 'E')} {B}MY STATS{RESET}      {W}➤{RESET} {B}[ \033[47m\033[30mINFO{RESET}{B} ]{RESET}")
+        print(f" {key('00', 'X')} {R}LOGOUT{RESET}        {W}➤{RESET} {R}[ \033[47m\033[30mEXIT ACC{RESET}{R} ]{RESET}")
     
     print(LINE)
 
@@ -1653,12 +1651,6 @@ def main():
             elif choice in ['6', '06', 'F']:
                 if user_data and user_data.get('isAdmin'):
                     admin_panel()
-                else:
-                    update_tool_logic()
-            
-            elif choice in ['7', '07', 'G']:
-                if user_data and user_data.get('isAdmin'):
-                    update_tool_logic()
                 else:
                     print(f"\n {R}[!] INVALID SELECTION{RESET}")
                     time.sleep(0.8)
