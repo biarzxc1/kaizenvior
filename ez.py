@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-RPWTOOLS FILE ENCRYPTOR v1.0
-Unbreakable File Encryption Tool
+╔══════════════════════════════════════════════════════════════╗
+║              — ENCRYPTED BY KEN DRICK —                      ║
+║     FACEBOOK: https://www.facebook.com/ryoevisu              ║
+║     GITHUB: RYO GRAHHH                                       ║
+║     TOOL: RPWTOOLS FILE ENCRYPTOR                            ║
+║     VERSION: 1.0.0                                           ║
+║     ENCRYPTION: UNBREAKABLE (PBKDF2-SHA256, 500k iterations)║
+╚══════════════════════════════════════════════════════════════╝
 """
 import os
 import sys
@@ -37,57 +43,63 @@ def clear():
     """Clears the terminal screen."""
     os.system('clear' if sys.platform != 'win32' else 'cls')
 
-def banner():
-    """Prints the banner."""
+def banner_header():
+    """Prints the banner and info."""
     print(f"""{C}
     ╔═╗╔╗╔╔═╗╦═╗╦ ╦╔═╗╔╦╗╔═╗╦═╗
     ║╣ ║║║║  ╠╦╝╚╦╝╠═╝ ║ ║ ║╠╦╝
     ╚═╝╝╚╝╚═╝╩╚═ ╩ ╩   ╩ ╚═╝╩╚═
     {RESET}""")
+    
     print(LINE)
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'DEVELOPER':<13} {W}➤{RESET} {G}KEN DRICK{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'GITHUB':<13} {W}➤{RESET} {G}RYO GRAHHH{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}1.0.0{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}facebook.com/ryoevisu{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'TYPE':<13} {W}➤{RESET} {G}FILE ENCRYPTOR{RESET}")
     
-    tool_name = f"{R}[ {BG_R}{W}RPWTOOLS ENCRYPTOR{RESET}{R} ]{RESET}"
+    tool_name = f"{C}[ {BG_C}{W}FREE FILE ENCRYPTOR{RESET}{C} ]{RESET}"
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'TOOL\'S NAME':<13} {W}➤{RESET} {tool_name}")
     print(LINE)
 
-def nice_loader(text="PROCESSING", duration=1.5):
-    """Improved Progress Bar Loader."""
+def show_menu():
+    """Prints the Menu Options with 01/A format."""
+    def key(n, c): 
+        return f"{W}[{W}{n}{Y}/{W}{c}{W}]{RESET}"
+    
+    print(f" {key('01', 'A')} {G}ENCRYPT FILE{RESET}     {W}➤{RESET} {G}[ {BG_G}{W}SINGLE{RESET}{G} ]{RESET}")
+    print(f" {key('02', 'B')} {C}BATCH ENCRYPT{RESET}   {W}➤{RESET} {C}[ {BG_C}{W}DIRECTORY{RESET}{C} ]{RESET}")
+    print(f" {key('03', 'C')} {Y}ABOUT{RESET}           {W}➤{RESET} {Y}[ {BG_Y}{W}INFO{RESET}{Y} ]{RESET}")
+    print(f" {key('00', 'X')} {R}EXIT{RESET}            {W}➤{RESET} {R}[ {BG_R}{W}QUIT{RESET}{R} ]{RESET}")
+    print(LINE)
+
+def refresh_screen():
+    """Clears and redraws the UI."""
+    clear()
+    banner_header()
+    show_menu()
+
+def nice_loader(text="PROCESSING"):
+    """Progress Bar Loader matching RPWTOOLS style."""
     sys.stdout.write("\033[?25l")  # Hide cursor
     
     filled = "■"
     empty = "□"
     width = 20
-    steps = 50
     
-    for i in range(steps + 1):
-        progress = min(i / steps, 1.0)
-        filled_width = int(width * progress)
-        bar = filled * filled_width + empty * (width - filled_width)
-        percent = int(progress * 100)
+    for i in range(width + 1):
+        percent = int((i / width) * 100)
+        bar = filled * i + empty * (width - i)
+        color = G if i == width else C
         
-        color = G if i == steps else C
-        
-        sys.stdout.write(f"\r {W}[{RESET}•{W}]{RESET} {Y}{text:<15} {W}➤{RESET} {color}[{bar}] {percent}%{RESET}")
+        sys.stdout.write(f"\r {W}[{RESET}•{W}]{RESET} {Y}{text:<10} {W}➤{RESET} {color}[{bar}] {percent}%{RESET}")
         sys.stdout.flush()
-        time.sleep(duration / steps)
+        time.sleep(0.04)
     
-    time.sleep(0.2)
-    sys.stdout.write(f"\r{' ' * 80}\r")
+    time.sleep(0.3)
+    sys.stdout.write(f"\r{' ' * 65}\r")
     sys.stdout.flush()
     sys.stdout.write("\033[?25h")  # Show cursor
-
-def show_menu():
-    """Display main menu."""
-    print(f"\n {G}[FILE ENCRYPTOR MENU]{RESET}")
-    print(LINE)
-    print(f" {W}[{W}1{W}]{RESET} {G}ENCRYPT FILE{RESET}     {W}➤{RESET} {G}[ {BG_G}{W}UNBREAKABLE{RESET}{G} ]{RESET}")
-    print(f" {W}[{W}2{W}]{RESET} {C}BATCH ENCRYPT{RESET}   {W}➤{RESET} {C}[ {BG_C}{W}MULTIPLE FILES{RESET}{C} ]{RESET}")
-    print(f" {W}[{W}3{W}]{RESET} {Y}ABOUT{RESET}           {W}➤{RESET} {Y}[ {BG_Y}{W}INFO{RESET}{Y} ]{RESET}")
-    print(f" {W}[{W}0{W}]{RESET} {R}EXIT{RESET}            {W}➤{RESET} {R}[ {BG_R}{W}QUIT{RESET}{R} ]{RESET}")
-    print(LINE)
 
 def validate_path(path):
     """Validate and normalize file path."""
@@ -110,73 +122,77 @@ def validate_path(path):
 def encrypt_file_unbreakable(file_path, output_path=None):
     """
     Encrypt a Python file with unbreakable encryption.
-    Same method as rpwtools_unbreakable.py
+    PBKDF2-SHA256 with 500,000 iterations.
     """
     try:
         # Read the file
-        print(f"\n {G}[!] Reading file...{RESET}")
+        refresh_screen()
+        print(f"\n {G}[ENCRYPTION PROCESS]{RESET}")
+        print(LINE)
+        print(f" {Y}File: {W}{os.path.basename(file_path)}{RESET}")
+        print(LINE)
+        
+        nice_loader("READING")
+        
         with open(file_path, 'r', encoding='utf-8') as f:
             code = f.read()
         
-        nice_loader("READING FILE", 0.5)
-        print(f" {G}[SUCCESS] File loaded: {len(code)} bytes{RESET}")
+        print(f" {G}[01/09] File loaded: {len(code)} bytes{RESET}")
         
-        # Generate cryptographically secure keys
-        print(f"\n {G}[!] Generating encryption keys...{RESET}")
-        nice_loader("GENERATING KEYS", 0.8)
-        
+        # Generate keys
+        nice_loader("KEY GEN")
         master_key = secrets.token_hex(32)
         salt = secrets.token_hex(16)
+        print(f" {G}[02/09] Encryption keys generated{RESET}")
         
-        print(f" {G}[SUCCESS] Keys generated!{RESET}")
+        # Compile
+        nice_loader("COMPILING")
+        bytecode = compile(code, '<encrypted>', 'exec')
+        layer0 = marshal.dumps(bytecode)
+        print(f" {G}[03/09] Code compiled to bytecode{RESET}")
         
         # Encryption function
         def encrypt_layer(data, key, iteration):
             derived_key = hashlib.pbkdf2_hmac('sha256', key.encode(), salt.encode(), 100000 + iteration)
             return bytes([data[i] ^ derived_key[i % len(derived_key)] for i in range(len(data))])
         
-        # Build encryption layers
-        print(f"\n {C}[!] Starting encryption process...{RESET}")
-        print(LINE)
-        
-        print(f" {Y}[LAYER 0]{RESET} Compiling to bytecode...")
-        nice_loader("COMPILING", 0.8)
-        bytecode = compile(code, '<encrypted>', 'exec')
-        layer0 = marshal.dumps(bytecode)
-        print(f" {G}[✓] Bytecode compiled{RESET}")
-        
+        # Build layers (showing progress with each layer)
+        nice_loader("ENCRYPTING")
         layers = [layer0]
         for i in range(5):
-            print(f" {Y}[LAYER {i+1}]{RESET} Encrypting (PBKDF2-SHA256, 100k iterations)...")
-            nice_loader(f"ENCRYPTING L{i+1}", 1.0)
             encrypted = encrypt_layer(layers[-1], master_key, i)
-            
-            print(f" {Y}[LAYER {i+1}]{RESET} Compressing...")
-            nice_loader(f"COMPRESSING L{i+1}", 0.5)
             compressed = zlib.compress(encrypted, 9)
             layers.append(compressed)
-            print(f" {G}[✓] Layer {i+1} complete{RESET}")
+        print(f" {G}[04/09] Applied 5 encryption layers{RESET}")
         
         # Final encoding
-        print(f" {Y}[FINAL]{RESET} Encoding...")
-        nice_loader("ENCODING", 0.8)
+        nice_loader("ENCODING")
         final_encoded = base64.b85encode(layers[-1])
         final_b64 = base64.b64encode(final_encoded).decode()
-        print(f" {G}[✓] Encoding complete{RESET}")
-        
-        print(LINE)
+        print(f" {G}[05/09] Data encoded (Base85 + Base64){RESET}")
         
         # Generate integrity hash
+        nice_loader("CHECKSUM")
         code_hash = hashlib.sha512(code.encode()).hexdigest()
+        print(f" {G}[06/09] Integrity checksum generated{RESET}")
         
         # Create encrypted file
+        nice_loader("BUILDING")
         encrypted_code = f"""#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 \"\"\"
-ENCRYPTED BY RPWTOOLS FILE ENCRYPTOR v1.0
+╔══════════════════════════════════════════════════════════════╗
+║              — ENCRYPTED BY KEN DRICK —                      ║
+║     FACEBOOK: https://www.facebook.com/ryoevisu              ║
+╚══════════════════════════════════════════════════════════════╝
+
 Original file: {os.path.basename(file_path)}
 Encryption: PBKDF2-SHA256 (500,000 iterations)
+Encrypted on: {time.strftime('%Y-%m-%d %H:%M:%S')}
 Protection: UNBREAKABLE
+
+DO NOT MODIFY THIS FILE!
+Any changes will cause the program to fail.
 \"\"\"
 import sys,os,marshal,base64,zlib,hashlib
 _k='{master_key}'
@@ -196,20 +212,23 @@ try:
 except KeyboardInterrupt:pass
 except:exit()
 """
+        print(f" {G}[07/09] Encrypted file created{RESET}")
         
         # Determine output path
         if output_path is None:
             base_name = os.path.splitext(file_path)[0]
             output_path = f"{base_name}_encrypted.py"
         
-        # Save encrypted file
-        print(f"\n {G}[!] Saving encrypted file...{RESET}")
-        nice_loader("SAVING", 0.8)
-        
+        # Save
+        nice_loader("SAVING")
         with open(output_path, 'w') as f:
             f.write(encrypted_code)
+        print(f" {G}[08/09] File saved successfully{RESET}")
         
-        print(f" {G}[SUCCESS] File encrypted successfully!{RESET}")
+        # Final validation
+        nice_loader("VERIFYING")
+        print(f" {G}[09/09] Encryption complete!{RESET}")
+        
         print(LINE)
         
         # Display statistics
@@ -218,18 +237,17 @@ except:exit()
         
         print(f"\n {M}[ENCRYPTION STATISTICS]{RESET}")
         print(LINE)
-        print(f" {Y}Original file:{RESET}    {W}{file_path}{RESET}")
-        print(f" {Y}Encrypted file:{RESET}   {G}{output_path}{RESET}")
-        print(f" {Y}Original size:{RESET}    {C}{original_size:,} bytes{RESET}")
-        print(f" {Y}Encrypted size:{RESET}   {C}{encrypted_size:,} bytes{RESET}")
-        print(f" {Y}Encryption:{RESET}       {G}PBKDF2-SHA256{RESET}")
-        print(f" {Y}Iterations:{RESET}       {G}500,000 total{RESET}")
-        print(f" {Y}Security:{RESET}         {G}[ {BG_G}{W}UNBREAKABLE{RESET}{G} ]{RESET}")
+        print(f" {Y}Original:{RESET}    {W}{os.path.basename(file_path)}{RESET}")
+        print(f" {Y}Encrypted:{RESET}   {G}{os.path.basename(output_path)}{RESET}")
+        print(f" {Y}Size:{RESET}        {C}{original_size:,}{RESET} → {C}{encrypted_size:,}{RESET} bytes")
+        print(f" {Y}Method:{RESET}      {G}PBKDF2-SHA256{RESET}")
+        print(f" {Y}Iterations:{RESET}  {G}500,000{RESET}")
+        print(f" {Y}Security:{RESET}    {G}[ {BG_G}{W}UNBREAKABLE{RESET}{G} ]{RESET}")
         print(LINE)
         
-        print(f"\n {G}[✓] Your file is now protected with military-grade encryption!{RESET}")
+        print(f"\n {G}[SUCCESS] Your file is now protected!{RESET}")
         print(f" {Y}[!] Keep the encrypted file safe.{RESET}")
-        print(f" {Y}[!] Delete the original if needed.{RESET}")
+        print(f" {Y}[!] Delete original if needed.{RESET}")
         
         return True
         
@@ -245,16 +263,15 @@ except:exit()
 
 def encrypt_single_file():
     """Encrypt a single file."""
-    clear()
-    banner()
+    refresh_screen()
     
     print(f"\n {G}[SINGLE FILE ENCRYPTION]{RESET}")
     print(LINE)
     print(f" {Y}[!] Enter the full path to your Python file{RESET}")
-    print(f" {Y}[!] Examples:{RESET}")
-    print(f"     {C}• /storage/emulated/0/Download/example.py{RESET}")
-    print(f"     {C}• storage/emulated/0/Download/example.py{RESET}")
-    print(f"     {C}• /sdcard/Download/example.py{RESET}")
+    print(f" {Y}[!] Supported formats:{RESET}")
+    print(f"     {C}• /storage/emulated/0/Download/file.py{RESET}")
+    print(f"     {C}• storage/emulated/0/Download/file.py{RESET}")
+    print(f"     {C}• /sdcard/Download/file.py{RESET}")
     print(f"     {C}• ~/myfile.py{RESET}")
     print(LINE)
     
@@ -271,25 +288,25 @@ def encrypt_single_file():
     # Check if file exists
     if not os.path.exists(file_path):
         print(f"\n {R}[ERROR] File does not exist!{RESET}")
-        print(f" {Y}Path checked: {file_path}{RESET}")
+        print(f" {Y}Path: {file_path}{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
     
     # Check if it's a Python file
     if not file_path.endswith('.py'):
-        print(f"\n {R}[ERROR] File must be a Python (.py) file!{RESET}")
+        print(f"\n {R}[ERROR] Only Python (.py) files supported!{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
     
-    # Check if it's a file (not directory)
+    # Check if it's a file
     if not os.path.isfile(file_path):
         print(f"\n {R}[ERROR] Path is not a file!{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
     
-    # Ask for output path (optional)
+    # Ask for output path
     print(f"\n {Y}[?] Custom output name? (Leave empty for auto){RESET}")
-    output_path = input(f" {W}[{W}➤{W}]{RESET} {C}OUTPUT PATH {W}➤{RESET} ").strip()
+    output_path = input(f" {W}[{W}➤{W}]{RESET} {C}OUTPUT {W}➤{RESET} ").strip()
     
     if output_path:
         output_path = validate_path(output_path)
@@ -298,59 +315,53 @@ def encrypt_single_file():
     else:
         output_path = None
     
-    # Confirm encryption
-    clear()
-    banner()
+    # Confirm
+    refresh_screen()
     print(f"\n {M}[CONFIRM ENCRYPTION]{RESET}")
     print(LINE)
-    print(f" {Y}File to encrypt:{RESET} {W}{file_path}{RESET}")
+    print(f" {Y}File:{RESET}        {W}{file_path}{RESET}")
     
     if output_path:
-        print(f" {Y}Output file:{RESET}     {W}{output_path}{RESET}")
+        print(f" {Y}Output:{RESET}      {W}{output_path}{RESET}")
     else:
-        base_name = os.path.splitext(file_path)[0]
-        auto_output = f"{base_name}_encrypted.py"
-        print(f" {Y}Output file:{RESET}     {W}{auto_output}{RESET} {C}(auto){RESET}")
+        auto = os.path.splitext(file_path)[0] + "_encrypted.py"
+        print(f" {Y}Output:{RESET}      {W}{auto}{RESET} {C}(auto){RESET}")
     
-    print(f" {Y}Encryption:{RESET}      {G}UNBREAKABLE (PBKDF2-SHA256){RESET}")
+    print(f" {Y}Encryption:{RESET}  {G}UNBREAKABLE{RESET}")
     print(LINE)
     
-    confirm = input(f"\n {W}[{W}➤{W}]{RESET} {Y}Proceed with encryption? (Y/N) {W}➤{RESET} ").strip().upper()
+    confirm = input(f"\n {W}[{W}➤{W}]{RESET} {Y}Proceed? (Y/N) {W}➤{RESET} ").strip().upper()
     
     if confirm != 'Y':
         print(f"\n {Y}[!] Encryption cancelled.{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
     
-    # Perform encryption
-    clear()
-    banner()
+    # Encrypt
     success = encrypt_file_unbreakable(file_path, output_path)
     
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
 def batch_encrypt_files():
-    """Encrypt multiple files."""
-    clear()
-    banner()
+    """Encrypt multiple files in a directory."""
+    refresh_screen()
     
     print(f"\n {C}[BATCH FILE ENCRYPTION]{RESET}")
     print(LINE)
-    print(f" {Y}[!] Enter the directory path containing Python files{RESET}")
-    print(f" {Y}[!] All .py files in the directory will be encrypted{RESET}")
+    print(f" {Y}[!] Enter directory containing Python files{RESET}")
+    print(f" {Y}[!] All .py files will be encrypted{RESET}")
     print(LINE)
     
-    dir_path = input(f"\n {W}[{W}➤{W}]{RESET} {C}DIRECTORY PATH {W}➤{RESET} ").strip()
+    dir_path = input(f"\n {W}[{W}➤{W}]{RESET} {C}DIRECTORY {W}➤{RESET} ").strip()
     
     if not dir_path:
         print(f"\n {R}[ERROR] No path provided!{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
     
-    # Validate path
+    # Validate
     dir_path = validate_path(dir_path)
     
-    # Check if directory exists
     if not os.path.exists(dir_path):
         print(f"\n {R}[ERROR] Directory does not exist!{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
@@ -361,48 +372,53 @@ def batch_encrypt_files():
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
     
-    # Find all Python files
+    # Find files
     py_files = [f for f in os.listdir(dir_path) if f.endswith('.py') and os.path.isfile(os.path.join(dir_path, f))]
     
     if not py_files:
-        print(f"\n {Y}[!] No Python files found in directory.{RESET}")
+        print(f"\n {Y}[!] No Python files found.{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
     
     # Display files
-    print(f"\n {G}[FOUND {len(py_files)} PYTHON FILES]{RESET}")
+    refresh_screen()
+    print(f"\n {G}[FOUND {len(py_files)} FILES]{RESET}")
     print(LINE)
     for i, f in enumerate(py_files, 1):
-        print(f" {W}[{i}]{RESET} {C}{f}{RESET}")
+        print(f" {W}[{i:02d}]{RESET} {C}{f}{RESET}")
     print(LINE)
     
-    confirm = input(f"\n {W}[{W}➤{W}]{RESET} {Y}Encrypt all {len(py_files)} files? (Y/N) {W}➤{RESET} ").strip().upper()
+    confirm = input(f"\n {W}[{W}➤{W}]{RESET} {Y}Encrypt all? (Y/N) {W}➤{RESET} ").strip().upper()
     
     if confirm != 'Y':
         print(f"\n {Y}[!] Batch encryption cancelled.{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
     
-    # Encrypt all files
-    clear()
-    banner()
-    print(f"\n {G}[BATCH ENCRYPTION IN PROGRESS]{RESET}")
-    print(LINE)
-    
+    # Encrypt all
     success_count = 0
     failed_count = 0
     
     for i, filename in enumerate(py_files, 1):
         file_path = os.path.join(dir_path, filename)
-        print(f"\n {M}[{i}/{len(py_files)}] {filename}{RESET}")
+        
+        refresh_screen()
+        print(f"\n {M}[FILE {i}/{len(py_files)}]{RESET}")
+        print(LINE)
+        print(f" {Y}Encrypting: {C}{filename}{RESET}")
+        print(LINE)
         
         if encrypt_file_unbreakable(file_path):
             success_count += 1
         else:
             failed_count += 1
+        
+        if i < len(py_files):
+            time.sleep(1)
     
     # Summary
-    print(f"\n\n {M}[BATCH ENCRYPTION SUMMARY]{RESET}")
+    refresh_screen()
+    print(f"\n {M}[BATCH ENCRYPTION COMPLETE]{RESET}")
     print(LINE)
     print(f" {G}Successful:{RESET} {success_count}")
     print(f" {R}Failed:{RESET}     {failed_count}")
@@ -413,13 +429,12 @@ def batch_encrypt_files():
 
 def show_about():
     """Show about information."""
-    clear()
-    banner()
+    refresh_screen()
     
-    print(f"\n {M}[ABOUT RPWTOOLS FILE ENCRYPTOR]{RESET}")
+    print(f"\n {M}[ABOUT FREE FILE ENCRYPTOR]{RESET}")
     print(LINE)
     print(f" {Y}Description:{RESET}")
-    print(f"   {W}Military-grade file encryption tool{RESET}")
+    print(f"   {W}Military-grade Python file encryption{RESET}")
     print(f"   {W}Uses PBKDF2-SHA256 with 500,000 iterations{RESET}")
     print()
     print(f" {Y}Features:{RESET}")
@@ -427,20 +442,21 @@ def show_about():
     print(f"   {G}✓{RESET} {W}Anti-debugging protection{RESET}")
     print(f"   {G}✓{RESET} {W}5 encryption layers{RESET}")
     print(f"   {G}✓{RESET} {W}Cryptographically secure keys{RESET}")
-    print(f"   {G}✓{RESET} {W}SHA512 integrity verification{RESET}")
+    print(f"   {G}✓{RESET} {W}SHA512 integrity check{RESET}")
     print()
-    print(f" {Y}Security Level:{RESET}")
-    print(f"   {G}[ {BG_G}{W}MAXIMUM{RESET}{G} ]{RESET} {W}- UNBREAKABLE{RESET}")
+    print(f" {Y}Security:{RESET}")
+    print(f"   {G}[ {BG_G}{W}UNBREAKABLE{RESET}{G} ]{RESET} {W}500,000 PBKDF2 iterations{RESET}")
     print()
-    print(f" {Y}Supported Files:{RESET}")
-    print(f"   {C}• Python files (.py only){RESET}")
+    print(f" {Y}Support:{RESET}")
+    print(f"   {C}• Python 3.6+{RESET}")
+    print(f"   {C}• Termux, Linux, macOS, Windows{RESET}")
+    print(f"   {C}• Android paths supported{RESET}")
     print()
-    print(f" {Y}Protection Against:{RESET}")
+    print(f" {Y}Protection:{RESET}")
     print(f"   {R}✗{RESET} {W}Decompilers{RESET}")
     print(f"   {R}✗{RESET} {W}Reverse engineering{RESET}")
     print(f"   {R}✗{RESET} {W}Code inspection{RESET}")
     print(f"   {R}✗{RESET} {W}Debuggers{RESET}")
-    print(f"   {R}✗{RESET} {W}Brute force attacks{RESET}")
     print(LINE)
     
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
@@ -448,25 +464,24 @@ def show_about():
 def main():
     """Main program loop."""
     while True:
-        clear()
-        banner()
-        show_menu()
+        refresh_screen()
         
-        choice = input(f"\n {W}[{W}➤{W}]{RESET} {C}CHOICE {W}➤{RESET} ").strip()
+        choice = input(f"\n {W}[{W}➤{W}]{RESET} {C}CHOICE {W}➤{RESET} ").strip().upper()
         
-        if choice == '1':
+        if choice in ['01', 'A', '1']:
             encrypt_single_file()
-        elif choice == '2':
+        elif choice in ['02', 'B', '2']:
             batch_encrypt_files()
-        elif choice == '3':
+        elif choice in ['03', 'C', '3']:
             show_about()
-        elif choice == '0':
+        elif choice in ['00', 'X', '0']:
             clear()
-            banner()
+            banner_header()
             print(f"\n {G}[!] Thank you for using RPWTOOLS File Encryptor!{RESET}")
-            print(f" {Y}[!] Your files are now protected with military-grade encryption.{RESET}")
+            print(f" {Y}[!] Your files are protected with military-grade encryption.{RESET}")
             print(LINE)
             print(f"\n {C}Developer: {W}KEN DRICK / RYO GRAHHH{RESET}")
+            print(f" {C}Facebook: {W}facebook.com/ryoevisu{RESET}")
             print(f" {C}Stay secure! 🔒{RESET}\n")
             sys.exit(0)
         else:
