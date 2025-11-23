@@ -19,6 +19,11 @@ M = '\033[1;35m'   # Magenta (Bold)
 B = '\033[1;34m'   # Blue (Bold)
 W = '\033[1;37m'   # White (Bold)
 BG_R = '\033[41m'  # Red Background
+BG_G = '\033[42m'  # Green Background
+BG_Y = '\033[43m'  # Yellow Background
+BG_B = '\033[44m'  # Blue Background
+BG_M = '\033[45m'  # Magenta Background
+BG_C = '\033[46m'  # Cyan Background
 RESET = '\033[0m' # Reset
 
 # --- UI CONSTANTS ---
@@ -118,8 +123,8 @@ def show_menu():
         print(f" {key('02', 'B')} {G}REGISTER{RESET}")
         print(f" {key('00', 'X')} {R}EXIT{RESET}")
     elif user_data and user_data.get('isAdmin'):
-        print(f" {key('01', 'A')} {G}START AUTO SHARE (PAGE & NORMAL ACCOUNT){RESET}")
-        print(f" {key('02', 'B')} {G}START AUTO SHARE V2 (NORMAL ACCOUNT){RESET}")
+        print(f" {key('01', 'A')} {G}SHARE BOT{RESET}     {W}➤{RESET} {G}[ {BG_G}\033[30mPAGE & NORM{RESET}{G} ]{RESET}")
+        print(f" {key('02', 'B')} {C}SHARE BOT V2{RESET}  {W}➤{RESET} {C}[ {BG_C}\033[30mNORM{RESET}{C} ]{RESET}")
         print(f" {key('03', 'C')} {G}COOKIE TO TOKEN{RESET}") 
         print(f" {key('04', 'D')} {G}MANAGE COOKIE & TOKEN{RESET}")
         print(f" {key('05', 'E')} {G}MY STATS{RESET}")
@@ -127,8 +132,8 @@ def show_menu():
         print(f" {key('07', 'G')} {G}UPDATE TOOL{RESET}")
         print(f" {key('00', 'X')} {R}LOGOUT{RESET}")
     else:
-        print(f" {key('01', 'A')} {G}START AUTO SHARE (PAGE & NORMAL ACCOUNT){RESET}")
-        print(f" {key('02', 'B')} {G}START AUTO SHARE V2 (NORMAL ACCOUNT){RESET}")
+        print(f" {key('01', 'A')} {G}SHARE BOT{RESET}     {W}➤{RESET} {G}[ {BG_G}\033[30mPAGE & NORM{RESET}{G} ]{RESET}")
+        print(f" {key('02', 'B')} {C}SHARE BOT V2{RESET}  {W}➤{RESET} {C}[ {BG_C}\033[30mNORM{RESET}{C} ]{RESET}")
         print(f" {key('03', 'C')} {G}COOKIE TO TOKEN{RESET}") 
         print(f" {key('04', 'D')} {G}MANAGE COOKIE & TOKEN{RESET}")
         print(f" {key('05', 'E')} {G}MY STATS{RESET}")
@@ -983,7 +988,7 @@ def dashboard_stats():
     
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
-# ============ AUTO SHARE FUNCTIONS (PAGE & NORMAL ACCOUNT) ============
+# ============ AUTO SHARE FUNCTIONS (MODE 1: PAGE & NORM ACC) ============
 
 async def get_facebook_account_info(session, token):
     """Get Facebook account info (UID and name) from token."""
@@ -1017,6 +1022,23 @@ async def getid(session, link):
     except Exception as e:
         print(f" {R}[ERROR] Failed to get post ID: {e}{RESET}")
         return None
+
+async def extract_post_id(session, input_str):
+    """
+    Extract post ID from various Facebook URL formats or return if already a post ID.
+    """
+    input_str = input_str.strip()
+    
+    # Check if it's already a numeric post ID
+    if input_str.isdigit():
+        return input_str
+    
+    # Try using traodoisub API to extract ID
+    post_id = await getid(session, input_str)
+    if post_id:
+        return post_id
+    
+    return None
 
 async def get_token(session, token, cookie):
     """Get page tokens from user token with FULL HEADERS."""
@@ -1052,7 +1074,7 @@ async def get_token(session, token, cookie):
         return {}
 
 async def share_single_post(session, tk, ck, post, published_value):
-    """Share a post once with FULL HEADERS."""
+    """Share a post once with FULL HEADERS (MODE 1)."""
     headers = {
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
         'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
@@ -1095,7 +1117,7 @@ async def show_countdown(seconds):
 
 async def share_loop(session, tk, ck, post, page_id):
     """
-    Continuous sharing loop for a single page.
+    Continuous sharing loop for a single page (MODE 1).
     ZERO DELAY - Maximum speed with synchronized pause handling.
     """
     global success_count, global_pause_event
@@ -1157,7 +1179,7 @@ async def share_loop(session, tk, ck, post, page_id):
             await asyncio.sleep(30)
 
 async def auto_share_main(link):
-    """Main auto share function with database paired account loading."""
+    """Main auto share function (MODE 1: PAGE & NORM ACC)."""
     global success_count, global_pause_event
     success_count = 0
     global_pause_event.set()
@@ -1206,7 +1228,7 @@ async def auto_share_main(link):
         return
     
     refresh_screen()
-    print(f" {G}[!] INITIALIZING AUTO SHARE...{RESET}")
+    print(f" {G}[!] INITIALIZING SHARE BOT (PAGE & NORM ACC)...{RESET}")
     nice_loader("LOADING")
     
     async with aiohttp.ClientSession() as session:
@@ -1214,9 +1236,9 @@ async def auto_share_main(link):
         print(f" {G}[!] EXTRACTING POST ID...{RESET}")
         nice_loader("EXTRACTING")
         
-        post = await getid(session, link)
+        post = await extract_post_id(session, link)
         if not post:
-            print(f" {R}[ERROR] Failed to get post ID{RESET}")
+            print(f" {R}[ERROR] Failed to extract post ID{RESET}")
             input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
             return
         
@@ -1281,6 +1303,7 @@ async def auto_share_main(link):
         refresh_screen()
         print(f" {M}[SHARE CONFIGURATION]{RESET}")
         print(LINE)
+        print(f" {Y}Mode: {G}[ {BG_G}\033[30mPAGE & NORM{RESET}{G} ]{RESET}")
         print(f" {Y}Total Page Tokens: {G}{total_pages}{RESET}")
         print(f" {Y}Share Speed: {G}MAXIMUM (ZERO DELAYS){RESET}")
         print(f" {Y}Independent Threads: {G}{len(list_pages)}{RESET}")
@@ -1308,7 +1331,7 @@ async def auto_share_main(link):
         await asyncio.gather(*tasks)
 
 def start_auto_share():
-    """Entry point for auto share feature (PAGE & NORMAL ACCOUNT)."""
+    """Entry point for auto share feature (MODE 1: PAGE & NORM ACC)."""
     refresh_screen()
     print(f" {G}[!] ENTER POST LINK OR POST ID (Leave empty to back){RESET}")
     
@@ -1326,7 +1349,7 @@ def start_auto_share():
         asyncio.run(auto_share_main(link))
     except KeyboardInterrupt:
         refresh_screen()
-        print(f" {Y}[!] AUTO SHARE STOPPED BY USER{RESET}")
+        print(f" {Y}[!] SHARE BOT STOPPED BY USER{RESET}")
         stop_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(f" {Y}[!] Stop Time: {stop_time}{RESET}")
         print(f" {G}[!] Total Successful Shares: {success_count}{RESET}")
@@ -1343,128 +1366,67 @@ def start_auto_share():
         print(f" {R}{str(e)}{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
-# ============ AUTO SHARE V2 FUNCTIONS (NORMAL ACCOUNT ONLY) ============
+# ============ AUTO SHARE V2 FUNCTIONS (MODE 2: NORM ACC) ============
 
-async def extract_access_token_from_cookie(session, cookie):
-    """Extract access token from cookie by visiting business.facebook.com"""
+async def share_single_post_v2(session, cookie, token, post_id, published_value):
+    """Share using normal account token (MODE 2 - DIFFERENT HEADERS)."""
     headers = {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
-        'sec-ch-ua': '"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': "Windows",
-        'sec-fetch-dest': 'document',
-        'sec-fetch-mode': 'navigate',
-        'sec-fetch-site': 'none',
-        'sec-fetch-user': '?1',
-        'upgrade-insecure-requests': '1',
-        'cookie': cookie
-    }
-    
-    try:
-        async with session.get('https://business.facebook.com/content_management', headers=headers) as response:
-            data = await response.text()
-            token_match = re.search('EAAG(.*?)","', data)
-            
-            if not token_match:
-                return None
-            
-            access_token = 'EAAG' + token_match.group(1)
-            return access_token
-    except Exception:
-        return None
-
-async def extract_post_id_from_link(link):
-    """Extract post ID from Facebook link or return as-is if already a post ID"""
-    # If it's already a numeric ID, return it
-    if link.isdigit():
-        return link
-    
-    # Try to extract from various Facebook URL formats
-    patterns = [
-        r'facebook\.com/.*?/posts/(\d+)',
-        r'facebook\.com/.*?/photos/.*?/(\d+)',
-        r'facebook\.com/photo\.php\?fbid=(\d+)',
-        r'facebook\.com/permalink\.php\?story_fbid=(\d+)',
-        r'/(\d+)/?$'
-    ]
-    
-    for pattern in patterns:
-        match = re.search(pattern, link)
-        if match:
-            return match.group(1)
-    
-    # If no pattern matches, return original (might be used with traodoisub API)
-    return link
-
-async def share_v2_single(session, token, cookie, post_id):
-    """Share a post using normal account (not page)"""
-    headers = {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
-        'sec-ch-ua': '"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': "Windows",
-        'sec-fetch-dest': 'document',
-        'sec-fetch-mode': 'navigate',
-        'sec-fetch-site': 'none',
-        'sec-fetch-user': '?1',
-        'upgrade-insecure-requests': '1',
+        'accept': '*/*',
         'accept-encoding': 'gzip, deflate',
-        'host': 'b-graph.facebook.com',
-        'cookie': cookie
+        'connection': 'keep-alive',
+        'content-length': '0',
+        'cookie': cookie,
+        'host': 'graph.facebook.com'
     }
     
     try:
-        url = f'https://b-graph.facebook.com/me/feed?link=https://mbasic.facebook.com/{post_id}&published=0&access_token={token}'
-        
+        url = f'https://graph.facebook.com/me/feed?link=https://m.facebook.com/{post_id}&published={published_value}&access_token={token}'
         async with session.post(url, headers=headers) as response:
-            data = await response.json()
-            
-            if 'id' in data:
-                return True, data.get('id', 'N/A')
+            json_data = await response.json()
+            if 'id' in json_data:
+                return True, json_data.get('id', 'N/A')
             else:
-                error_msg = data.get('error', {}).get('message', 'Unknown error')
+                error_msg = json_data.get('error', {}).get('message', 'Unknown error')
                 return False, error_msg
     except Exception as e:
         return False, str(e)
 
-async def share_v2_loop(session, token, cookie, post_id, account_name):
-    """Continuous sharing loop for V2 (normal account)"""
+async def share_loop_v2(session, cookie, token, post_id, acc_name, delay):
+    """
+    Continuous sharing loop for V2 (NORM ACC) with controlled delay.
+    """
     global success_count
     
-    failed_count = 0
+    current_published_status = 0
     
     while True:
         try:
             now = datetime.datetime.now()
             current_time = now.strftime("%H:%M:%S")
             
-            is_success, result = await share_v2_single(session, token, cookie, post_id)
+            is_success, result = await share_single_post_v2(session, cookie, token, post_id, current_published_status)
             
             if is_success:
                 async with lock:
                     success_count += 1
                     current_success_count = success_count
                 
-                failed_count = 0
-                
-                print(f" {G}[SUCCESS]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {Y}{account_name}{RESET} {W}|{RESET} {C}Total: {current_success_count}{RESET}")
-                
+                print(f" {G}[SUCCESS]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{acc_name}{RESET} {W}|{RESET} {Y}Total: {current_success_count}{RESET}")
             else:
-                failed_count += 1
-                
-                if failed_count >= 3:
-                    print(f" {R}[BLOCKED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {Y}{account_name}{RESET} {W}|{RESET} {R}Account blocked (too many failures){RESET}")
-                    break
-                
-                print(f" {R}[FAILED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {Y}{account_name}{RESET} {W}|{RESET} {R}{result[:40]}{RESET}")
-                await asyncio.sleep(5)
-                
+                # Toggle published status on error
+                current_published_status = 1 if current_published_status == 0 else 0
+                error_message = str(result)[:30]
+                print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{acc_name}{RESET} {W}|{RESET} {R}{error_message}{RESET}")
+            
+            # Controlled delay between shares
+            await asyncio.sleep(delay)
+            
         except Exception as e:
-            print(f" {R}[EXCEPTION]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {Y}{account_name}{RESET} {W}|{RESET} {R}{str(e)[:40]}{RESET}")
-            await asyncio.sleep(30)
+            print(f" {R}[EXCEPTION]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {C}{acc_name}{RESET} {W}|{RESET} {R}{str(e)[:40]}{RESET}")
+            await asyncio.sleep(5)
 
-async def auto_share_v2_main(link):
-    """Main auto share V2 function (Normal Account Only)"""
+async def auto_share_v2_main(link, delay):
+    """Main auto share V2 function (MODE 2: NORM ACC)."""
     global success_count
     success_count = 0
     
@@ -1512,23 +1474,17 @@ async def auto_share_v2_main(link):
         return
     
     refresh_screen()
-    print(f" {G}[!] INITIALIZING AUTO SHARE V2 (NORMAL ACCOUNT)...{RESET}")
+    print(f" {C}[!] INITIALIZING SHARE BOT V2 (NORM ACC)...{RESET}")
     nice_loader("LOADING")
     
     async with aiohttp.ClientSession() as session:
         refresh_screen()
-        print(f" {G}[!] PROCESSING POST LINK/ID...{RESET}")
-        nice_loader("PROCESSING")
+        print(f" {G}[!] EXTRACTING POST ID...{RESET}")
+        nice_loader("EXTRACTING")
         
-        # Try to extract post ID from link or use traodoisub API
-        post_id = await extract_post_id_from_link(link)
-        
-        # If extraction failed, try traodoisub API
-        if not post_id or not post_id.isdigit():
-            post_id = await getid(session, link)
-        
+        post_id = await extract_post_id(session, link)
         if not post_id:
-            print(f" {R}[ERROR] Failed to get post ID{RESET}")
+            print(f" {R}[ERROR] Failed to extract post ID{RESET}")
             input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
             return
         
@@ -1563,41 +1519,13 @@ async def auto_share_v2_main(link):
             print(f" {W}[{i}]{RESET} {Y}{acc['name']}{RESET} {W}-{RESET} {C}UID: {acc['uid']}{RESET}")
         print(LINE)
         
-        print(f" {G}[!] EXTRACTING ACCESS TOKENS...{RESET}")
-        nice_loader("EXTRACTING")
-        
-        valid_accounts = []
-        for acc in accounts_data:
-            cookie = acc['cookie']
-            
-            # Try to use stored token first
-            token = acc['token']
-            
-            # If token extraction from cookie is needed (optional)
-            # token = await extract_access_token_from_cookie(session, cookie)
-            
-            if token:
-                valid_accounts.append({
-                    'token': token,
-                    'cookie': cookie,
-                    'name': acc['name'],
-                    'uid': acc['uid']
-                })
-                print(f" {G}[✓]{RESET} {Y}{acc['name']}{RESET} - Token ready")
-            else:
-                print(f" {R}[✗]{RESET} {Y}{acc['name']}{RESET} - Failed to get token")
-        
-        if not valid_accounts:
-            print(f" {R}[ERROR] No valid accounts with tokens{RESET}")
-            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-            return
-        
         refresh_screen()
-        print(f" {M}[SHARE V2 CONFIGURATION]{RESET}")
+        print(f" {M}[SHARE CONFIGURATION V2]{RESET}")
         print(LINE)
-        print(f" {Y}Mode: {G}NORMAL ACCOUNT (Direct Sharing){RESET}")
-        print(f" {Y}Total Accounts: {G}{len(valid_accounts)}{RESET}")
-        print(f" {Y}Share Speed: {G}MAXIMUM (ZERO DELAYS){RESET}")
+        print(f" {Y}Mode: {C}[ {BG_C}\033[30mNORM{RESET}{C} ]{RESET}")
+        print(f" {Y}Total Accounts: {G}{len(accounts_data)}{RESET}")
+        print(f" {Y}Share Delay: {G}{delay}s{RESET}")
+        print(f" {Y}Independent Threads: {G}{len(accounts_data)}{RESET}")
         print(f" {Y}Your Plan: {G}{user_data['plan'].upper()}{RESET}")
         print(LINE)
         print(f" {G}[!] STARTING CONTINUOUS SHARING...{RESET}")
@@ -1605,24 +1533,27 @@ async def auto_share_v2_main(link):
         print(LINE)
         
         tasks = []
-        for acc in valid_accounts:
-            task = asyncio.create_task(share_v2_loop(
+        for acc in accounts_data:
+            task = asyncio.create_task(share_loop_v2(
                 session,
-                acc['token'],
                 acc['cookie'],
+                acc['token'],
                 post_id,
-                acc['name']
+                acc['name'],
+                delay
             ))
             tasks.append(task)
         
-        print(f" {G}[STARTED] Running {len(tasks)} parallel share threads...{RESET}")
+        print(f" {G}[STARTED] Running {len(tasks)} parallel share threads with {delay}s delay...{RESET}")
         print(LINE)
         
         await asyncio.gather(*tasks)
 
 def start_auto_share_v2():
-    """Entry point for auto share V2 feature (NORMAL ACCOUNT ONLY)."""
+    """Entry point for auto share V2 feature (MODE 2: NORM ACC)."""
     refresh_screen()
+    print(f" {C}[SHARE BOT V2 - NORM ACC]{RESET}")
+    print(LINE)
     print(f" {G}[!] ENTER POST LINK OR POST ID (Leave empty to back){RESET}")
     
     prompt = f" {W}[{W}➤{W}]{RESET} {C}POST LINK/ID {W}➤{RESET} "
@@ -1635,11 +1566,31 @@ def start_auto_share_v2():
     if not link.strip():
         return
     
+    refresh_screen()
+    print(f" {G}[!] ENTER DELAY BETWEEN SHARES{RESET}")
+    print(f" {Y}[TIP] Recommended: 0.5 to 0.6 seconds for stable sharing{RESET}")
+    print(LINE)
+    
+    delay_input = input(f" {W}[{W}➤{W}]{RESET} {C}DELAY (seconds) {W}➤{RESET} ").strip()
+    
+    if not delay_input:
+        delay = 0.5  # Default delay
+    else:
+        try:
+            delay = float(delay_input)
+            if delay < 0.5:
+                print(f" {Y}[!] Delay too low! Setting to minimum 0.5s{RESET}")
+                delay = 0.5
+        except ValueError:
+            print(f" {R}[ERROR] Invalid delay value! Using default 0.5s{RESET}")
+            delay = 0.5
+            time.sleep(1)
+    
     try:
-        asyncio.run(auto_share_v2_main(link))
+        asyncio.run(auto_share_v2_main(link, delay))
     except KeyboardInterrupt:
         refresh_screen()
-        print(f" {Y}[!] AUTO SHARE V2 STOPPED BY USER{RESET}")
+        print(f" {Y}[!] SHARE BOT V2 STOPPED BY USER{RESET}")
         stop_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(f" {Y}[!] Stop Time: {stop_time}{RESET}")
         print(f" {G}[!] Total Successful Shares: {success_count}{RESET}")
@@ -1655,6 +1606,8 @@ def start_auto_share_v2():
         print(f" {R}[ERROR] An unexpected error occurred:{RESET}")
         print(f" {R}{str(e)}{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+
+# ============ MAIN FUNCTION ============
 
 def main():
     global user_token, user_data
