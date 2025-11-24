@@ -20,6 +20,9 @@ M = '\033[1;35m'   # Magenta (Bold)
 B = '\033[1;34m'   # Blue (Bold)
 W = '\033[1;37m'   # White (Bold)
 BG_R = '\033[41m'  # Red Background
+BG_G = '\033[42m'  # Green Background
+BG_C = '\033[46m'  # Cyan Background
+BG_M = '\033[45m'  # Magenta Background
 RESET = '\033[0m' # Reset
 
 # --- UI CONSTANTS ---
@@ -74,7 +77,7 @@ def banner_header():
     print(LINE)
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'DEVELOPER':<13} {W}➤{RESET} {G}KEN DRICK{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'GITHUB':<13} {W}➤{RESET} {G}RYO GRAHHH{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}2.0.0{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}1.0{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}facebook.com/ryoevisu{RESET}")
     
     tool_name = f"{R}[ {BG_R}{W}RPWTOOLS{RESET}{R} ]{RESET}"
@@ -116,28 +119,28 @@ def banner_header():
     print(LINE)
 
 def show_menu():
-    """Prints the Menu Options with colorful styling."""
-    def key(n, c, color): return f" {color}{n}{W}/{color}{c}{RESET}"
-
+    """Prints the Menu Options with colored background numbers."""
     if not user_token:
-        print(f"{key('01', 'A', G)}  {G}LOGIN{RESET}")
-        print(f"{key('02', 'B', C)}  {C}REGISTER{RESET}")
-        print(f"{key('00', 'X', R)}  {R}EXIT{RESET}")
+        print(f" {W}[{BG_G}{W}01{RESET}{Y}/{W}A{W}]{RESET} {G}LOGIN{RESET}")
+        print(f" {W}[{BG_C}{W}02{RESET}{Y}/{W}B{W}]{RESET} {C}REGISTER{RESET}")
+        print(f" {W}[{BG_R}{W}00{RESET}{Y}/{W}X{W}]{RESET} {R}EXIT{RESET}")
     elif user_data and user_data.get('isAdmin'):
-        print(f"{key('01', 'A', G)}  {G}START AUTO SHARE{RESET}")
-        print(f"{key('02', 'B', C)}  {C}COOKIE TO TOKEN{RESET}") 
-        print(f"{key('03', 'C', M)}  {M}MANAGE COOKIE & TOKEN{RESET}")
-        print(f"{key('04', 'D', Y)}  {Y}MY STATS{RESET}")
-        print(f"{key('05', 'E', M)}  {M}ADMIN PANEL{RESET}")
-        print(f"{key('06', 'F', B)}  {B}UPDATE TOOL{RESET}")
-        print(f"{key('00', 'X', R)}  {R}LOGOUT{RESET}")
+        print(f" {W}[{BG_G}{W}01{RESET}{Y}/{W}A{W}]{RESET} {G}START AUTO SHARE (PAGE & NORM ACC){RESET}")
+        print(f" {W}[{BG_C}{W}02{RESET}{Y}/{W}B{W}]{RESET} {C}START AUTO SHARE V2 (NORM ACC){RESET}")
+        print(f" {W}[{BG_M}{W}03{RESET}{Y}/{W}C{W}]{RESET} {M}COOKIE TO TOKEN{RESET}")
+        print(f" {W}[{BG_G}{W}04{RESET}{Y}/{W}D{W}]{RESET} {G}MANAGE COOKIE & TOKEN{RESET}")
+        print(f" {W}[{BG_G}{W}05{RESET}{Y}/{W}E{W}]{RESET} {G}MY STATS{RESET}")
+        print(f" {W}[{BG_M}{W}06{RESET}{Y}/{W}F{W}]{RESET} {M}ADMIN PANEL{RESET}")
+        print(f" {W}[{BG_G}{W}07{RESET}{Y}/{W}G{W}]{RESET} {G}UPDATE TOOL{RESET}")
+        print(f" {W}[{BG_R}{W}00{RESET}{Y}/{W}X{W}]{RESET} {R}LOGOUT{RESET}")
     else:
-        print(f"{key('01', 'A', G)}  {G}START AUTO SHARE{RESET}")
-        print(f"{key('02', 'B', C)}  {C}COOKIE TO TOKEN{RESET}") 
-        print(f"{key('03', 'C', M)}  {M}MANAGE COOKIE & TOKEN{RESET}")
-        print(f"{key('04', 'D', Y)}  {Y}MY STATS{RESET}")
-        print(f"{key('05', 'E', B)}  {B}UPDATE TOOL{RESET}")
-        print(f"{key('00', 'X', R)}  {R}LOGOUT{RESET}")
+        print(f" {W}[{BG_G}{W}01{RESET}{Y}/{W}A{W}]{RESET} {G}START AUTO SHARE (PAGE & NORM ACC){RESET}")
+        print(f" {W}[{BG_C}{W}02{RESET}{Y}/{W}B{W}]{RESET} {C}START AUTO SHARE V2 (NORM ACC){RESET}")
+        print(f" {W}[{BG_M}{W}03{RESET}{Y}/{W}C{W}]{RESET} {M}COOKIE TO TOKEN{RESET}")
+        print(f" {W}[{BG_G}{W}04{RESET}{Y}/{W}D{W}]{RESET} {G}MANAGE COOKIE & TOKEN{RESET}")
+        print(f" {W}[{BG_G}{W}05{RESET}{Y}/{W}E{W}]{RESET} {G}MY STATS{RESET}")
+        print(f" {W}[{BG_G}{W}06{RESET}{Y}/{W}F{W}]{RESET} {G}UPDATE TOOL{RESET}")
+        print(f" {W}[{BG_R}{W}00{RESET}{Y}/{W}X{W}]{RESET} {R}LOGOUT{RESET}")
     
     print(LINE)
 
@@ -1626,6 +1629,297 @@ def start_auto_share():
         print(f" {R}{str(e)}{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
+# ============ AUTO SHARE V2 FUNCTIONS (NORM ACC - DATABASE COOKIES) ============
+
+def extract_post_id_from_link(link):
+    """Extract post ID from Facebook link or return as-is if already an ID."""
+    link = link.strip()
+    
+    # Check if it's already a numeric ID
+    if link.isdigit():
+        return link
+    
+    # Remove protocol and www
+    link = re.sub(r'^https?://', '', link)
+    link = re.sub(r'^(www\.|m\.)', '', link)
+    
+    # Try to extract ID from various Facebook URL formats
+    patterns = [
+        r'facebook\.com/.*?/posts/(\d+)',
+        r'facebook\.com/.*?/photos/.*?/(\d+)',
+        r'facebook\.com/permalink\.php\?story_fbid=(\d+)',
+        r'facebook\.com/story\.php\?story_fbid=(\d+)',
+        r'facebook\.com/photo\.php\?fbid=(\d+)',
+        r'/(\d+)/?$'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, link)
+        if match:
+            return match.group(1)
+    
+    return link
+
+def cookie_to_eaag_token(cookie):
+    """Convert cookie to EAAG token using business.facebook.com."""
+    headers = {
+        'authority': 'business.facebook.com',
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+        'cache-control': 'max-age=0',
+        'cookie': cookie,
+        'referer': 'https://www.facebook.com/',
+        'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Linux"',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'same-origin',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
+    }
+    
+    try:
+        response = requests.get('https://business.facebook.com/content_management', headers=headers, timeout=10)
+        home_business = response.text
+        
+        token = home_business.split('EAAG')[1].split('","')[0]
+        return f'EAAG{token}'
+    except:
+        return None
+
+async def share_with_eaag_v2(session, cookie, token, post_id):
+    """Share a post using EAAG token."""
+    headers = {
+        'accept': '*/*',
+        'accept-encoding': 'gzip, deflate',
+        'connection': 'keep-alive',
+        'content-length': '0',
+        'cookie': cookie,
+        'host': 'graph.facebook.com'
+    }
+    
+    try:
+        url = f'https://graph.facebook.com/me/feed?link=https://m.facebook.com/{post_id}&published=0&access_token={token}'
+        async with session.post(url, headers=headers) as response:
+            json_data = await response.json()
+            
+            if 'id' in json_data:
+                return True, json_data.get('id', 'N/A')
+            else:
+                error_msg = json_data.get('error', {}).get('message', 'Unknown error')
+                return False, error_msg
+    except Exception as e:
+        return False, str(e)
+
+async def share_loop_v2(session, cookie, token, post_id, account_name):
+    """Continuous sharing loop for V2 with 0.5-0.6 second delays."""
+    global success_count_v2
+    
+    while True:
+        try:
+            now = datetime.datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+            
+            is_success, result = await share_with_eaag_v2(session, cookie, token, post_id)
+            
+            if is_success:
+                async with lock_v2:
+                    success_count_v2 += 1
+                    current_success_count = success_count_v2
+                
+                print(f" {G}[SUCCESS]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {Y}Total: {current_success_count}{RESET}")
+                
+                # Random delay between 0.5-0.6 seconds
+                delay = random.uniform(0.5, 0.6)
+                await asyncio.sleep(delay)
+            else:
+                error_message = result
+                print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
+                await asyncio.sleep(5)
+        
+        except Exception as e:
+            print(f" {R}[EXCEPTION]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {R}{str(e)[:40]}{RESET}")
+            await asyncio.sleep(30)
+
+async def auto_share_v2_main(link_or_id, selected_cookies):
+    """Main auto share V2 function using selected database cookies."""
+    global success_count_v2, eaag_tokens
+    success_count_v2 = 0
+    eaag_tokens = []
+    
+    refresh_screen()
+    print(f" {C}[!] CONVERTING SELECTED COOKIES TO EAAG TOKENS...{RESET}")
+    nice_loader("CONVERTING")
+    
+    # Convert selected cookies to EAAG tokens
+    for acc in selected_cookies:
+        token = cookie_to_eaag_token(acc['cookie'])
+        if token:
+            eaag_tokens.append({
+                'cookie': acc['cookie'],
+                'token': token,
+                'name': acc['name'],
+                'uid': acc['uid']
+            })
+            print(f" {G}✓{RESET} {Y}{acc['name']}{RESET} {W}({C}UID: {acc['uid']}{W}){RESET}")
+        else:
+            print(f" {R}✗{RESET} {Y}{acc['name']}{RESET} {R}Failed to extract token{RESET}")
+    
+    if not eaag_tokens:
+        print(f" {R}[ERROR] No valid EAAG tokens extracted!{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return
+    
+    # Extract post ID
+    post_id = extract_post_id_from_link(link_or_id)
+    
+    refresh_screen()
+    print(f" {G}[SUCCESS] Extracted {len(eaag_tokens)} EAAG tokens{RESET}")
+    print(LINE)
+    print(f" {Y}Post ID: {G}{post_id}{RESET}")
+    print(LINE)
+    
+    async with aiohttp.ClientSession() as session:
+        print(f" {M}[SHARE V2 CONFIGURATION]{RESET}")
+        print(LINE)
+        print(f" {Y}Total Accounts: {G}{len(eaag_tokens)}{RESET}")
+        print(f" {Y}Share Speed: {C}0.5-0.6 seconds delay per share{RESET}")
+        print(f" {Y}Mode: {C}NORM ACC (EAAG Tokens){RESET}")
+        print(LINE)
+        print(f" {G}[!] STARTING AUTO SHARE V2...{RESET}")
+        print(f" {Y}[TIP] Press Ctrl+C to stop{RESET}")
+        print(LINE)
+        
+        tasks = []
+        for acc in eaag_tokens:
+            task = asyncio.create_task(share_loop_v2(
+                session,
+                acc['cookie'],
+                acc['token'],
+                post_id,
+                acc['name']
+            ))
+            tasks.append(task)
+        
+        print(f" {G}[STARTED] Running {len(tasks)} parallel share threads with 0.5-0.6s delays...{RESET}")
+        print(LINE)
+        
+        await asyncio.gather(*tasks)
+
+def select_cookies_for_v2():
+    """Let user select which cookies to use for V2 sharing."""
+    refresh_screen()
+    print(f" {G}[!] LOADING ACCOUNTS FROM DATABASE...{RESET}")
+    nice_loader("LOADING")
+    
+    status, response = api_request("GET", "/user/accounts")
+    
+    if status != 200 or not response.get('success'):
+        print(f" {R}[ERROR] Failed to load accounts{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return None
+    
+    accounts = response.get('accounts', [])
+    
+    if not accounts:
+        print(f" {R}[ERROR] No accounts stored in database{RESET}")
+        print(f" {Y}[TIP] Use option 4 to add paired accounts{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return None
+    
+    refresh_screen()
+    print(f" {C}[SELECT COOKIES FOR AUTO SHARE V2]{RESET}")
+    print(LINE)
+    print(f" {W}[{BG_G}{W}ALL{RESET}{W}]{RESET} {G}USE ALL ACCOUNTS{RESET}")
+    print(LINE)
+    
+    for i, acc in enumerate(accounts, 1):
+        print(f" {W}[{BG_G}{W}{i:02d}{RESET}{Y}/{W}{chr(64+i)}{W}]{RESET} {Y}{acc['name']}{RESET} {W}({C}UID: {acc['uid']}{W}){RESET}")
+    
+    print(LINE)
+    print(f" {Y}[TIP] Enter numbers separated by commas (e.g., 1,2,3) or 'ALL'{RESET}")
+    print(LINE)
+    
+    selection = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT {W}➤{RESET} ").strip().upper()
+    
+    if not selection:
+        return None
+    
+    selected_accounts = []
+    
+    if selection == 'ALL':
+        selected_accounts = accounts
+    else:
+        try:
+            indices = [int(x.strip()) for x in selection.replace(',', ' ').split() if x.strip().isdigit()]
+            for idx in indices:
+                if 1 <= idx <= len(accounts):
+                    selected_accounts.append(accounts[idx-1])
+        except:
+            print(f" {R}[ERROR] Invalid selection{RESET}")
+            time.sleep(1)
+            return None
+    
+    if not selected_accounts:
+        print(f" {R}[ERROR] No valid accounts selected{RESET}")
+        time.sleep(1)
+        return None
+    
+    # Confirmation
+    refresh_screen()
+    print(f" {Y}[CONFIRM SELECTION]{RESET}")
+    print(LINE)
+    print(f" {Y}Selected {G}{len(selected_accounts)}{Y} account(s):{RESET}")
+    for acc in selected_accounts:
+        print(f"   • {Y}{acc['name']}{RESET} {W}({C}UID: {acc['uid']}{W}){RESET}")
+    print(LINE)
+    
+    confirm = input(f" {W}[{W}➤{W}]{RESET} {Y}Confirm? (Y/N) {W}➤{RESET} ").strip().upper()
+    
+    if confirm == 'Y':
+        return selected_accounts
+    else:
+        return None
+
+def start_auto_share_v2():
+    """Entry point for auto share V2 feature (NORM ACC)."""
+    selected_cookies = select_cookies_for_v2()
+    
+    if not selected_cookies:
+        return
+    
+    refresh_screen()
+    print(f" {C}[AUTO SHARE V2 - NORM ACC]{RESET}")
+    print(LINE)
+    
+    link_or_id = input(f" {W}[{W}➤{W}]{RESET} {C}POST LINK OR ID {W}➤{RESET} ").strip()
+    
+    if not link_or_id:
+        return
+    
+    try:
+        asyncio.run(auto_share_v2_main(link_or_id, selected_cookies))
+    except KeyboardInterrupt:
+        refresh_screen()
+        print(f" {Y}[!] AUTO SHARE V2 STOPPED BY USER{RESET}")
+        stop_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f" {Y}[!] Stop Time: {stop_time}{RESET}")
+        print(f" {G}[!] Total Successful Shares: {success_count_v2}{RESET}")
+        print(LINE)
+        
+        if success_count_v2 > 0:
+            api_request("POST", "/share/complete", {"totalShares": success_count_v2})
+            print(f" {G}[!] Shares recorded to your account{RESET}")
+        
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+    except Exception as e:
+        refresh_screen()
+        print(f" {R}[ERROR] An unexpected error occurred:{RESET}")
+        print(f" {R}{str(e)}{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+
+
 # ============ MAIN FUNCTION ============
 
 def main():
@@ -1658,15 +1952,18 @@ def main():
                 start_auto_share()
                 
             elif choice in ['2', '02', 'B']:
-                cookie_to_token_tool()
+                start_auto_share_v2()
                 
             elif choice in ['3', '03', 'C']:
-                manage_cookie_token()
+                cookie_to_token_tool()
                 
             elif choice in ['4', '04', 'D']:
-                show_user_stats()
+                manage_cookie_token()
             
             elif choice in ['5', '05', 'E']:
+                show_user_stats()
+            
+            elif choice in ['6', '06', 'F']:
                 if user_data and user_data.get('isAdmin'):
                     admin_panel()
                 else:
