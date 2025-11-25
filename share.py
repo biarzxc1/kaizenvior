@@ -25,9 +25,7 @@ BG_C = '\033[46m'  # Cyan Background
 BG_M = '\033[45m'  # Magenta Background
 BG_Y = '\033[43m'  # Yellow Background
 BG_B = '\033[44m'  # Blue Background
-BG_W = '\033[47m'  # White Background
-BLACK = '\033[30m' # Black text
-RESET = '\033[0m'  # Reset
+RESET = '\033[0m' # Reset
 
 # --- UI CONSTANTS ---
 LINE = f"{G}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}"
@@ -81,7 +79,7 @@ def banner_header():
     print(LINE)
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'DEVELOPER':<13} {W}➤{RESET} {G}KEN DRICK{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'GITHUB':<13} {W}➤{RESET} {G}RYO GRAHHH{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}1.0.0{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}1.0{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}facebook.com/ryoevisu{RESET}")
     
     tool_name = f"{R}[ {BG_R}{W}RPWTOOLS{RESET}{R} ]{RESET}"
@@ -122,45 +120,29 @@ def banner_header():
     
     print(LINE)
 
-def menu_item(num, letter, text, color, bg_color, desc=""):
-    """Create a menu item with colored number background."""
-    num_display = f"{bg_color}{BLACK}{num}{RESET}"
-    letter_display = f"{bg_color}{BLACK}{letter}{RESET}"
-    
-    # Calculate padding for alignment (— should align)
-    base_text_len = len(text)
-    padding = 22 - base_text_len  # Adjust padding for alignment
-    if padding < 1:
-        padding = 1
-    
-    if desc:
-        return f" {color}[{num_display}{color}/{letter_display}{color}]{RESET} {color}{text}{RESET}{' ' * padding}{W}—{RESET} {W}{desc}{RESET}"
-    else:
-        return f" {color}[{num_display}{color}/{letter_display}{color}]{RESET} {color}{text}{RESET}"
-
 def show_menu():
-    """Prints the Menu Options with colorful styling."""
+    """Prints the Menu Options with colored background numbers."""
     if not user_token:
-        print(menu_item("01", "A", "LOGIN", G, BG_G))
-        print(menu_item("02", "B", "REGISTER", C, BG_C))
-        print(menu_item("00", "X", "EXIT", R, BG_R))
+        print(f" {W}[{BG_G}{W}01{RESET}{Y}/{BG_G}{W}A{RESET}{W}]{RESET} {G}LOGIN{RESET}")
+        print(f" {W}[{BG_C}{W}02{RESET}{Y}/{BG_C}{W}B{RESET}{W}]{RESET} {C}REGISTER{RESET}")
+        print(f" {W}[{BG_R}{W}00{RESET}{Y}/{BG_R}{W}X{RESET}{W}]{RESET} {R}EXIT{RESET}")
     elif user_data and user_data.get('isAdmin'):
-        print(menu_item("01", "A", "AUTO SHARE", G, BG_G, "PAGE & NORM ACCOUNTS"))
-        print(menu_item("02", "B", "AUTO SHARE V2", C, BG_C, "NORMAL ACCOUNTS"))
-        print(menu_item("03", "C", "COOKIE TO TOKEN", M, BG_M, "CONVERT"))
-        print(menu_item("04", "D", "MANAGE ACCOUNTS", Y, BG_Y, "COOKIE & TOKEN"))
-        print(menu_item("05", "E", "MY STATS", B, BG_B, "VIEW STATISTICS"))
-        print(menu_item("06", "F", "ADMIN PANEL", M, BG_M, "MANAGE USERS"))
-        print(menu_item("07", "G", "UPDATE TOOL", C, BG_C, "CHECK UPDATES"))
-        print(menu_item("00", "X", "LOGOUT", R, BG_R))
+        print(f" {W}[{BG_G}{W}01{RESET}{Y}/{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — PAGE & NORM ACCOUNTS{RESET}")
+        print(f" {W}[{BG_C}{W}02{RESET}{Y}/{BG_C}{W}B{RESET}{W}]{RESET} {C}AUTO SHARE V2           — NORMAL ACCOUNTS{RESET}")
+        print(f" {W}[{BG_M}{W}03{RESET}{Y}/{BG_M}{W}C{RESET}{W}]{RESET} {M}COOKIE TO TOKEN         — CONVERT{RESET}")
+        print(f" {W}[{BG_Y}{W}04{RESET}{Y}/{BG_Y}{W}D{RESET}{W}]{RESET} {Y}MANAGE COOKIE & TOKEN   — DATABASE{RESET}")
+        print(f" {W}[{BG_B}{W}05{RESET}{Y}/{BG_B}{W}E{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
+        print(f" {W}[{BG_M}{W}06{RESET}{Y}/{BG_M}{W}F{RESET}{W}]{RESET} {M}ADMIN PANEL             — MANAGEMENT{RESET}")
+        print(f" {W}[{BG_G}{W}07{RESET}{Y}/{BG_G}{W}G{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
+        print(f" {W}[{BG_R}{W}00{RESET}{Y}/{BG_R}{W}X{RESET}{W}]{RESET} {R}LOGOUT{RESET}")
     else:
-        print(menu_item("01", "A", "AUTO SHARE", G, BG_G, "PAGE & NORM ACCOUNTS"))
-        print(menu_item("02", "B", "AUTO SHARE V2", C, BG_C, "NORMAL ACCOUNTS"))
-        print(menu_item("03", "C", "COOKIE TO TOKEN", M, BG_M, "CONVERT"))
-        print(menu_item("04", "D", "MANAGE ACCOUNTS", Y, BG_Y, "COOKIE & TOKEN"))
-        print(menu_item("05", "E", "MY STATS", B, BG_B, "VIEW STATISTICS"))
-        print(menu_item("06", "F", "UPDATE TOOL", C, BG_C, "CHECK UPDATES"))
-        print(menu_item("00", "X", "LOGOUT", R, BG_R))
+        print(f" {W}[{BG_G}{W}01{RESET}{Y}/{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — PAGE & NORM ACCOUNTS{RESET}")
+        print(f" {W}[{BG_C}{W}02{RESET}{Y}/{BG_C}{W}B{RESET}{W}]{RESET} {C}AUTO SHARE V2           — NORMAL ACCOUNTS{RESET}")
+        print(f" {W}[{BG_M}{W}03{RESET}{Y}/{BG_M}{W}C{RESET}{W}]{RESET} {M}COOKIE TO TOKEN         — CONVERT{RESET}")
+        print(f" {W}[{BG_Y}{W}04{RESET}{Y}/{BG_Y}{W}D{RESET}{W}]{RESET} {Y}MANAGE COOKIE & TOKEN   — DATABASE{RESET}")
+        print(f" {W}[{BG_B}{W}05{RESET}{Y}/{BG_B}{W}E{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
+        print(f" {W}[{BG_G}{W}06{RESET}{Y}/{BG_G}{W}F{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
+        print(f" {W}[{BG_R}{W}00{RESET}{Y}/{BG_R}{W}X{RESET}{W}]{RESET} {R}LOGOUT{RESET}")
     
     print(LINE)
 
@@ -413,24 +395,24 @@ def manage_cookie_token():
         refresh_screen()
         print(f" {G}[MANAGE COOKIE & TOKEN]{RESET}")
         print(LINE)
-        print(menu_item("01", "A", "VIEW ALL ACCOUNTS", G, BG_G))
-        print(menu_item("02", "B", "ADD ACCOUNT", C, BG_C, "Cookie + Token"))
-        print(menu_item("03", "C", "DELETE ACCOUNT", R, BG_R))
-        print(menu_item("04", "D", "DELETE ALL", R, BG_R, "ALL ACCOUNTS"))
-        print(menu_item("00", "X", "BACK", Y, BG_Y))
+        print(f" {W}[{W}1{W}]{RESET} {G}VIEW ALL ACCOUNTS{RESET}")
+        print(f" {W}[{W}2{W}]{RESET} {G}ADD ACCOUNT (Cookie + Token){RESET}")
+        print(f" {W}[{W}3{W}]{RESET} {R}DELETE ACCOUNT{RESET}")
+        print(f" {W}[{W}4{W}]{RESET} {R}DELETE ALL ACCOUNTS{RESET}")
+        print(f" {W}[{W}0{W}]{RESET} {Y}BACK{RESET}")
         print(LINE)
         
-        choice = input(f" {W}[{W}➤{W}]{RESET} {C}CHOICE {W}➤{RESET} ").strip().upper()
+        choice = input(f" {W}[{W}➤{W}]{RESET} {C}CHOICE {W}➤{RESET} ").strip()
         
-        if choice in ['1', '01', 'A']:
+        if choice == '1':
             view_accounts()
-        elif choice in ['2', '02', 'B']:
+        elif choice == '2':
             add_account()
-        elif choice in ['3', '03', 'C']:
+        elif choice == '3':
             delete_account()
-        elif choice in ['4', '04', 'D']:
+        elif choice == '4':
             delete_all_accounts()
-        elif choice in ['0', '00', 'X']:
+        elif choice == '0':
             return
         else:
             print(f"\n {R}[!] INVALID SELECTION{RESET}")
@@ -537,8 +519,7 @@ def delete_account():
     print(LINE)
     
     for i, acc in enumerate(accounts, 1):
-        letter = chr(64 + i) if i <= 26 else str(i)
-        print(menu_item(f"{i:02d}", letter, acc['name'], M, BG_M, f"UID: {acc['uid']}"))
+        print(f" {W}[{i}]{RESET} {M}{acc['name']}{RESET} {W}({C}UID: {acc['uid']}{W}){RESET}")
     
     print(LINE)
     
@@ -695,27 +676,27 @@ def admin_panel():
         refresh_screen()
         print(f" {M}[ADMIN PANEL]{RESET}")
         print(LINE)
-        print(menu_item("01", "A", "VIEW ALL USERS", G, BG_G))
-        print(menu_item("02", "B", "CHANGE USER PLAN", Y, BG_Y))
-        print(menu_item("03", "C", "DELETE USER", R, BG_R))
-        print(menu_item("04", "D", "ACTIVITY LOGS", C, BG_C, "VIEW LOGS"))
-        print(menu_item("05", "E", "DASHBOARD", B, BG_B, "STATS"))
-        print(menu_item("00", "X", "BACK", Y, BG_Y))
+        print(f" {W}[{W}1{W}]{RESET} {G}VIEW ALL USERS{RESET}")
+        print(f" {W}[{W}2{W}]{RESET} {Y}CHANGE USER PLAN{RESET}")
+        print(f" {W}[{W}3{W}]{RESET} {R}DELETE USER{RESET}")
+        print(f" {W}[{W}4{W}]{RESET} {C}VIEW ACTIVITY LOGS{RESET}")
+        print(f" {W}[{W}5{W}]{RESET} {G}DASHBOARD STATS{RESET}")
+        print(f" {W}[{W}0{W}]{RESET} {Y}BACK{RESET}")
         print(LINE)
         
-        choice = input(f" {W}[{W}➤{W}]{RESET} {C}CHOICE {W}➤{RESET} ").strip().upper()
+        choice = input(f" {W}[{W}➤{W}]{RESET} {C}CHOICE {W}➤{RESET} ").strip()
         
-        if choice in ['1', '01', 'A']:
+        if choice == '1':
             view_all_users()
-        elif choice in ['2', '02', 'B']:
+        elif choice == '2':
             change_user_plan()
-        elif choice in ['3', '03', 'C']:
+        elif choice == '3':
             delete_user()
-        elif choice in ['4', '04', 'D']:
+        elif choice == '4':
             view_activity_logs()
-        elif choice in ['5', '05', 'E']:
+        elif choice == '5':
             dashboard_stats()
-        elif choice in ['0', '00', 'X']:
+        elif choice == '0':
             return
         else:
             print(f"\n {R}[!] INVALID SELECTION{RESET}")
@@ -795,14 +776,14 @@ def change_user_plan():
     refresh_screen()
     print(f" {Y}[CHANGE PLAN FOR: {selected_user['username'].upper()}]{RESET}")
     print(LINE)
-    print(menu_item("01", "A", "FREE", W, BG_W, "5min share CD, 30s cookie CD"))
-    print(menu_item("02", "B", "VIP", Y, BG_Y, "1min share CD, no cookie CD (RENTAL)"))
-    print(menu_item("03", "C", "MAX", G, BG_G, "No cooldowns, unlimited"))
+    print(f" {W}[1]{RESET} {W}FREE{RESET} - 5min share cooldown, 30s cookie cooldown")
+    print(f" {W}[2]{RESET} {Y}VIP{RESET} - 1min share cooldown, no cookie cooldown (RENTAL)")
+    print(f" {W}[3]{RESET} {G}MAX{RESET} - No cooldowns, unlimited")
     print(LINE)
     
-    plan_choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT PLAN NUMBER {W}➤{RESET} ").strip().upper()
+    plan_choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT PLAN NUMBER {W}➤{RESET} ").strip()
     
-    plan_map = {'1': 'free', '01': 'free', 'A': 'free', '2': 'vip', '02': 'vip', 'B': 'vip', '3': 'max', '03': 'max', 'C': 'max'}
+    plan_map = {'1': 'free', '2': 'vip', '3': 'max'}
     
     if plan_choice not in plan_map:
         print(f" {R}[ERROR] Invalid plan{RESET}")
@@ -816,14 +797,14 @@ def change_user_plan():
         refresh_screen()
         print(f" {Y}[VIP PLAN DURATION]{RESET}")
         print(LINE)
-        print(menu_item("01", "A", "1 Month", G, BG_G))
-        print(menu_item("02", "B", "2 Months", C, BG_C))
-        print(menu_item("03", "C", "3 Months", M, BG_M))
+        print(f" {W}[1]{RESET} 1 Month")
+        print(f" {W}[2]{RESET} 2 Months")
+        print(f" {W}[3]{RESET} 3 Months")
         print(LINE)
         
-        duration_choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT DURATION {W}➤{RESET} ").strip().upper()
+        duration_choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT DURATION {W}➤{RESET} ").strip()
         
-        duration_map = {'1': 1, '01': 1, 'A': 1, '2': 2, '02': 2, 'B': 2, '3': 3, '03': 3, 'C': 3}
+        duration_map = {'1': 1, '2': 2, '3': 3}
         
         if duration_choice not in duration_map:
             print(f" {R}[ERROR] Invalid duration{RESET}")
@@ -888,11 +869,13 @@ def delete_user():
     for i, user in enumerate(users, 1):
         plan_color = G if user['plan'] == 'max' else Y if user['plan'] == 'vip' else W
         admin_badge = f" {M}[ADMIN]{RESET}" if user.get('isAdmin') else ""
-        letter = chr(64 + i) if i <= 26 else str(i)
         
-        print(menu_item(f"{i:02d}", letter, user['username'].upper(), C, BG_C, f"{user['plan'].upper()}{admin_badge}"))
+        letter = chr(64 + i)
+        key_display = f"{W}[{i:02d}{Y}/{W}{letter}{W}]{RESET}"
+        
+        print(f" {key_display} {C}{user['username'].upper()}{RESET}{admin_badge} - {plan_color}{user['plan'].upper()}{RESET}")
     
-    print(menu_item("00", "X", "CANCEL", Y, BG_Y))
+    print(f" {W}[00{Y}/{W}X{W}]{RESET} {Y}CANCEL{RESET}")
     print(LINE)
     
     choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT USER {W}➤{RESET} ").strip().upper()
@@ -1009,7 +992,7 @@ def dashboard_stats():
     
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
-# ============ AUTO SHARE V1 FUNCTIONS (PAGE & NORM ACC) ============
+# ============ POST ID EXTRACTION ============
 
 def extract_post_id_from_link(link):
     """Extract post ID from Facebook link or return as-is if already an ID."""
@@ -1030,8 +1013,6 @@ def extract_post_id_from_link(link):
         r'facebook\.com/permalink\.php\?story_fbid=(\d+)',
         r'facebook\.com/story\.php\?story_fbid=(\d+)',
         r'facebook\.com/photo\.php\?fbid=(\d+)',
-        r'facebook\.com/share/p/([A-Za-z0-9]+)',
-        r'facebook\.com/share/([A-Za-z0-9]+)',
         r'/(\d+)/?$'
     ]
     
@@ -1041,6 +1022,8 @@ def extract_post_id_from_link(link):
             return match.group(1)
     
     return link
+
+# ============ AUTO SHARE V1 FUNCTIONS (PAGE & NORM ACC) ============
 
 def cookie_to_eaag_token(cookie):
     """Convert cookie to EAAG token using business.facebook.com."""
@@ -1090,15 +1073,7 @@ async def get_facebook_account_info(session, token):
     return 'Unknown', 'Unknown'
 
 async def getid(session, link):
-    """Get Facebook post ID from link using traodoisub API or extract directly."""
-    # First try to extract ID directly from link
-    extracted_id = extract_post_id_from_link(link)
-    
-    # If it's already a numeric ID, return it
-    if extracted_id.isdigit():
-        return extracted_id
-    
-    # Otherwise use the API
+    """Get Facebook post ID from link using traodoisub API."""
     try:
         async with session.post('https://id.traodoisub.com/api.php', data={"link": link}) as response:
             rq = await response.json()
@@ -1249,69 +1224,29 @@ async def share_loop(session, tk, ck, post, page_id):
             print(f" {R}[EXCEPTION]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {R}{str(e)[:40]}{RESET}")
             await asyncio.sleep(30)
 
-async def auto_share_v1_main(link):
-    """Main auto share V1 function - PAGE & NORM ACCOUNTS mode."""
+async def auto_share_page_mode(link):
+    """PAGE & NORM ACC MODE - Uses paired accounts from database."""
     global success_count, global_pause_event
-    success_count = 0
-    global_pause_event.set()
-    
-    refresh_screen()
-    print(f" {G}[!] CHECKING COOLDOWN STATUS...{RESET}")
-    nice_loader("CHECKING")
-    
-    status, response = api_request("POST", "/share/start")
-    
-    if status == 429:
-        refresh_screen()
-        cooldown_type = response.get('cooldownType', 'unknown')
-        
-        if cooldown_type == 'global_pause':
-            print(f" {R}⚠ GLOBAL PAUSE ACTIVE ⚠{RESET}")
-            print(f" {R}All accounts are blocked due to Facebook restrictions{RESET}")
-            print(LINE)
-            print(f" {Y}This is different from plan cooldown!{RESET}")
-            print(f" {Y}All your accounts are paused until the block expires.{RESET}")
-            print(LINE)
-            print(f" {R}Remaining Time: {response.get('remainingSeconds', 0)}s{RESET}")
-            print(f" {Y}Available At: {W}{response.get('cooldownEnd', 'N/A')}{RESET}")
-            print(LINE)
-        else:
-            print(f" {Y}[PLAN COOLDOWN ACTIVE]{RESET}")
-            print(LINE)
-            print(f" {Y}You must wait before starting another share session.{RESET}")
-            print(f" {Y}This is based on your subscription plan.{RESET}")
-            print(LINE)
-            print(f" {R}Remaining Time: {response.get('remainingSeconds', 0)}s{RESET}")
-            print(f" {Y}Available At: {W}{response.get('cooldownEnd', 'N/A')}{RESET}")
-            print(LINE)
-            print(f" {C}[PLAN INFO]{RESET}")
-            print(f" {Y}Your Plan: {W}{user_data['plan'].upper()}{RESET}")
-            
-            if user_data['plan'] == 'free':
-                print(f" {Y}Upgrade to VIP for 1 minute cooldown{RESET}")
-                print(f" {Y}Upgrade to MAX for no cooldown{RESET}")
-            elif user_data['plan'] == 'vip':
-                print(f" {Y}Upgrade to MAX for no cooldown{RESET}")
-            
-            print(LINE)
-        
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        return
     
     refresh_screen()
     print(f" {G}[!] INITIALIZING AUTO SHARE (PAGE & NORM ACC MODE)...{RESET}")
     nice_loader("LOADING")
     
     async with aiohttp.ClientSession() as session:
-        refresh_screen()
-        print(f" {G}[!] EXTRACTING POST ID...{RESET}")
-        nice_loader("EXTRACTING")
+        # Try to extract post ID directly first
+        post = extract_post_id_from_link(link)
         
-        post = await getid(session, link)
-        if not post:
-            print(f" {R}[ERROR] Failed to get post ID{RESET}")
-            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-            return
+        # If extraction failed or looks like a full URL, try API method
+        if not post.isdigit():
+            refresh_screen()
+            print(f" {G}[!] EXTRACTING POST ID FROM LINK...{RESET}")
+            nice_loader("EXTRACTING")
+            
+            post = await getid(session, link)
+            if not post:
+                print(f" {R}[ERROR] Failed to get post ID{RESET}")
+                input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+                return
         
         refresh_screen()
         print(f" {G}[SUCCESS] Post ID: {post}{RESET}")
@@ -1401,6 +1336,85 @@ async def auto_share_v1_main(link):
         
         await asyncio.gather(*tasks)
 
+def start_auto_share():
+    """Entry point for auto share feature (PAGE & NORM ACC)."""
+    refresh_screen()
+    print(f" {G}[!] CHECKING COOLDOWN STATUS...{RESET}")
+    nice_loader("CHECKING")
+    
+    status, response = api_request("POST", "/share/start")
+    
+    if status == 429:
+        refresh_screen()
+        cooldown_type = response.get('cooldownType', 'unknown')
+        
+        if cooldown_type == 'global_pause':
+            print(f" {R}⚠ GLOBAL PAUSE ACTIVE ⚠{RESET}")
+            print(f" {R}All accounts are blocked due to Facebook restrictions{RESET}")
+            print(LINE)
+            print(f" {Y}This is different from plan cooldown!{RESET}")
+            print(f" {Y}All your accounts are paused until the block expires.{RESET}")
+            print(LINE)
+            print(f" {R}Remaining Time: {response.get('remainingSeconds', 0)}s{RESET}")
+            print(f" {Y}Available At: {W}{response.get('cooldownEnd', 'N/A')}{RESET}")
+            print(LINE)
+        else:
+            print(f" {Y}[PLAN COOLDOWN ACTIVE]{RESET}")
+            print(LINE)
+            print(f" {Y}You must wait before starting another share session.{RESET}")
+            print(f" {Y}This is based on your subscription plan.{RESET}")
+            print(LINE)
+            print(f" {R}Remaining Time: {response.get('remainingSeconds', 0)}s{RESET}")
+            print(f" {Y}Available At: {W}{response.get('cooldownEnd', 'N/A')}{RESET}")
+            print(LINE)
+            print(f" {C}[PLAN INFO]{RESET}")
+            print(f" {Y}Your Plan: {W}{user_data['plan'].upper()}{RESET}")
+            
+            if user_data['plan'] == 'free':
+                print(f" {Y}Upgrade to VIP for 1 minute cooldown{RESET}")
+                print(f" {Y}Upgrade to MAX for no cooldown{RESET}")
+            elif user_data['plan'] == 'vip':
+                print(f" {Y}Upgrade to MAX for no cooldown{RESET}")
+            
+            print(LINE)
+        
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return
+    
+    refresh_screen()
+    print(f" {G}[!] ENTER POST LINK OR ID (Leave empty to back){RESET}")
+    
+    prompt = f" {W}[{W}➤{W}]{RESET} {C}POST LINK/ID {W}➤{RESET} "
+    
+    try:
+        link = input(prompt)
+    except KeyboardInterrupt:
+        return
+    
+    if not link.strip():
+        return
+    
+    try:
+        asyncio.run(auto_share_page_mode(link))
+    except KeyboardInterrupt:
+        refresh_screen()
+        print(f" {Y}[!] AUTO SHARE STOPPED BY USER{RESET}")
+        stop_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f" {Y}[!] Stop Time: {stop_time}{RESET}")
+        print(f" {G}[!] Total Successful Shares: {success_count}{RESET}")
+        print(LINE)
+        
+        if success_count > 0:
+            api_request("POST", "/share/complete", {"totalShares": success_count})
+            print(f" {G}[!] Shares recorded to your account{RESET}")
+        
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+    except Exception as e:
+        refresh_screen()
+        print(f" {R}[ERROR] An unexpected error occurred:{RESET}")
+        print(f" {R}{str(e)}{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+
 # ============ AUTO SHARE V2 FUNCTIONS (NORM ACC) ============
 
 async def share_with_eaag_v2(session, cookie, token, post_id):
@@ -1408,17 +1422,10 @@ async def share_with_eaag_v2(session, cookie, token, post_id):
     headers = {
         'accept': '*/*',
         'accept-encoding': 'gzip, deflate',
-        'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
         'connection': 'keep-alive',
+        'content-length': '0',
         'cookie': cookie,
-        'host': 'graph.facebook.com',
-        'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+        'host': 'graph.facebook.com'
     }
     
     try:
@@ -1466,108 +1473,29 @@ async def share_loop_v2(session, cookie, token, post_id, account_name):
             print(f" {R}[EXCEPTION]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {R}{str(e)[:40]}{RESET}")
             await asyncio.sleep(30)
 
-async def auto_share_v2_main(link):
-    """Main auto share V2 function - NORMAL ACCOUNTS mode using EAAG tokens."""
+async def auto_share_v2_main(link_or_id, selected_cookies):
+    """Main auto share V2 function using selected database cookies."""
     global success_count_v2, eaag_tokens
     success_count_v2 = 0
     eaag_tokens = []
     
     refresh_screen()
-    print(f" {C}[!] LOADING COOKIES FROM DATABASE...{RESET}")
-    nice_loader("LOADING")
-    
-    # Get all cookies from database
-    account_status, account_response = api_request("GET", "/user/accounts")
-    if account_status != 200 or not account_response.get('success'):
-        print(f" {R}[ERROR] Failed to load accounts from database{RESET}")
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        return
-    
-    accounts_data = account_response.get('accounts', [])
-    if not accounts_data:
-        print(f" {R}[ERROR] No cookies stored in database{RESET}")
-        print(f" {Y}[TIP] Use option 4 to add accounts{RESET}")
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        return
-    
-    # Display available cookies for selection
-    refresh_screen()
-    print(f" {C}[SELECT COOKIES FOR NORM ACC MODE]{RESET}")
-    print(LINE)
-    
-    for i, acc in enumerate(accounts_data, 1):
-        letter = chr(64 + i) if i <= 26 else str(i)
-        print(menu_item(f"{i:02d}", letter, acc['name'], M, BG_M, f"UID: {acc['uid']}"))
-    
-    print(menu_item("00", "X", "CANCEL", R, BG_R))
-    print(LINE)
-    print(f" {Y}[TIP] Select cookies separated by comma (e.g., 1,3,5 or A,C,E){RESET}")
-    print(f" {Y}[TIP] Or type 'ALL' to use all cookies{RESET}")
-    print(LINE)
-    
-    selection = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT COOKIES {W}➤{RESET} ").strip().upper()
-    
-    if not selection or selection in ['0', '00', 'X']:
-        return
-    
-    selected_cookies = []
-    
-    if selection == 'ALL':
-        selected_cookies = accounts_data
-    else:
-        # Parse selection
-        selections = [s.strip() for s in selection.split(',')]
-        for sel in selections:
-            try:
-                if sel.isdigit():
-                    idx = int(sel) - 1
-                    if 0 <= idx < len(accounts_data):
-                        selected_cookies.append(accounts_data[idx])
-                elif len(sel) == 1 and sel.isalpha():
-                    idx = ord(sel) - 65
-                    if 0 <= idx < len(accounts_data):
-                        selected_cookies.append(accounts_data[idx])
-            except:
-                continue
-    
-    if not selected_cookies:
-        print(f" {R}[ERROR] No valid cookies selected{RESET}")
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        return
-    
-    # Confirm selection
-    refresh_screen()
-    print(f" {Y}[CONFIRM SELECTION]{RESET}")
-    print(LINE)
-    print(f" {Y}Selected {G}{len(selected_cookies)}{Y} cookies:{RESET}")
-    for i, acc in enumerate(selected_cookies, 1):
-        print(f" {W}[{i}]{RESET} {M}{acc['name']}{RESET}")
-    print(LINE)
-    
-    confirm = input(f" {W}[{W}➤{W}]{RESET} {Y}Proceed with these cookies? (Y/N) {W}➤{RESET} ").strip().upper()
-    
-    if confirm != 'Y':
-        return
-    
-    refresh_screen()
-    print(f" {G}[!] CONVERTING COOKIES TO EAAG TOKENS...{RESET}")
+    print(f" {C}[!] CONVERTING SELECTED COOKIES TO EAAG TOKENS...{RESET}")
     nice_loader("CONVERTING")
     
     # Convert selected cookies to EAAG tokens
-    for i, acc in enumerate(selected_cookies, 1):
-        cookie = acc['cookie']
-        print(f" {Y}[{i}/{len(selected_cookies)}]{RESET} Converting {M}{acc['name']}{RESET}...", end="", flush=True)
-        token = cookie_to_eaag_token(cookie)
+    for acc in selected_cookies:
+        token = cookie_to_eaag_token(acc['cookie'])
         if token:
             eaag_tokens.append({
-                'cookie': cookie,
+                'cookie': acc['cookie'],
                 'token': token,
                 'name': acc['name'],
-                'index': i
+                'uid': acc['uid']
             })
-            print(f" {G}✓ Token extracted{RESET}")
+            print(f" {G}✓{RESET} {Y}{acc['name']}{RESET} {W}({C}UID: {acc['uid']}{W}){RESET}")
         else:
-            print(f" {R}✗ Failed{RESET}")
+            print(f" {R}✗{RESET} {Y}{acc['name']}{RESET} {R}Failed to extract token{RESET}")
     
     if not eaag_tokens:
         print(f" {R}[ERROR] No valid EAAG tokens extracted!{RESET}")
@@ -1575,27 +1503,22 @@ async def auto_share_v2_main(link):
         return
     
     # Extract post ID
+    post_id = extract_post_id_from_link(link_or_id)
+    
+    refresh_screen()
+    print(f" {G}[SUCCESS] Extracted {len(eaag_tokens)} EAAG tokens{RESET}")
+    print(LINE)
+    print(f" {Y}Post ID: {G}{post_id}{RESET}")
+    print(LINE)
+    
     async with aiohttp.ClientSession() as session:
-        refresh_screen()
-        print(f" {G}[!] EXTRACTING POST ID...{RESET}")
-        nice_loader("EXTRACTING")
-        
-        post_id = await getid(session, link)
-        if not post_id:
-            print(f" {R}[ERROR] Failed to get post ID{RESET}")
-            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-            return
-        
-        refresh_screen()
-        print(f" {M}[SHARE CONFIGURATION]{RESET}")
+        print(f" {M}[SHARE V2 CONFIGURATION]{RESET}")
         print(LINE)
-        print(f" {Y}Mode: {C}NORM ACC (EAAG Tokens){RESET}")
         print(f" {Y}Total Accounts: {G}{len(eaag_tokens)}{RESET}")
         print(f" {Y}Share Speed: {C}0.5-0.6 seconds delay per share{RESET}")
-        print(f" {Y}Post ID: {G}{post_id}{RESET}")
-        print(f" {Y}Your Plan: {G}{user_data['plan'].upper()}{RESET}")
+        print(f" {Y}Mode: {C}NORM ACC (EAAG Tokens){RESET}")
         print(LINE)
-        print(f" {G}[!] STARTING AUTO SHARE V2 (NORM ACC MODE)...{RESET}")
+        print(f" {G}[!] STARTING AUTO SHARE V2...{RESET}")
         print(f" {Y}[TIP] Press Ctrl+C to stop{RESET}")
         print(LINE)
         
@@ -1615,70 +1538,112 @@ async def auto_share_v2_main(link):
         
         await asyncio.gather(*tasks)
 
-def start_auto_share_v1():
-    """Entry point for auto share V1 feature (PAGE & NORM ACCOUNTS)."""
+def select_cookies_for_v2():
+    """Let user select which cookies to use for V2 sharing."""
     refresh_screen()
-    print(f" {G}[AUTO SHARE - PAGE & NORM ACCOUNTS]{RESET}")
+    print(f" {G}[!] LOADING ACCOUNTS FROM DATABASE...{RESET}")
+    nice_loader("LOADING")
+    
+    status, response = api_request("GET", "/user/accounts")
+    
+    if status != 200 or not response.get('success'):
+        print(f" {R}[ERROR] Failed to load accounts{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return None
+    
+    accounts = response.get('accounts', [])
+    
+    if not accounts:
+        print(f" {R}[ERROR] No accounts stored in database{RESET}")
+        print(f" {Y}[TIP] Use option 4 to add paired accounts{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return None
+    
+    refresh_screen()
+    print(f" {C}[SELECT COOKIES FOR AUTO SHARE V2]{RESET}")
     print(LINE)
-    print(f" {Y}[!] ENTER POST LINK OR ID (Leave empty to back){RESET}")
+    print(f" {W}[{BG_G}{W}ALL{RESET}{W}]{RESET} {G}USE ALL ACCOUNTS{RESET}")
+    print(LINE)
     
-    prompt = f" {W}[{W}➤{W}]{RESET} {C}POST LINK/ID {W}➤{RESET} "
+    for i, acc in enumerate(accounts, 1):
+        letter = chr(64 + i) if i <= 26 else str(i)
+        print(f" {W}[{BG_C}{W}{i:02d}{RESET}{Y}/{BG_C}{W}{letter}{RESET}{W}]{RESET} {C}{acc['name']}{RESET} {W}({Y}UID: {acc['uid']}{W}){RESET}")
     
-    try:
-        link = input(prompt)
-    except KeyboardInterrupt:
-        return
+    print(LINE)
+    print(f" {Y}[TIP] Enter numbers separated by commas (e.g., 1,2,3) or type 'ALL'{RESET}")
+    print(LINE)
     
-    if not link.strip():
-        return
+    selection = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT {W}➤{RESET} ").strip().upper()
     
-    try:
-        asyncio.run(auto_share_v1_main(link))
-    except KeyboardInterrupt:
-        refresh_screen()
-        print(f" {Y}[!] AUTO SHARE STOPPED BY USER{RESET}")
-        stop_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f" {Y}[!] Stop Time: {stop_time}{RESET}")
-        
-        print(f" {G}[!] Total Successful Shares: {success_count}{RESET}")
-        print(LINE)
-        
-        if success_count > 0:
-            api_request("POST", "/share/complete", {"totalShares": success_count})
-            print(f" {G}[!] Shares recorded to your account{RESET}")
-        
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-    except Exception as e:
-        refresh_screen()
-        print(f" {R}[ERROR] An unexpected error occurred:{RESET}")
-        print(f" {R}{str(e)}{RESET}")
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+    if not selection:
+        return None
+    
+    selected_accounts = []
+    
+    if selection == 'ALL':
+        selected_accounts = accounts
+    else:
+        try:
+            # Handle both numbers and letters
+            parts = selection.replace(',', ' ').split()
+            for part in parts:
+                if part.isdigit():
+                    idx = int(part) - 1
+                    if 0 <= idx < len(accounts):
+                        selected_accounts.append(accounts[idx])
+                elif len(part) == 1 and part.isalpha():
+                    idx = ord(part) - 65
+                    if 0 <= idx < len(accounts):
+                        selected_accounts.append(accounts[idx])
+        except:
+            print(f" {R}[ERROR] Invalid selection{RESET}")
+            time.sleep(1)
+            return None
+    
+    if not selected_accounts:
+        print(f" {R}[ERROR] No valid accounts selected{RESET}")
+        time.sleep(1)
+        return None
+    
+    # Confirmation
+    refresh_screen()
+    print(f" {Y}[CONFIRM SELECTION]{RESET}")
+    print(LINE)
+    print(f" {Y}Selected {G}{len(selected_accounts)}{Y} account(s):{RESET}")
+    for acc in selected_accounts:
+        print(f"   • {C}{acc['name']}{RESET} {W}({Y}UID: {acc['uid']}{W}){RESET}")
+    print(LINE)
+    
+    confirm = input(f" {W}[{W}➤{W}]{RESET} {Y}Confirm? (Y/N) {W}➤{RESET} ").strip().upper()
+    
+    if confirm == 'Y':
+        return selected_accounts
+    else:
+        return None
 
 def start_auto_share_v2():
-    """Entry point for auto share V2 feature (NORMAL ACCOUNTS)."""
+    """Entry point for auto share V2 feature (NORM ACC)."""
+    selected_cookies = select_cookies_for_v2()
+    
+    if not selected_cookies:
+        return
+    
     refresh_screen()
-    print(f" {C}[AUTO SHARE V2 - NORMAL ACCOUNTS]{RESET}")
+    print(f" {C}[AUTO SHARE V2 - NORM ACC]{RESET}")
     print(LINE)
-    print(f" {Y}[!] ENTER POST LINK OR ID (Leave empty to back){RESET}")
     
-    prompt = f" {W}[{W}➤{W}]{RESET} {C}POST LINK/ID {W}➤{RESET} "
+    link_or_id = input(f" {W}[{W}➤{W}]{RESET} {C}POST LINK OR ID {W}➤{RESET} ").strip()
     
-    try:
-        link = input(prompt)
-    except KeyboardInterrupt:
-        return
-    
-    if not link.strip():
+    if not link_or_id:
         return
     
     try:
-        asyncio.run(auto_share_v2_main(link))
+        asyncio.run(auto_share_v2_main(link_or_id, selected_cookies))
     except KeyboardInterrupt:
         refresh_screen()
         print(f" {Y}[!] AUTO SHARE V2 STOPPED BY USER{RESET}")
         stop_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(f" {Y}[!] Stop Time: {stop_time}{RESET}")
-        
         print(f" {G}[!] Total Successful Shares: {success_count_v2}{RESET}")
         print(LINE)
         
@@ -1722,7 +1687,7 @@ def main():
                 time.sleep(0.8)
         else:
             if choice in ['1', '01', 'A']:
-                start_auto_share_v1()
+                start_auto_share()
                 
             elif choice in ['2', '02', 'B']:
                 start_auto_share_v2()
@@ -1732,7 +1697,7 @@ def main():
                 
             elif choice in ['4', '04', 'D']:
                 manage_cookie_token()
-                
+            
             elif choice in ['5', '05', 'E']:
                 show_user_stats()
             
