@@ -10,7 +10,6 @@ import datetime
 import requests
 import re
 import random
-import uuid
 
 # --- NEON COLOR PALETTE ---
 R = '\033[1;31m'   # Red (Bold)
@@ -34,108 +33,113 @@ RESET = '\033[0m'  # Reset
 LINE = f"{G}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}"
 
 # --- API CONFIGURATION ---
-API_URL = "https://rpwtools.onrender.com/api"
+API_URL = "https://rpwtools.onrender.com/api"  # Render server URL
 user_token = None
 user_data = None
 
-# --- GLOBAL VARIABLES ---
+# --- GLOBAL VARIABLES FOR AUTO SHARE V1 (PAGE & NORM ACC) ---
 success_count = 0
-success_count_v2 = 0
-pages_created_count = 0
 lock = asyncio.Lock()
-lock_v2 = asyncio.Lock()
 global_pause_event = asyncio.Event()
-global_pause_event.set()
+global_pause_event.set()  # Initially not paused
+
+# --- GLOBAL VARIABLES FOR AUTO SHARE V2 (NORM ACC) ---
+success_count_v2 = 0
+lock_v2 = asyncio.Lock()
 eaag_tokens = []
 
-# --- PAGE NAME GENERATORS ---
-PAGE_NAME_PREFIXES = ["The", "Amazing", "Best", "Super", "Ultra", "Pro", "Elite", "Prime", "Top", "Royal", "Golden", "Silver", "Diamond", "Crystal", "Magic", "Digital", "Smart", "Fast", "Quick", "Easy", "Fresh", "New", "Modern", "Classic", "Premium", "Luxury", "Expert", "Master", "Power", "Max"]
-PAGE_NAME_WORDS = ["Shop", "Store", "Market", "Hub", "Zone", "Center", "Place", "Spot", "World", "Planet", "Galaxy", "Universe", "Kingdom", "Empire", "Nation", "Land", "City", "Town", "Village", "House", "Home", "Room", "Space", "Studio", "Lab", "Factory", "Works", "Co", "Inc", "Group", "Team", "Squad", "Crew", "Club", "Society", "Community", "Network", "Connect", "Link", "Bridge", "Tech", "Digital", "Online", "Web", "Net", "Cloud", "Data", "Info", "Media", "News", "Blog", "Channel", "Stream", "Cast", "Show", "Live", "Now", "Today", "Daily", "Weekly"]
-PAGE_NAME_SUFFIXES = ["Official", "PH", "USA", "Global", "International", "Worldwide", "Online", "24/7", "Express", "Direct", "Plus", "Pro", "VIP", "Premium", "Gold", "Platinum", "Elite", "Supreme", "Ultimate", "Extreme", "2024", "2025", "New", "Fresh", "Hot", "Trending", "Viral", "Popular", "Famous", "Best"]
-PAGE_CATEGORIES = [{"id": "2214", "name": "Public Figure"}, {"id": "2200", "name": "Community"}, {"id": "1601", "name": "Business"}, {"id": "2612", "name": "Entertainment"}, {"id": "2500", "name": "Brand"}, {"id": "2301", "name": "Local Business"}, {"id": "2707", "name": "Musician/Band"}, {"id": "2600", "name": "TV Show"}, {"id": "2603", "name": "Movie"}, {"id": "2606", "name": "Sports Team"}, {"id": "2611", "name": "Artist"}, {"id": "2700", "name": "Comedian"}, {"id": "1900", "name": "Product/Service"}, {"id": "2201", "name": "Organization"}, {"id": "2210", "name": "Personal Blog"}]
-
 def clear():
+    """Clears the terminal screen completely."""
     os.system('clear')
 
 def normalize_facebook_url(url):
+    """
+    Normalize Facebook URL to facebook.com/username format.
+    Removes https://, www., m., and standardizes to facebook.com
+    """
     if not url:
         return url
+    
     url = url.strip()
     url = re.sub(r'^https?://', '', url, flags=re.IGNORECASE)
     url = re.sub(r'^(www\.|m\.)', '', url, flags=re.IGNORECASE)
+    
     if not url.startswith('facebook.com'):
         if '/' not in url:
             url = f'facebook.com/{url}'
+    
     return url
 
-def generate_random_page_name():
-    style = random.randint(1, 5)
-    if style == 1:
-        name = f"{random.choice(PAGE_NAME_PREFIXES)} {random.choice(PAGE_NAME_WORDS)} {random.choice(PAGE_NAME_SUFFIXES)}"
-    elif style == 2:
-        name = f"{random.choice(PAGE_NAME_WORDS)} {random.choice(PAGE_NAME_WORDS)}"
-    elif style == 3:
-        name = f"{random.choice(PAGE_NAME_PREFIXES)} {random.choice(PAGE_NAME_WORDS)}"
-    elif style == 4:
-        name = f"{random.choice(PAGE_NAME_WORDS)} {random.choice(PAGE_NAME_SUFFIXES)}"
-    else:
-        name = f"{random.choice(PAGE_NAME_PREFIXES)} {random.choice(PAGE_NAME_WORDS)} {random.randint(1, 999)}"
-    unique_id = ''.join(random.choices('0123456789', k=random.randint(2, 4)))
-    if random.random() > 0.5:
-        name = f"{name} {unique_id}"
-    return name
-
-def get_random_category():
-    return random.choice(PAGE_CATEGORIES)
-
 def banner_header():
+    """Prints the static top part (Banner + Info)."""
     print(f"""{C}
     ╦═╗╔═╗╦ ╦╔╦╗╔═╗╔═╗╦  ╔═╗
     ╠╦╝╠═╝║║║ ║ ║ ║║ ║║  ╚═╗
     ╩╚═╩  ╚╩╝ ╩ ╚═╝╚═╝╩═╝╚═╝
     {RESET}""")
+
     print(LINE)
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'DEVELOPER':<13} {W}➤{RESET} {G}KEN DRICK{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'GITHUB':<13} {W}➤{RESET} {G}RYO GRAHHH{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}1.0.0{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}facebook.com/ryoevisu{RESET}")
+    
     tool_name = f"{R}[ {BG_R}{W}RPWTOOLS{RESET}{R} ]{RESET}"
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'TOOL\\'S NAME':<13} {W}➤{RESET} {tool_name}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'TOOL\'S NAME':<13} {W}➤{RESET} {tool_name}")
     
     if user_data:
         print(LINE)
-        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'USERNAME':<13} {W}➤{RESET} {G}{user_data['username'].upper()}{RESET}")
-        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}{user_data.get('facebook', 'N/A')}{RESET}")
-        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'COUNTRY':<13} {W}➤{RESET} {G}{user_data.get('country', 'N/A').upper()}{RESET}")
+        username_display = user_data['username'].upper()
+        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'USERNAME':<13} {W}➤{RESET} {G}{username_display}{RESET}")
         
+        fb_link = user_data.get('facebook', 'N/A')
+        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}{fb_link}{RESET}")
+        
+        country_display = user_data.get('country', 'N/A').upper()
+        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'COUNTRY':<13} {W}➤{RESET} {G}{country_display}{RESET}")
+        
+        # Color-coded plan display with background colors
         user_plan = user_data['plan']
         if user_plan == 'max':
-            plan_display = f"{M}[ {BG_M}{W}MAX{RESET}{M} ]{RESET}"
+            plan_display = f"{M}[ \033[45m{W}MAX{RESET}{M} ]{RESET}"  # Magenta background
         elif user_plan == 'vip':
-            plan_display = f"{G}[ {BG_G}{W}VIP{RESET}{G} ]{RESET}"
-        else:
-            plan_display = f"{W}[ {BG_W}{BLACK}FREE{RESET}{W} ]{RESET}"
+            plan_display = f"{G}[ \033[42m{W}VIP{RESET}{G} ]{RESET}"  # Green background
+        else:  # free
+            plan_display = f"{W}[ \033[47m\033[30mFREE{RESET}{W} ]{RESET}"  # White background with black text
+        
         print(f" {W}[{RESET}•{W}]{RESET} {Y}{'PLAN':<13} {W}➤{RESET} {plan_display}")
         
         if user_data.get('planExpiry'):
             print(f" {W}[{RESET}•{W}]{RESET} {Y}{'PLAN EXPIRY IN':<13} {W}➤{RESET} {Y}{user_data['planExpiry']}{RESET}")
         
-        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'PAIRED ACC':<13} {W}➤{RESET} {C}{user_data.get('accountCount', 0)}{RESET}")
-        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'ALL COOKIES':<13} {W}➤{RESET} {C}{user_data.get('allCookies', 0)}{RESET}")
-        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'ALL TOKENS':<13} {W}➤{RESET} {C}{user_data.get('allTokens', 0)}{RESET}")
+        # Show paired accounts count
+        account_count = user_data.get('accountCount', 0)
+        all_cookies = user_data.get('allCookies', 0)
+        all_tokens = user_data.get('allTokens', 0)
+        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'PAIRED ACC':<13} {W}➤{RESET} {C}{account_count}{RESET}")
+        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'ALL COOKIES':<13} {W}➤{RESET} {C}{all_cookies}{RESET}")
+        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'ALL TOKENS':<13} {W}➤{RESET} {C}{all_tokens}{RESET}")
+    
     print(LINE)
 
 def menu_item(num, letter, text, color, bg_color, desc=""):
-    bracket_display = f"{bg_color}{W}[{num}/{letter}]{RESET}"
-    padding = 22 - len(text)
+    """Create a menu item with colored number background."""
+    num_display = f"{bg_color}{BLACK}{num}{RESET}"
+    letter_display = f"{bg_color}{BLACK}{letter}{RESET}"
+    
+    # Calculate padding for alignment (— should align)
+    base_text_len = len(text)
+    padding = 22 - base_text_len  # Adjust padding for alignment
     if padding < 1:
         padding = 1
+    
     if desc:
-        return f" {bracket_display} {color}{text}{RESET}{' ' * padding}{W}—{RESET} {W}{desc}{RESET}"
+        return f" {color}[{num_display}{color}/{letter_display}{color}]{RESET} {color}{text}{RESET}{' ' * padding}{W}—{RESET} {W}{desc}{RESET}"
     else:
-        return f" {bracket_display} {color}{text}{RESET}"
+        return f" {color}[{num_display}{color}/{letter_display}{color}]{RESET} {color}{text}{RESET}"
 
 def show_menu():
+    """Prints the Menu Options with colorful styling."""
     if not user_token:
         print(menu_item("01", "A", "LOGIN", G, BG_G))
         print(menu_item("02", "B", "REGISTER", C, BG_C))
@@ -143,58 +147,73 @@ def show_menu():
     elif user_data and user_data.get('isAdmin'):
         print(menu_item("01", "A", "AUTO SHARE", G, BG_G, "PAGE & NORM ACCOUNTS"))
         print(menu_item("02", "B", "AUTO SHARE V2", C, BG_C, "NORMAL ACCOUNTS"))
-        print(menu_item("03", "C", "AUTO CREATE PAGE", M, BG_M, "FB PAGE CREATOR"))
-        print(menu_item("04", "D", "COOKIE TO TOKEN", Y, BG_Y, "CONVERT"))
-        print(menu_item("05", "E", "MANAGE ACCOUNTS", B, BG_B, "COOKIE & TOKEN"))
-        print(menu_item("06", "F", "MY STATS", C, BG_C, "VIEW STATISTICS"))
-        print(menu_item("07", "G", "ADMIN PANEL", M, BG_M, "MANAGE USERS"))
-        print(menu_item("08", "H", "UPDATE TOOL", G, BG_G, "CHECK UPDATES"))
+        print(menu_item("03", "C", "COOKIE TO TOKEN", M, BG_M, "CONVERT"))
+        print(menu_item("04", "D", "MANAGE ACCOUNTS", Y, BG_Y, "COOKIE & TOKEN"))
+        print(menu_item("05", "E", "MY STATS", B, BG_B, "VIEW STATISTICS"))
+        print(menu_item("06", "F", "ADMIN PANEL", M, BG_M, "MANAGE USERS"))
+        print(menu_item("07", "G", "UPDATE TOOL", C, BG_C, "CHECK UPDATES"))
         print(menu_item("00", "X", "LOGOUT", R, BG_R))
     else:
         print(menu_item("01", "A", "AUTO SHARE", G, BG_G, "PAGE & NORM ACCOUNTS"))
         print(menu_item("02", "B", "AUTO SHARE V2", C, BG_C, "NORMAL ACCOUNTS"))
-        print(menu_item("03", "C", "AUTO CREATE PAGE", M, BG_M, "FB PAGE CREATOR"))
-        print(menu_item("04", "D", "COOKIE TO TOKEN", Y, BG_Y, "CONVERT"))
-        print(menu_item("05", "E", "MANAGE ACCOUNTS", B, BG_B, "COOKIE & TOKEN"))
-        print(menu_item("06", "F", "MY STATS", C, BG_C, "VIEW STATISTICS"))
-        print(menu_item("07", "G", "UPDATE TOOL", G, BG_G, "CHECK UPDATES"))
+        print(menu_item("03", "C", "COOKIE TO TOKEN", M, BG_M, "CONVERT"))
+        print(menu_item("04", "D", "MANAGE ACCOUNTS", Y, BG_Y, "COOKIE & TOKEN"))
+        print(menu_item("05", "E", "MY STATS", B, BG_B, "VIEW STATISTICS"))
+        print(menu_item("06", "F", "UPDATE TOOL", C, BG_C, "CHECK UPDATES"))
         print(menu_item("00", "X", "LOGOUT", R, BG_R))
+    
     print(LINE)
 
 def refresh_screen():
+    """Instantly wipes screen and repaints the UI base."""
     clear()
     banner_header()
     show_menu()
 
 def nice_loader(text="PROCESSING"):
+    """Improved Progress Bar Loader."""
     sys.stdout.write("\033[?25l")
-    filled, empty, width = "■", "□", 20
+    
+    filled = "■"
+    empty = "□"
+    width = 20
+    
     for i in range(width + 1):
         percent = int((i / width) * 100)
         bar = filled * i + empty * (width - i)
         color = G if i == width else C
+        
         sys.stdout.write(f"\r {W}[{RESET}•{W}]{RESET} {Y}{text:<10} {W}➤{RESET} {color}[{bar}] {percent}%{RESET}")
         sys.stdout.flush()
-        time.sleep(0.04)
-    time.sleep(0.3)
+        time.sleep(0.04) 
+    
+    time.sleep(0.3) 
     sys.stdout.write(f"\r{' ' * 65}\r")
     sys.stdout.flush()
     sys.stdout.write("\033[?25h")
 
+# ============ API FUNCTIONS ============
+
 def get_country_from_ip():
+    """Auto-detect country from IP address"""
     try:
         response = requests.get('http://ip-api.com/json/', timeout=5)
         if response.status_code == 200:
-            return response.json().get('country', 'Unknown')
+            data = response.json()
+            return data.get('country', 'Unknown')
     except:
         pass
     return 'Unknown'
 
 def api_request(method, endpoint, data=None, use_token=True):
+    """Make API request to server"""
     headers = {"Content-Type": "application/json"}
+    
     if use_token and user_token:
         headers["Authorization"] = f"Bearer {user_token}"
+    
     url = f"{API_URL}{endpoint}"
+    
     try:
         if method == "GET":
             response = requests.get(url, headers=headers, timeout=10)
@@ -206,101 +225,190 @@ def api_request(method, endpoint, data=None, use_token=True):
             response = requests.delete(url, headers=headers, timeout=10)
         else:
             return None, "Invalid method"
+        
         return response.status_code, response.json()
     except requests.exceptions.ConnectionError:
-        return None, "Cannot connect to server."
+        return None, "Cannot connect to server. Make sure server is running."
     except requests.exceptions.Timeout:
-        return None, "Request timeout."
+        return None, "Request timeout. Server not responding."
     except Exception as e:
         return None, f"Error: {str(e)}"
 
 def login_user():
+    """Login user"""
     global user_token, user_data
+    
     refresh_screen()
     print(f" {G}[!] LOGIN TO RPWTOOLS{RESET}")
     print(LINE)
+    
     username = input(f" {W}[{W}➤{W}]{RESET} {C}USERNAME {W}➤{RESET} ").strip()
     if not username:
         return
+    
     password = input(f" {W}[{W}➤{W}]{RESET} {C}PASSWORD {W}➤{RESET} ").strip()
     if not password:
         return
+    
     refresh_screen()
     nice_loader("LOGGING IN")
-    status, response = api_request("POST", "/auth/login", {"username": username, "password": password}, use_token=False)
+    
+    status, response = api_request("POST", "/auth/login", {
+        "username": username,
+        "password": password
+    }, use_token=False)
+    
     if status == 200 and response.get('success'):
         user_token = response.get('token')
         user_data = response.get('user')
+        
         print(f" {G}[SUCCESS] Login successful!{RESET}")
         print(LINE)
         print(f" {Y}Welcome back, {G}{user_data['username'].upper()}{RESET}")
         print(f" {Y}Plan: {G}{user_data['plan'].upper()}{RESET}")
+        print(f" {Y}Paired Accounts: {C}{user_data.get('accountCount', 0)}{RESET}")
+        print(f" {Y}All Cookies: {C}{user_data.get('allCookies', 0)}{RESET}")
+        print(f" {Y}All Tokens: {C}{user_data.get('allTokens', 0)}{RESET}")
+        
         if user_data.get('isAdmin'):
             print(f" {M}[ADMIN ACCESS GRANTED]{RESET}")
+        
         print(LINE)
     else:
         print(f" {R}[ERROR] {response if isinstance(response, str) else response.get('message', 'Login failed')}{RESET}")
         print(LINE)
+    
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
 def register_user():
+    """Register new user"""
     global user_token, user_data
+    
     refresh_screen()
     print(f" {G}[!] REGISTER NEW ACCOUNT{RESET}")
     print(LINE)
+    
     username = input(f" {W}[{W}➤{W}]{RESET} {C}USERNAME {W}➤{RESET} ").strip()
     if not username:
         return
+    
     password = input(f" {W}[{W}➤{W}]{RESET} {C}PASSWORD {W}➤{RESET} ").strip()
     if not password:
         return
+    
     facebook = input(f" {W}[{W}➤{W}]{RESET} {C}FACEBOOK LINK {W}➤{RESET} ").strip()
     if not facebook:
         return
+    
     facebook = normalize_facebook_url(facebook)
+    
+    refresh_screen()
+    print(f" {G}[!] NORMALIZED FACEBOOK URL: {Y}{facebook}{RESET}")
+    print(LINE)
+    
     print(f" {G}[!] DETECTING YOUR COUNTRY...{RESET}")
     nice_loader("DETECTING")
+    
     country = get_country_from_ip()
+    
     refresh_screen()
     print(f" {G}[!] DETECTED COUNTRY: {Y}{country}{RESET}")
     print(LINE)
     confirm = input(f" {W}[{W}➤{W}]{RESET} {Y}Is this correct? (Y/N) {W}➤{RESET} ").strip().upper()
+    
     if confirm == 'N':
         country = input(f" {W}[{W}➤{W}]{RESET} {C}ENTER YOUR COUNTRY {W}➤{RESET} ").strip()
+    
     refresh_screen()
     nice_loader("REGISTERING")
-    status, response = api_request("POST", "/auth/register", {"username": username, "password": password, "facebook": facebook, "country": country}, use_token=False)
+    
+    status, response = api_request("POST", "/auth/register", {
+        "username": username,
+        "password": password,
+        "facebook": facebook,
+        "country": country
+    }, use_token=False)
+    
     if status == 201 and response.get('success'):
         user_token = response.get('token')
         user_data = response.get('user')
+        
         print(f" {G}[SUCCESS] Registration successful!{RESET}")
+        print(LINE)
+        print(f" {Y}Welcome, {G}{user_data['username'].upper()}{RESET}")
+        print(f" {Y}Plan: {G}{user_data['plan'].upper()}{RESET}")
+        print(f" {Y}Country: {G}{user_data['country']}{RESET}")
+        print(f" {Y}Facebook: {G}{facebook}{RESET}")
         print(LINE)
     else:
         print(f" {R}[ERROR] {response if isinstance(response, str) else response.get('message', 'Registration failed')}{RESET}")
         print(LINE)
+    
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
 def show_user_stats():
+    """Display user statistics"""
     refresh_screen()
     print(f" {G}[!] LOADING STATS...{RESET}")
     nice_loader("LOADING")
+    
     status, response = api_request("GET", "/user/stats")
+    
     if status == 200 and response.get('success'):
         stats = response.get('stats')
+        
         refresh_screen()
         print(f" {G}[USER STATISTICS]{RESET}")
         print(LINE)
         print(f" {Y}Username: {W}{stats['username'].upper()}{RESET}")
-        print(f" {Y}Plan: {G}{stats['plan'].upper()}{RESET}")
+        
+        plan_color = G if stats['plan'] == 'max' else Y if stats['plan'] == 'vip' else W
+        print(f" {Y}Plan: {plan_color}{stats['plan'].upper()}{RESET}")
+        
+        if stats.get('planExpiry'):
+            print(f" {Y}Plan Expiry In: {W}{stats['planExpiry']}{RESET}")
+        
+        print(LINE)
+        print(f" {C}[STATISTICS]{RESET}")
         print(f" {Y}Total Shares: {G}{stats['totalShares']}{RESET}")
         print(f" {Y}Total Cookie Converts: {G}{stats['totalCookieConverts']}{RESET}")
+        print(f" {Y}Paired Accounts: {C}{stats.get('accountCount', 0)}{RESET}")
+        print(f" {Y}All Cookies: {C}{stats.get('allCookies', 0)}{RESET}")
+        print(f" {Y}All Tokens: {C}{stats.get('allTokens', 0)}{RESET}")
+        print(LINE)
+        
+        global_pause = stats.get('globalPause', {})
+        share_cd = stats.get('shareCooldown', {})
+        cookie_cd = stats.get('cookieCooldown', {})
+        
+        print(f" {C}[COOLDOWN STATUS]{RESET}")
+        
+        if global_pause.get('active'):
+            print(f" {R}⚠ GLOBAL PAUSE ACTIVE (All Accounts Blocked) ⚠{RESET}")
+            print(f" {R}Remaining: {global_pause['remainingSeconds']}s{RESET}")
+            print(f" {Y}Available at: {W}{global_pause['availableAt']}{RESET}")
+        else:
+            if share_cd.get('active'):
+                print(f" {R}Share Cooldown: {share_cd['remainingSeconds']}s remaining{RESET}")
+                print(f" {Y}Available at: {W}{share_cd['availableAt']}{RESET}")
+            else:
+                print(f" {G}Share: Ready ✓{RESET}")
+            
+            if cookie_cd.get('active'):
+                print(f" {R}Cookie Convert Cooldown: {cookie_cd['remainingSeconds']}s remaining{RESET}")
+                print(f" {Y}Available at: {W}{cookie_cd['availableAt']}{RESET}")
+            else:
+                print(f" {G}Cookie Convert: Ready ✓{RESET}")
+        
         print(LINE)
     else:
-        print(f" {R}[ERROR] Failed to get stats{RESET}")
+        print(f" {R}[ERROR] {response if isinstance(response, str) else response.get('message', 'Failed to get stats')}{RESET}")
         print(LINE)
+    
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
 def manage_cookie_token():
+    """Manage paired cookie & token accounts"""
     while True:
         refresh_screen()
         print(f" {G}[MANAGE COOKIE & TOKEN]{RESET}")
@@ -311,7 +419,9 @@ def manage_cookie_token():
         print(menu_item("04", "D", "DELETE ALL", R, BG_R, "ALL ACCOUNTS"))
         print(menu_item("00", "X", "BACK", Y, BG_Y))
         print(LINE)
+        
         choice = input(f" {W}[{W}➤{W}]{RESET} {C}CHOICE {W}➤{RESET} ").strip().upper()
+        
         if choice in ['1', '01', 'A']:
             view_accounts()
         elif choice in ['2', '02', 'B']:
@@ -322,134 +432,265 @@ def manage_cookie_token():
             delete_all_accounts()
         elif choice in ['0', '00', 'X']:
             return
+        else:
+            print(f"\n {R}[!] INVALID SELECTION{RESET}")
+            time.sleep(0.8)
 
 def view_accounts():
+    """View all paired accounts"""
     refresh_screen()
+    print(f" {G}[!] LOADING ACCOUNTS...{RESET}")
     nice_loader("LOADING")
+    
     status, response = api_request("GET", "/user/accounts")
+    
     if status == 200 and response.get('success'):
         accounts = response.get('accounts', [])
+        
         refresh_screen()
         print(f" {G}[PAIRED ACCOUNTS] Total: {len(accounts)}{RESET}")
         print(LINE)
+        
         if not accounts:
             print(f" {Y}No accounts stored yet.{RESET}")
         else:
             for i, acc in enumerate(accounts, 1):
                 print(f" {W}[{i:02d}]{RESET} {M}{acc['name']}{RESET} {W}({C}UID: {acc['uid']}{W}){RESET}")
+                cookie_preview = acc['cookie'][:30] + "..." if len(acc['cookie']) > 30 else acc['cookie']
+                token_preview = acc['token'][:30] + "..." if len(acc['token']) > 30 else acc['token']
+                print(f"      Cookie: {C}{cookie_preview}{RESET}")
+                print(f"      Token: {C}{token_preview}{RESET}")
+                print(f"      Added: {Y}{acc['addedAt']}{RESET}")
                 print(LINE)
+        
     else:
         print(f" {R}[ERROR] Failed to load accounts{RESET}")
+        print(LINE)
+    
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
 def add_account():
+    """Add new paired cookie & token account"""
     refresh_screen()
     print(f" {G}[ADD ACCOUNT]{RESET}")
+    print(f" {Y}[TIP] You need to provide both Cookie and Token for the same account.{RESET}")
     print(LINE)
+    
     cookie = input(f" {W}[{W}➤{W}]{RESET} {C}COOKIE {W}➤{RESET} ").strip()
     if not cookie:
         return
+    
     token = input(f" {W}[{W}➤{W}]{RESET} {C}TOKEN {W}➤{RESET} ").strip()
     if not token:
         return
+    
+    refresh_screen()
     nice_loader("VALIDATING")
-    status, response = api_request("POST", "/user/accounts", {"cookie": cookie, "token": token})
-    if status == 200 and response.get('success'):
-        print(f" {G}[SUCCESS] Account added!{RESET}")
+    
+    status, response = api_request("POST", "/user/accounts", {
+        "cookie": cookie,
+        "token": token
+    })
+    
+    if status == 200 and isinstance(response, dict) and response.get('success'):
+        print(f" {G}[SUCCESS] {response.get('message')}{RESET}")
+        print(LINE)
+        print(f" {Y}Name: {M}{response.get('name', 'Unknown')}{RESET}")
+        print(f" {Y}UID: {C}{response.get('uid', 'Unknown')}{RESET}")
+        print(LINE)
+        
         if user_data:
             user_data['accountCount'] = response.get('totalAccounts', 0)
+            user_data['allCookies'] = response.get('allCookies', 0)
+            user_data['allTokens'] = response.get('allTokens', 0)
     else:
-        print(f" {R}[ERROR] Failed to add account{RESET}")
+        error_msg = response if isinstance(response, str) else response.get('message', 'Failed to add account') if isinstance(response, dict) else 'Failed to add account'
+        print(f" {R}[ERROR] {error_msg}{RESET}")
+        print(LINE)
+    
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
 def delete_account():
+    """Delete a specific account"""
     refresh_screen()
+    print(f" {G}[!] LOADING ACCOUNTS...{RESET}")
     nice_loader("LOADING")
+    
     status, response = api_request("GET", "/user/accounts")
-    if status != 200 or not response.get('success'):
-        print(f" {R}[ERROR] Failed to load accounts{RESET}")
+    
+    if status != 200 or not isinstance(response, dict) or not response.get('success'):
+        error_msg = response if isinstance(response, str) else 'Failed to load accounts'
+        print(f" {R}[ERROR] {error_msg}{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
+    
     accounts = response.get('accounts', [])
+    
     if not accounts:
+        refresh_screen()
         print(f" {Y}No accounts to delete.{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
+    
     refresh_screen()
     print(f" {R}[DELETE ACCOUNT]{RESET}")
     print(LINE)
+    
     for i, acc in enumerate(accounts, 1):
-        print(f" {W}[{i}]{RESET} {M}{acc['name']}{RESET}")
+        letter = chr(64 + i) if i <= 26 else str(i)
+        print(menu_item(f"{i:02d}", letter, acc['name'], M, BG_M, f"UID: {acc['uid']}"))
+    
     print(LINE)
-    choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT NUMBER (0 to cancel) {W}➤{RESET} ").strip()
+    
+    choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT ACCOUNT NUMBER (0 to cancel) {W}➤{RESET} ").strip()
+    
     if not choice or choice == '0':
         return
+    
     try:
         acc_index = int(choice) - 1
-        if 0 <= acc_index < len(accounts):
-            nice_loader("DELETING")
-            status, response = api_request("DELETE", f"/user/accounts/{accounts[acc_index]['id']}")
-            if status == 200 and response.get('success'):
-                print(f" {G}[SUCCESS] Account deleted!{RESET}")
+        if acc_index < 0 or acc_index >= len(accounts):
+            print(f" {R}[ERROR] Invalid account number{RESET}")
+            time.sleep(1)
+            return
+        
+        selected_acc = accounts[acc_index]
     except:
-        pass
+        print(f" {R}[ERROR] Invalid input{RESET}")
+        time.sleep(1)
+        return
+    
+    refresh_screen()
+    nice_loader("DELETING")
+    
+    status, response = api_request("DELETE", f"/user/accounts/{selected_acc['id']}")
+    
+    if status == 200 and isinstance(response, dict) and response.get('success'):
+        print(f" {G}[SUCCESS] Account deleted!{RESET}")
+        if user_data:
+            user_data['accountCount'] = response.get('totalAccounts', 0)
+            user_data['allCookies'] = response.get('allCookies', 0)
+            user_data['allTokens'] = response.get('allTokens', 0)
+    else:
+        error_msg = response if isinstance(response, str) else 'Failed to delete account'
+        print(f" {R}[ERROR] {error_msg}{RESET}")
+    
+    print(LINE)
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
 def delete_all_accounts():
+    """Delete all accounts"""
     refresh_screen()
-    confirm = input(f" {W}[{W}➤{W}]{RESET} {R}Delete ALL accounts? (YES/NO) {W}➤{RESET} ").strip().upper()
+    print(f" {R}[DELETE ALL ACCOUNTS]{RESET}")
+    print(LINE)
+    
+    confirm = input(f" {W}[{W}➤{W}]{RESET} {R}Delete ALL accounts? This cannot be undone! (YES/NO) {W}➤{RESET} ").strip().upper()
+    
     if confirm != 'YES':
         return
+    
+    refresh_screen()
     nice_loader("DELETING")
+    
     status, response = api_request("DELETE", "/user/accounts")
+    
     if status == 200 and response.get('success'):
-        print(f" {G}[SUCCESS] All accounts deleted!{RESET}")
+        print(f" {G}[SUCCESS] {response.get('message')}{RESET}")
         if user_data:
             user_data['accountCount'] = 0
+            user_data['allCookies'] = 0
+            user_data['allTokens'] = 0
+    else:
+        print(f" {R}[ERROR] Failed to delete accounts{RESET}")
+    
+    print(LINE)
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
 def cookie_to_token_tool():
+    """Cookie to token converter with cooldown check"""
     nice_loader("LAUNCHING")
+
     while True:
         refresh_screen()
+        
+        status, response = api_request("POST", "/cookie/convert")
+        
+        if status == 429:
+            print(f" {R}[COOLDOWN ACTIVE]{RESET}")
+            print(LINE)
+            print(f" {Y}Remaining Time: {R}{response.get('remainingSeconds', 0)}s{RESET}")
+            print(f" {Y}Available At: {W}{response.get('cooldownEnd', 'N/A')}{RESET}")
+            print(LINE)
+            input(f"\n {Y}[PRESS ENTER TO GO BACK]{RESET}")
+            return
+        
         print(f" {G}[!] ENTER COOKIE TO CONVERT (Leave empty to back){RESET}")
+        
+        prompt = f" {W}[{W}➤{W}]{RESET} {C}COOKIE {W}➤{RESET} "
+        
         try:
-            cookie = input(f" {W}[{W}➤{W}]{RESET} {C}COOKIE {W}➤{RESET} ")
+            cookie = input(prompt)
         except KeyboardInterrupt:
             return
+
         if not cookie.strip():
             return
-        nice_loader("EXTRACTING")
+
+        refresh_screen() 
+        nice_loader("EXTRACTING") 
+
         try:
             encoded_cookie = urllib.parse.quote(cookie.strip())
             url = f"https://kazuxapi.vercel.app/{encoded_cookie}"
+            
             req = urllib.request.Request(url)
             with urllib.request.urlopen(req) as response:
                 data = response.read().decode('utf-8')
                 json_data = json.loads(data)
+                
             if json_data.get("success"):
                 print(f" {G}[SUCCESS] TOKENS GENERATED:{RESET}")
                 print(LINE)
+                
                 tokens = json_data.get("tokens", {})
                 for app_name, token in tokens.items():
                     if token:
                         print(f" {Y}{app_name}:{RESET}")
                         print(f" {W}{token}{RESET}")
                         print(LINE)
+                    else:
+                        print(f" {Y}{app_name}: {R}No Token Found{RESET}")
+                        print(LINE)
+                
+                api_request("POST", "/cookie/convert")
             else:
-                print(f" {R}[FAILED] {json_data.get('error', 'Unknown Error')}{RESET}")
-        except:
+                error = json_data.get("error", "Unknown Error")
+                print(f" {R}[FAILED] {error}{RESET}")
+                print(LINE)
+                
+        except Exception:
             print(f" {R}[ERROR] Network Connection Failed.{RESET}")
+            print(LINE)
+
         input(f"\n {Y}[PRESS ENTER TO CONVERT ANOTHER]{RESET}")
 
 def update_tool_logic():
+    """Simulates an update and restarts the script."""
     print(f" {G}[!] CHECKING FOR UPDATES...{RESET}")
     nice_loader("CHECKING")
+    
+    print(f" {G}[!] NEW VERSION FOUND! DOWNLOADING...{RESET}")
+    nice_loader("UPDATING")
+    
     print(f" {G}[!] UPDATE COMPLETE. RESTARTING...{RESET}")
     time.sleep(1)
+    
     os.execv(sys.executable, ['python'] + sys.argv)
 
+# ============ ADMIN PANEL FUNCTIONS ============
+
 def admin_panel():
+    """Admin panel for managing users"""
     while True:
         refresh_screen()
         print(f" {M}[ADMIN PANEL]{RESET}")
@@ -457,499 +698,1066 @@ def admin_panel():
         print(menu_item("01", "A", "VIEW ALL USERS", G, BG_G))
         print(menu_item("02", "B", "CHANGE USER PLAN", Y, BG_Y))
         print(menu_item("03", "C", "DELETE USER", R, BG_R))
+        print(menu_item("04", "D", "ACTIVITY LOGS", C, BG_C, "VIEW LOGS"))
+        print(menu_item("05", "E", "DASHBOARD", B, BG_B, "STATS"))
         print(menu_item("00", "X", "BACK", Y, BG_Y))
         print(LINE)
+        
         choice = input(f" {W}[{W}➤{W}]{RESET} {C}CHOICE {W}➤{RESET} ").strip().upper()
+        
         if choice in ['1', '01', 'A']:
             view_all_users()
         elif choice in ['2', '02', 'B']:
             change_user_plan()
         elif choice in ['3', '03', 'C']:
             delete_user()
+        elif choice in ['4', '04', 'D']:
+            view_activity_logs()
+        elif choice in ['5', '05', 'E']:
+            dashboard_stats()
         elif choice in ['0', '00', 'X']:
             return
+        else:
+            print(f"\n {R}[!] INVALID SELECTION{RESET}")
+            time.sleep(0.8)
 
 def view_all_users():
+    """View all registered users"""
     refresh_screen()
+    print(f" {G}[!] LOADING USERS...{RESET}")
     nice_loader("LOADING")
+    
     status, response = api_request("GET", "/admin/users")
+    
     if status == 200 and response.get('success'):
         users = response.get('users', [])
+        
         refresh_screen()
         print(f" {G}[ALL USERS] Total: {len(users)}{RESET}")
         print(LINE)
+        
         for i, user in enumerate(users, 1):
-            print(f" {W}[{i:02d}]{RESET} {C}{user['username'].upper()}{RESET} - {G}{user['plan'].upper()}{RESET}")
+            plan_color = G if user['plan'] == 'max' else Y if user['plan'] == 'vip' else W
+            admin_badge = f" {M}[ADMIN]{RESET}" if user.get('isAdmin') else ""
+            
+            print(f" {W}[{i:02d}]{RESET} {C}{user['username'].upper()}{RESET}{admin_badge}")
+            print(f"      Plan: {plan_color}{user['plan'].upper()}{RESET} | Country: {G}{user['country']}{RESET}")
+            print(f"      Shares: {Y}{user['totalShares']}{RESET} | Converts: {Y}{user['totalCookieConverts']}{RESET}")
+            print(f"      Accounts: {C}{user.get('accountCount', 0)}{RESET} | Cookies: {C}{user.get('allCookies', 0)}{RESET} | Tokens: {C}{user.get('allTokens', 0)}{RESET}")
+            print(LINE)
+        
+    else:
+        print(f" {R}[ERROR] Failed to get users{RESET}")
         print(LINE)
+    
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
 def change_user_plan():
+    """Change a user's plan"""
     refresh_screen()
-    status, response = api_request("GET", "/admin/users")
-    if status != 200:
-        return
-    users = response.get('users', [])
-    for i, user in enumerate(users, 1):
-        print(f" {W}[{i}]{RESET} {C}{user['username'].upper()}{RESET}")
+    print(f" {Y}[CHANGE USER PLAN]{RESET}")
     print(LINE)
-    choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT USER NUMBER {W}➤{RESET} ").strip()
-    if not choice:
+    
+    status, response = api_request("GET", "/admin/users")
+    
+    if status != 200 or not response.get('success'):
+        print(f" {R}[ERROR] Failed to load users{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
+    
+    users = response.get('users', [])
+    
+    print(f" {G}[SELECT USER]{RESET}")
+    print(LINE)
+    for i, user in enumerate(users, 1):
+        plan_color = G if user['plan'] == 'max' else Y if user['plan'] == 'vip' else W
+        print(f" {W}[{i}]{RESET} {C}{user['username'].upper()}{RESET} - Plan: {plan_color}{user['plan'].upper()}{RESET}")
+    print(LINE)
+    
+    user_choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT USER NUMBER (0 to cancel) {W}➤{RESET} ").strip()
+    
+    if not user_choice or user_choice == '0':
+        return
+    
     try:
-        user_index = int(choice) - 1
-        if 0 <= user_index < len(users):
-            selected_user = users[user_index]
-            print(f"\n {W}[1]{RESET} FREE  {W}[2]{RESET} VIP  {W}[3]{RESET} MAX")
-            plan_choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT PLAN {W}➤{RESET} ").strip()
-            plan_map = {'1': 'free', '2': 'vip', '3': 'max'}
-            if plan_choice in plan_map:
-                nice_loader("UPDATING")
-                api_request("PUT", f"/admin/users/{selected_user['username']}/plan", {"plan": plan_map[plan_choice]})
-                print(f" {G}[SUCCESS] Plan updated!{RESET}")
+        user_index = int(user_choice) - 1
+        if user_index < 0 or user_index >= len(users):
+            print(f" {R}[ERROR] Invalid user number{RESET}")
+            time.sleep(1)
+            return
+        
+        selected_user = users[user_index]
     except:
-        pass
+        print(f" {R}[ERROR] Invalid input{RESET}")
+        time.sleep(1)
+        return
+    
+    refresh_screen()
+    print(f" {Y}[CHANGE PLAN FOR: {selected_user['username'].upper()}]{RESET}")
+    print(LINE)
+    print(menu_item("01", "A", "FREE", W, BG_W, "5min share CD, 30s cookie CD"))
+    print(menu_item("02", "B", "VIP", Y, BG_Y, "1min share CD, no cookie CD (RENTAL)"))
+    print(menu_item("03", "C", "MAX", G, BG_G, "No cooldowns, unlimited"))
+    print(LINE)
+    
+    plan_choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT PLAN NUMBER {W}➤{RESET} ").strip().upper()
+    
+    plan_map = {'1': 'free', '01': 'free', 'A': 'free', '2': 'vip', '02': 'vip', 'B': 'vip', '3': 'max', '03': 'max', 'C': 'max'}
+    
+    if plan_choice not in plan_map:
+        print(f" {R}[ERROR] Invalid plan{RESET}")
+        time.sleep(1)
+        return
+    
+    new_plan = plan_map[plan_choice]
+    duration = None
+    
+    if new_plan == 'vip':
+        refresh_screen()
+        print(f" {Y}[VIP PLAN DURATION]{RESET}")
+        print(LINE)
+        print(menu_item("01", "A", "1 Month", G, BG_G))
+        print(menu_item("02", "B", "2 Months", C, BG_C))
+        print(menu_item("03", "C", "3 Months", M, BG_M))
+        print(LINE)
+        
+        duration_choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT DURATION {W}➤{RESET} ").strip().upper()
+        
+        duration_map = {'1': 1, '01': 1, 'A': 1, '2': 2, '02': 2, 'B': 2, '3': 3, '03': 3, 'C': 3}
+        
+        if duration_choice not in duration_map:
+            print(f" {R}[ERROR] Invalid duration{RESET}")
+            time.sleep(1)
+            return
+        
+        duration = duration_map[duration_choice]
+    
+    refresh_screen()
+    print(f" {Y}[CONFIRM CHANGE]{RESET}")
+    print(LINE)
+    print(f" User: {C}{selected_user['username'].upper()}{RESET}")
+    print(f" Current Plan: {W}{selected_user['plan'].upper()}{RESET}")
+    print(f" New Plan: {G}{new_plan.upper()}{RESET}")
+    if duration:
+        print(f" Duration: {Y}{duration} month(s){RESET}")
+    print(LINE)
+    
+    confirm = input(f" {W}[{W}➤{W}]{RESET} {Y}Confirm? (Y/N) {W}➤{RESET} ").strip().upper()
+    
+    if confirm != 'Y':
+        return
+    
+    nice_loader("UPDATING")
+    
+    status, response = api_request("PUT", f"/admin/users/{selected_user['username']}/plan", {
+        "plan": new_plan,
+        "duration": duration
+    })
+    
+    if status == 200 and response.get('success'):
+        print(f" {G}[SUCCESS] Plan updated successfully!{RESET}")
+    else:
+        print(f" {R}[ERROR] {response.get('message', 'Failed to update plan')}{RESET}")
+    
+    print(LINE)
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
 def delete_user():
+    """Delete a user account"""
     refresh_screen()
-    status, response = api_request("GET", "/admin/users")
-    if status != 200:
-        return
-    users = response.get('users', [])
-    for i, user in enumerate(users, 1):
-        print(f" {W}[{i}]{RESET} {C}{user['username'].upper()}{RESET}")
+    print(f" {R}[DELETE USER]{RESET}")
     print(LINE)
-    choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT USER NUMBER {W}➤{RESET} ").strip()
-    if not choice:
+    
+    status, response = api_request("GET", "/admin/users")
+    
+    if status != 200 or not response.get('success'):
+        print(f" {R}[ERROR] Failed to load users{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
+    
+    users = response.get('users', [])
+    
+    if not users:
+        print(f" {Y}No users to delete.{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return
+    
+    print(f" {G}[SELECT USER TO DELETE]{RESET}")
+    print(LINE)
+    
+    for i, user in enumerate(users, 1):
+        plan_color = G if user['plan'] == 'max' else Y if user['plan'] == 'vip' else W
+        admin_badge = f" {M}[ADMIN]{RESET}" if user.get('isAdmin') else ""
+        letter = chr(64 + i) if i <= 26 else str(i)
+        
+        print(menu_item(f"{i:02d}", letter, user['username'].upper(), C, BG_C, f"{user['plan'].upper()}{admin_badge}"))
+    
+    print(menu_item("00", "X", "CANCEL", Y, BG_Y))
+    print(LINE)
+    
+    choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT USER {W}➤{RESET} ").strip().upper()
+    
+    if not choice or choice in ['0', '00', 'X']:
+        return
+    
+    selected_user = None
     try:
-        user_index = int(choice) - 1
-        if 0 <= user_index < len(users):
-            confirm = input(f" {R}Delete this user? (YES/NO) {W}➤{RESET} ").strip().upper()
-            if confirm == 'YES':
-                nice_loader("DELETING")
-                api_request("DELETE", f"/admin/users/{users[user_index]['username']}")
-                print(f" {G}[SUCCESS] User deleted!{RESET}")
+        if choice.isdigit():
+            user_index = int(choice) - 1
+            if 0 <= user_index < len(users):
+                selected_user = users[user_index]
+        elif len(choice) == 1 and choice.isalpha():
+            user_index = ord(choice) - 65
+            if 0 <= user_index < len(users):
+                selected_user = users[user_index]
     except:
         pass
+    
+    if not selected_user:
+        print(f" {R}[ERROR] Invalid selection{RESET}")
+        time.sleep(1)
+        return
+    
+    refresh_screen()
+    print(f" {R}[CONFIRM DELETION]{RESET}")
+    print(LINE)
+    print(f" User: {C}{selected_user['username'].upper()}{RESET}")
+    print(f" Plan: {W}{selected_user['plan'].upper()}{RESET}")
+    print(f" Country: {W}{selected_user['country']}{RESET}")
+    print(LINE)
+    
+    confirm = input(f" {W}[{W}➤{W}]{RESET} {R}Delete this user? This cannot be undone! (YES/NO) {W}➤{RESET} ").strip().upper()
+    
+    if confirm != 'YES':
+        return
+    
+    nice_loader("DELETING")
+    
+    status, response = api_request("DELETE", f"/admin/users/{selected_user['username']}")
+    
+    if status == 200 and response.get('success'):
+        print(f" {G}[SUCCESS] User '{selected_user['username']}' deleted successfully!{RESET}")
+    else:
+        print(f" {R}[ERROR] {response.get('message', 'Failed to delete user')}{RESET}")
+    
+    print(LINE)
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
-# ============ AUTO CREATE FB PAGE ============
-
-def create_facebook_page(access_token, page_name, category_id="2214"):
-    client_trace_id = str(uuid.uuid4())
-    post_data = {
-        'method': 'post', 'pretty': 'false', 'format': 'json', 'server_timestamps': 'true', 'locale': 'en_US', 'purpose': 'fetch',
-        'fb_api_req_friendly_name': 'FbBloksActionRootQuery-com.bloks.www.additional.profile.plus.creation.action.category.submit',
-        'fb_api_caller_class': 'graphservice', 'client_doc_id': '11994080423068421059028841356',
-        'variables': json.dumps({"params": {"params": json.dumps({"params": json.dumps({"client_input_params": {"cp_upsell_declined": 0, "category_ids": [category_id], "profile_plus_id": "0", "page_id": "0"}, "server_params": {"INTERNAL__latency_qpl_instance_id": 40168896100127, "screen": "category", "referrer": "pages_tab_launch_point", "name": page_name, "creation_source": "android", "INTERNAL__latency_qpl_marker_id": 36707139, "variant": 5}})}), "bloks_versioning_id": "c3cc18230235472b54176a5922f9b91d291342c3a276e2644dbdb9760b96deec", "app_id": "com.bloks.www.additional.profile.plus.creation.action.category.submit"}, "scale": "1.5", "nt_context": {"styles_id": "e6c6f61b7a86cdf3fa2eaaffa982fbd1", "using_white_navbar": True, "pixel_ratio": 1.5, "is_push_on": True, "bloks_version": "c3cc18230235472b54176a5922f9b91d291342c3a276e2644dbdb9760b96deec"}}),
-        'fb_api_analytics_tags': '["GraphServices"]', 'client_trace_id': client_trace_id
-    }
-    headers = {
-        'authorization': f'OAuth {access_token}',
-        'user-agent': '[FBAN/FB4A;FBAV/417.0.0.33.65;FBBV/480086274;FBDM/{density=1.5,width=720,height=1244};FBLC/en_US;FBRV/0;FBCR/T-Mobile;FBMF/samsung;FBBD/samsung;FBPN/com.facebook.katana;FBDV/SM-N976N;FBSV/7.1.2;FBOP/1;FBCA/x86:armeabi-v7a;]',
-        'content-type': 'application/x-www-form-urlencoded'
-    }
-    try:
-        response = requests.post("https://graph.facebook.com/graphql", data=post_data, headers=headers, timeout=30)
-        response_json = response.json()
-        if 'data' in response_json:
-            success_res = str(response_json)
-            if 'Cannot create Page' in success_res or 'too many Pages' in success_res:
-                return {'success': False, 'message': "Rate limited", 'rate_limited': True}
-            return {'success': True, 'message': "Page created!"}
-        return {'success': False, 'message': "Failed"}
-    except Exception as e:
-        return {'success': False, 'message': str(e)}
-
-def show_countdown_timer(seconds, message="Next page creation in"):
-    for remaining in range(seconds, 0, -1):
-        mins, secs = divmod(remaining, 60)
-        sys.stdout.write(f"\r {Y}[WAITING]{RESET} {message}: {G}{mins:02d}:{secs:02d}{RESET} | {C}Press Ctrl+C to stop{RESET}    ")
-        sys.stdout.flush()
-        time.sleep(1)
-    sys.stdout.write("\r" + " " * 80 + "\r")
-    sys.stdout.flush()
-
-def auto_create_page_loop(token, account_name):
-    global pages_created_count
-    while True:
-        try:
-            current_time = datetime.datetime.now().strftime("%H:%M:%S")
-            page_name = generate_random_page_name()
-            category = get_random_category()
-            print(f" {Y}[CREATING]{RESET} | {M}{current_time}{RESET} | {B}{account_name}{RESET}")
-            print(f"           | Name: {C}{page_name}{RESET}")
-            print(f"           | Category: {C}{category['name']}{RESET}")
-            result = create_facebook_page(token, page_name, category['id'])
-            if result['success']:
-                pages_created_count += 1
-                print(f" {G}[SUCCESS]{RESET} | {M}{current_time}{RESET} | {G}Page Created!{RESET} | {Y}Total: {pages_created_count}{RESET}")
-                print(LINE)
-                show_countdown_timer(300, "Next page creation in")
-            elif result.get('rate_limited'):
-                print(f" {R}[RATE LIMITED]{RESET} | Waiting 10 minutes...")
-                print(LINE)
-                show_countdown_timer(600, "Retry in")
-            else:
-                print(f" {R}[FAILED]{RESET} | {result['message'][:50]}")
-                print(LINE)
-                time.sleep(30)
-        except KeyboardInterrupt:
-            raise
-        except Exception as e:
-            print(f" {R}[ERROR]{RESET} | {str(e)[:50]}")
-            time.sleep(60)
-
-def start_auto_create_page():
-    global pages_created_count
-    pages_created_count = 0
+def view_activity_logs():
+    """View recent activity logs"""
     refresh_screen()
-    print(f" {M}[AUTO CREATE FB PAGE]{RESET}")
-    print(LINE)
+    print(f" {G}[!] LOADING ACTIVITY LOGS...{RESET}")
     nice_loader("LOADING")
-    status, response = api_request("GET", "/user/accounts")
-    if status != 200 or not response.get('success'):
-        print(f" {R}[ERROR] Failed to load accounts{RESET}")
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        return
-    accounts = response.get('accounts', [])
-    if not accounts:
-        print(f" {R}[ERROR] No accounts stored{RESET}")
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        return
-    refresh_screen()
-    print(f" {M}[SELECT ACCOUNT]{RESET}")
-    print(LINE)
-    for i, acc in enumerate(accounts, 1):
-        letter = chr(64 + i) if i <= 26 else str(i)
-        print(menu_item(f"{i:02d}", letter, acc['name'], C, BG_C, f"UID: {acc['uid']}"))
-    print(menu_item("00", "X", "CANCEL", R, BG_R))
-    print(LINE)
-    selection = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT ACCOUNT {W}➤{RESET} ").strip().upper()
-    if not selection or selection in ['0', '00', 'X']:
-        return
-    selected = None
-    try:
-        if selection.isdigit():
-            idx = int(selection) - 1
-            if 0 <= idx < len(accounts):
-                selected = accounts[idx]
-        elif len(selection) == 1 and selection.isalpha():
-            idx = ord(selection) - 65
-            if 0 <= idx < len(accounts):
-                selected = accounts[idx]
-    except:
-        pass
-    if not selected:
-        print(f" {R}[ERROR] Invalid selection{RESET}")
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        return
-    refresh_screen()
-    print(f" {Y}[CONFIRM]{RESET}")
-    print(LINE)
-    print(f" Account: {M}{selected['name']}{RESET}")
-    print(f" Interval: {G}Every 5 minutes{RESET}")
-    print(f" Names: {G}Auto-generated{RESET}")
-    print(f" Categories: {G}Auto-selected{RESET}")
-    print(LINE)
-    confirm = input(f" {W}[{W}➤{W}]{RESET} {Y}Start? (Y/N) {W}➤{RESET} ").strip().upper()
-    if confirm != 'Y':
-        return
-    refresh_screen()
-    print(f" {G}[!] STARTING AUTO PAGE CREATION...{RESET}")
-    print(f" {Y}[TIP] Press Ctrl+C to stop{RESET}")
-    print(LINE)
-    try:
-        auto_create_page_loop(selected['token'], selected['name'])
-    except KeyboardInterrupt:
+    
+    status, response = api_request("GET", "/admin/logs?limit=20")
+    
+    if status == 200 and response.get('success'):
+        logs = response.get('logs', [])
+        
         refresh_screen()
-        print(f" {Y}[!] STOPPED BY USER{RESET}")
-        print(f" {G}[!] Total Pages Created: {pages_created_count}{RESET}")
+        print(f" {C}[ACTIVITY LOGS] Recent 20{RESET}")
         print(LINE)
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        
+        for log in logs:
+            action_color = G if log['action'] == 'login' else Y if log['action'] == 'register' else C
+            print(f" {W}[{log['timestamp']}]{RESET}")
+            print(f" User: {C}{log['username'].upper()}{RESET} | Action: {action_color}{log['action'].upper()}{RESET}")
+            if log.get('details'):
+                print(f" Details: {W}{log['details']}{RESET}")
+            print(LINE)
+    else:
+        print(f" {R}[ERROR] Failed to load logs{RESET}")
+        print(LINE)
+    
+    input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
-# ============ AUTO SHARE FUNCTIONS ============
+def dashboard_stats():
+    """Show admin dashboard statistics"""
+    refresh_screen()
+    print(f" {G}[!] LOADING DASHBOARD...{RESET}")
+    nice_loader("LOADING")
+    
+    status, response = api_request("GET", "/admin/dashboard")
+    
+    if status == 200 and response.get('success'):
+        stats = response.get('stats', {})
+        
+        refresh_screen()
+        print(f" {G}[ADMIN DASHBOARD]{RESET}")
+        print(LINE)
+        
+        print(f" {C}[USER STATISTICS]{RESET}")
+        print(f" Total Users: {G}{stats['totalUsers']}{RESET}")
+        print(f" FREE Users: {W}{stats['planDistribution']['free']}{RESET}")
+        print(f" VIP Users: {Y}{stats['planDistribution']['vip']}{RESET}")
+        print(f" MAX Users: {G}{stats['planDistribution']['max']}{RESET}")
+        print(LINE)
+        
+        print(f" {C}[ACTIVITY STATISTICS]{RESET}")
+        print(f" Total Shares: {G}{stats['totalShares']}{RESET}")
+        print(f" Total Cookie Converts: {G}{stats['totalCookieConverts']}{RESET}")
+        print(LINE)
+        
+        print(f" {C}[RECENT USERS]{RESET}")
+        for user in stats.get('recentUsers', []):
+            plan_color = G if user['plan'] == 'max' else Y if user['plan'] == 'vip' else W
+            print(f" {C}{user['username'].upper()}{RESET} - {plan_color}{user['plan'].upper()}{RESET} - {G}{user['country']}{RESET}")
+        print(LINE)
+    else:
+        print(f" {R}[ERROR] Failed to load dashboard{RESET}")
+        print(LINE)
+    
+    input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+
+# ============ AUTO SHARE V1 FUNCTIONS (PAGE & NORM ACC) ============
 
 def extract_post_id_from_link(link):
+    """Extract post ID from Facebook link or return as-is if already an ID."""
     link = link.strip()
+    
+    # Check if it's already a numeric ID
     if link.isdigit():
         return link
+    
+    # Remove protocol and www
     link = re.sub(r'^https?://', '', link)
     link = re.sub(r'^(www\.|m\.)', '', link)
-    patterns = [r'facebook\.com/.*?/posts/(\d+)', r'facebook\.com/.*?/photos/.*?/(\d+)', r'facebook\.com/permalink\.php\?story_fbid=(\d+)', r'facebook\.com/share/p/([A-Za-z0-9]+)', r'/(\d+)/?$']
+    
+    # Try to extract ID from various Facebook URL formats
+    patterns = [
+        r'facebook\.com/.*?/posts/(\d+)',
+        r'facebook\.com/.*?/photos/.*?/(\d+)',
+        r'facebook\.com/permalink\.php\?story_fbid=(\d+)',
+        r'facebook\.com/story\.php\?story_fbid=(\d+)',
+        r'facebook\.com/photo\.php\?fbid=(\d+)',
+        r'facebook\.com/share/p/([A-Za-z0-9]+)',
+        r'facebook\.com/share/([A-Za-z0-9]+)',
+        r'/(\d+)/?$'
+    ]
+    
     for pattern in patterns:
         match = re.search(pattern, link)
         if match:
             return match.group(1)
+    
     return link
 
 def cookie_to_eaag_token(cookie):
-    headers = {'authority': 'business.facebook.com', 'cookie': cookie, 'user-agent': 'Mozilla/5.0'}
+    """Convert cookie to EAAG token using business.facebook.com."""
+    headers = {
+        'authority': 'business.facebook.com',
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+        'cache-control': 'max-age=0',
+        'cookie': cookie,
+        'referer': 'https://www.facebook.com/',
+        'sec-ch-ua': '".Not/A)Brand";v="99", "Google Chrome";v="103", "Chromium";v="103"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Linux"',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'same-origin',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
+    }
+    
     try:
         response = requests.get('https://business.facebook.com/content_management', headers=headers, timeout=10)
-        token = response.text.split('EAAG')[1].split('","')[0]
+        home_business = response.text
+        
+        token = home_business.split('EAAG')[1].split('","')[0]
         return f'EAAG{token}'
     except:
         return None
 
+async def get_facebook_account_info(session, token):
+    """Get Facebook account info (UID and name) from token."""
+    try:
+        url = f"https://graph.facebook.com/me"
+        params = {
+            'fields': 'id,name',
+            'access_token': token
+        }
+        
+        async with session.get(url, params=params) as response:
+            if response.status == 200:
+                data = await response.json()
+                name = data.get('name', 'Unknown')
+                uid = data.get('id', 'Unknown')
+                return name, uid
+    except:
+        pass
+    return 'Unknown', 'Unknown'
+
 async def getid(session, link):
+    """Get Facebook post ID from link using traodoisub API or extract directly."""
+    # First try to extract ID directly from link
     extracted_id = extract_post_id_from_link(link)
+    
+    # If it's already a numeric ID, return it
     if extracted_id.isdigit():
         return extracted_id
+    
+    # Otherwise use the API
     try:
         async with session.post('https://id.traodoisub.com/api.php', data={"link": link}) as response:
             rq = await response.json()
             if 'success' in rq:
                 return rq["id"]
-    except:
-        pass
-    return None
+            else:
+                print(f" {R}[ERROR] Incorrect post link! Please re-enter{RESET}")
+                return None
+    except Exception as e:
+        print(f" {R}[ERROR] Failed to get post ID: {e}{RESET}")
+        return None
 
 async def get_token(session, token, cookie):
+    """Get page tokens from user token with FULL HEADERS."""
+    params = {
+        'access_token': token
+    }
+    headers = {
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+        'cache-control': 'max-age=0',
+        'cookie': cookie,
+        'priority': 'u=0, i',
+        'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'none',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+    }
     try:
-        async with session.get(f'https://graph.facebook.com/me/accounts?access_token={token}') as r:
+        async with session.get('https://graph.facebook.com/me/accounts', params=params, headers=headers) as r:
             rq = await r.json()
-            return rq if 'data' in rq else {}
-    except:
+            if 'data' in rq:
+                return rq
+            else:
+                print(f" {R}[ERROR] Incorrect Token or Cookie! Error getting pages.{RESET}")
+                return {}
+    except Exception as e:
+        print(f" {R}[ERROR] Failed to get pages: {e}{RESET}")
         return {}
 
 async def share_single_post(session, tk, ck, post, published_value):
+    """Share a post once with FULL HEADERS."""
+    headers = {
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+        'cache-control': 'max-age=0',
+        'cookie': ck,
+        'priority': 'u=0, i',
+        'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'none',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+    }
     try:
-        async with session.get(f'https://graph.facebook.com/me/feed?method=POST&link=https://m.facebook.com/{post}&published={published_value}&access_token={tk}') as response:
+        async with session.get(f'https://graph.facebook.com/me/feed?method=POST&link=https://m.facebook.com/{post}&published={published_value}&access_token={tk}', headers=headers) as response:
             json_data = await response.json()
             if 'id' in json_data:
                 return True, json_data.get('id', 'N/A')
-            return False, json_data.get('error', {}).get('message', 'Unknown')
+            else:
+                return False, json_data.get('error', {}).get('message', 'Unknown error')
     except Exception as e:
         return False, str(e)
 
 async def show_countdown(seconds):
+    """Display a countdown timer in MM:SS format."""
     for remaining in range(seconds, 0, -1):
         mins, secs = divmod(remaining, 60)
-        sys.stdout.write(f"\r {Y}[PAUSED]{RESET} | Resuming in: {G}{mins:02d}:{secs:02d}{RESET} | {C}Ctrl+C to stop{RESET}")
+        timer = f"{mins:02d}:{secs:02d}"
+        
+        sys.stdout.write(f"\r {Y}[PAUSED]{RESET} {W}|{RESET} {R}All accounts paused. Resuming in: {timer}{RESET} {W}|{RESET} {C}Press Ctrl+C to stop{RESET}")
         sys.stdout.flush()
+        
         await asyncio.sleep(1)
-    sys.stdout.write("\r" + " " * 80 + "\r")
+    
+    sys.stdout.write("\r" + " " * 100 + "\r")
     sys.stdout.flush()
 
 async def share_loop(session, tk, ck, post, page_id):
+    """
+    Continuous sharing loop for a single page.
+    ZERO DELAY - Maximum speed with synchronized pause handling.
+    """
     global success_count, global_pause_event
+    
     current_published_status = 0
-    consecutive_block_count = 0
+    consecutive_block_count = 0 
+    
     while True:
         try:
             await global_pause_event.wait()
-            current_time = datetime.datetime.now().strftime("%H:%M:%S")
+            
+            now = datetime.datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+
             is_success, result = await share_single_post(session, tk, ck, post, current_published_status)
+            
             if is_success:
                 async with lock:
                     success_count += 1
-                print(f" {G}[SUCCESS]{RESET} | {M}{current_time}{RESET} | {B}{page_id}{RESET} | {Y}Total: {success_count}{RESET}")
-                consecutive_block_count = 0
+                    current_success_count = success_count
+                
+                consecutive_block_count = 0 
+                
+                print(f" {G}[SUCCESS]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {Y}Total: {current_success_count}{RESET}")
+                continue
+
             else:
                 consecutive_block_count += 1
+                error_message = result 
+                
                 if consecutive_block_count == 1:
-                    current_published_status = 1 if current_published_status == 0 else 0
-                elif consecutive_block_count >= 2:
+                    next_published_status = 1 if current_published_status == 0 else 0
+                    
+                    print(f" {Y}[RETRY]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {Y}Switching status...{RESET}")
+                    current_published_status = next_published_status
+                    continue
+                
+                elif consecutive_block_count == 2:
+                    current_published_status = 0
+                    
+                    print(f" {R}[BLOCKED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {R}Triggering global pause for all accounts{RESET}")
+                    
+                    api_request("POST", "/share/set-global-pause", {"minutes": 30})
+                    
                     global_pause_event.clear()
+                    
                     await show_countdown(1800)
+                    
                     global_pause_event.set()
                     consecutive_block_count = 0
-                else:
-                    await asyncio.sleep(5)
+                    print(f" {G}[RESUMED]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {G}All accounts resumed{RESET}")
+                    continue
+
+                print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {R}{error_message[:30]}{RESET}")
+                await asyncio.sleep(5)
+
         except Exception as e:
+            print(f" {R}[EXCEPTION]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {R}{str(e)[:40]}{RESET}")
             await asyncio.sleep(30)
 
 async def auto_share_v1_main(link):
+    """Main auto share V1 function - PAGE & NORM ACCOUNTS mode."""
     global success_count, global_pause_event
     success_count = 0
     global_pause_event.set()
+    
+    refresh_screen()
+    print(f" {G}[!] CHECKING COOLDOWN STATUS...{RESET}")
+    nice_loader("CHECKING")
+    
+    status, response = api_request("POST", "/share/start")
+    
+    if status == 429:
+        refresh_screen()
+        cooldown_type = response.get('cooldownType', 'unknown')
+        
+        if cooldown_type == 'global_pause':
+            print(f" {R}⚠ GLOBAL PAUSE ACTIVE ⚠{RESET}")
+            print(f" {R}All accounts are blocked due to Facebook restrictions{RESET}")
+            print(LINE)
+            print(f" {Y}This is different from plan cooldown!{RESET}")
+            print(f" {Y}All your accounts are paused until the block expires.{RESET}")
+            print(LINE)
+            print(f" {R}Remaining Time: {response.get('remainingSeconds', 0)}s{RESET}")
+            print(f" {Y}Available At: {W}{response.get('cooldownEnd', 'N/A')}{RESET}")
+            print(LINE)
+        else:
+            print(f" {Y}[PLAN COOLDOWN ACTIVE]{RESET}")
+            print(LINE)
+            print(f" {Y}You must wait before starting another share session.{RESET}")
+            print(f" {Y}This is based on your subscription plan.{RESET}")
+            print(LINE)
+            print(f" {R}Remaining Time: {response.get('remainingSeconds', 0)}s{RESET}")
+            print(f" {Y}Available At: {W}{response.get('cooldownEnd', 'N/A')}{RESET}")
+            print(LINE)
+            print(f" {C}[PLAN INFO]{RESET}")
+            print(f" {Y}Your Plan: {W}{user_data['plan'].upper()}{RESET}")
+            
+            if user_data['plan'] == 'free':
+                print(f" {Y}Upgrade to VIP for 1 minute cooldown{RESET}")
+                print(f" {Y}Upgrade to MAX for no cooldown{RESET}")
+            elif user_data['plan'] == 'vip':
+                print(f" {Y}Upgrade to MAX for no cooldown{RESET}")
+            
+            print(LINE)
+        
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return
+    
+    refresh_screen()
+    print(f" {G}[!] INITIALIZING AUTO SHARE (PAGE & NORM ACC MODE)...{RESET}")
+    nice_loader("LOADING")
+    
     async with aiohttp.ClientSession() as session:
+        refresh_screen()
+        print(f" {G}[!] EXTRACTING POST ID...{RESET}")
+        nice_loader("EXTRACTING")
+        
         post = await getid(session, link)
         if not post:
             print(f" {R}[ERROR] Failed to get post ID{RESET}")
+            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
             return
-        status, response = api_request("GET", "/user/accounts")
-        if status != 200:
-            print(f" {R}[ERROR] Failed to load accounts{RESET}")
-            return
-        accounts = response.get('accounts', [])
-        if not accounts:
-            print(f" {R}[ERROR] No accounts{RESET}")
-            return
-        list_pages = []
-        for acc in accounts:
-            token_data = await get_token(session, acc['token'], acc['cookie'])
-            if 'data' in token_data:
-                for page in token_data['data']:
-                    list_pages.append({"tk": page["access_token"], "page_id": page["id"], "ck": acc['cookie']})
-        if not list_pages:
-            print(f" {R}[ERROR] No pages found{RESET}")
-            return
-        print(f" {G}[STARTED] Running {len(list_pages)} threads...{RESET}")
+        
+        refresh_screen()
+        print(f" {G}[SUCCESS] Post ID: {post}{RESET}")
         print(LINE)
-        tasks = [asyncio.create_task(share_loop(session, p["tk"], p["ck"], post, p["page_id"])) for p in list_pages]
+        
+        print(f" {G}[!] LOADING PAIRED ACCOUNTS FROM DATABASE...{RESET}")
+        nice_loader("LOADING")
+        
+        account_status, account_response = api_request("GET", "/user/accounts")
+        if account_status != 200 or not account_response.get('success'):
+            print(f" {R}[ERROR] Failed to load accounts from database{RESET}")
+            print(f" {Y}[TIP] Use option 4 to add paired accounts{RESET}")
+            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+            return
+        
+        accounts_data = account_response.get('accounts', [])
+        if not accounts_data:
+            print(f" {R}[ERROR] No paired accounts stored in database{RESET}")
+            print(f" {Y}[TIP] Use option 4 to add paired accounts (Cookie + Token){RESET}")
+            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+            return
+        
+        refresh_screen()
+        print(f" {G}[SUCCESS] Loaded {len(accounts_data)} paired accounts from database{RESET}")
+        print(LINE)
+        
+        print(f" {G}[FACEBOOK ACCOUNTS]{RESET}")
+        print(LINE)
+        for i, acc in enumerate(accounts_data, 1):
+            print(f" {W}[{i}]{RESET} {Y}{acc['name']}{RESET} {W}-{RESET} {C}UID: {acc['uid']}{RESET}")
+        print(LINE)
+        
+        print(f" {G}[!] FETCHING PAGE TOKENS...{RESET}")
+        nice_loader("FETCHING")
+        
+        list_pages = []
+        total_pages = 0
+        for acc in accounts_data:
+            token = acc['token']
+            cookie = acc['cookie']
+            token_data = await get_token(session, token, cookie)
+            
+            if 'data' in token_data:
+                pages_found = 0
+                for page in token_data['data']:
+                    list_pages.append({
+                        "tk": page["access_token"], 
+                        "page_id": page["id"],
+                        "ck": cookie
+                    })
+                    pages_found += 1
+                total_pages += pages_found
+                print(f" {B}[!] Found {R}{pages_found}{RESET} {M}pages from {Y}{acc['name']}{RESET}")
+        
+        if not list_pages:
+            print(f" {R}[ERROR] No Pages found from accounts{RESET}")
+            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+            return
+        
+        refresh_screen()
+        print(f" {M}[SHARE CONFIGURATION]{RESET}")
+        print(LINE)
+        print(f" {Y}Mode: {G}PAGE & NORM ACC{RESET}")
+        print(f" {Y}Total Page Tokens: {G}{total_pages}{RESET}")
+        print(f" {Y}Share Speed: {G}MAXIMUM (ZERO DELAYS){RESET}")
+        print(f" {Y}Independent Threads: {G}{len(list_pages)}{RESET}")
+        print(f" {Y}Your Plan: {G}{user_data['plan'].upper()}{RESET}")
+        print(f" {Y}Pause Mode: {C}SYNCHRONIZED (All accounts pause together){RESET}")
+        print(LINE)
+        print(f" {G}[!] STARTING CONTINUOUS SHARING...{RESET}")
+        print(f" {Y}[TIP] Press Ctrl+C to stop{RESET}")
+        print(LINE)
+        
+        tasks = []
+        for page in list_pages:
+            task = asyncio.create_task(share_loop(
+                session, 
+                page["tk"], 
+                page["ck"], 
+                post, 
+                page["page_id"]
+            ))
+            tasks.append(task)
+        
+        print(f" {G}[STARTED] Running {len(tasks)} parallel share threads at MAXIMUM SPEED (ZERO DELAYS)...{RESET}")
+        print(LINE)
+        
         await asyncio.gather(*tasks)
 
+# ============ AUTO SHARE V2 FUNCTIONS (NORM ACC) ============
+
 async def share_with_eaag_v2(session, cookie, token, post_id):
+    """Share a post using EAAG token with proper headers."""
+    headers = {
+        'accept': '*/*',
+        'accept-encoding': 'gzip, deflate',
+        'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+        'connection': 'keep-alive',
+        'cookie': cookie,
+        'host': 'graph.facebook.com',
+        'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+    }
+    
     try:
         url = f'https://graph.facebook.com/me/feed?link=https://m.facebook.com/{post_id}&published=0&access_token={token}'
-        async with session.post(url) as response:
+        async with session.post(url, headers=headers) as response:
             json_data = await response.json()
+            
             if 'id' in json_data:
-                return True, json_data.get('id')
-            return False, json_data.get('error', {}).get('message', 'Unknown')
+                return True, json_data.get('id', 'N/A')
+            else:
+                error_msg = json_data.get('error', {}).get('message', 'Unknown error')
+                return False, error_msg
     except Exception as e:
         return False, str(e)
 
 async def share_loop_v2(session, cookie, token, post_id, account_name):
+    """
+    Continuous sharing loop for NORM ACC mode with 0.5-0.6 second delays.
+    """
     global success_count_v2
+    
     while True:
         try:
-            current_time = datetime.datetime.now().strftime("%H:%M:%S")
+            now = datetime.datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+            
             is_success, result = await share_with_eaag_v2(session, cookie, token, post_id)
+            
             if is_success:
                 async with lock_v2:
                     success_count_v2 += 1
-                print(f" {G}[SUCCESS]{RESET} | {M}{current_time}{RESET} | {B}{account_name}{RESET} | {Y}Total: {success_count_v2}{RESET}")
-                await asyncio.sleep(random.uniform(0.5, 0.6))
+                    current_success_count = success_count_v2
+                
+                print(f" {G}[SUCCESS]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {Y}Total: {current_success_count}{RESET}")
+                
+                # Random delay between 0.5-0.6 seconds
+                delay = random.uniform(0.5, 0.6)
+                await asyncio.sleep(delay)
             else:
-                print(f" {R}[ERROR]{RESET} | {M}{current_time}{RESET} | {result[:40]}")
+                error_message = result
+                print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
                 await asyncio.sleep(5)
-        except:
+        
+        except Exception as e:
+            print(f" {R}[EXCEPTION]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {R}{str(e)[:40]}{RESET}")
             await asyncio.sleep(30)
 
 async def auto_share_v2_main(link):
+    """Main auto share V2 function - NORMAL ACCOUNTS mode using EAAG tokens."""
     global success_count_v2, eaag_tokens
     success_count_v2 = 0
     eaag_tokens = []
-    status, response = api_request("GET", "/user/accounts")
-    if status != 200:
-        print(f" {R}[ERROR] Failed to load accounts{RESET}")
-        return
-    accounts = response.get('accounts', [])
-    if not accounts:
-        print(f" {R}[ERROR] No accounts{RESET}")
-        return
+    
     refresh_screen()
-    print(f" {C}[SELECT COOKIES]{RESET}")
+    print(f" {C}[!] LOADING COOKIES FROM DATABASE...{RESET}")
+    nice_loader("LOADING")
+    
+    # Get all cookies from database
+    account_status, account_response = api_request("GET", "/user/accounts")
+    if account_status != 200 or not account_response.get('success'):
+        print(f" {R}[ERROR] Failed to load accounts from database{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return
+    
+    accounts_data = account_response.get('accounts', [])
+    if not accounts_data:
+        print(f" {R}[ERROR] No cookies stored in database{RESET}")
+        print(f" {Y}[TIP] Use option 4 to add accounts{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return
+    
+    # Display available cookies for selection
+    refresh_screen()
+    print(f" {C}[SELECT COOKIES FOR NORM ACC MODE]{RESET}")
     print(LINE)
-    for i, acc in enumerate(accounts, 1):
+    
+    for i, acc in enumerate(accounts_data, 1):
+        letter = chr(64 + i) if i <= 26 else str(i)
+        print(menu_item(f"{i:02d}", letter, acc['name'], M, BG_M, f"UID: {acc['uid']}"))
+    
+    print(menu_item("00", "X", "CANCEL", R, BG_R))
+    print(LINE)
+    print(f" {Y}[TIP] Select cookies separated by comma (e.g., 1,3,5 or A,C,E){RESET}")
+    print(f" {Y}[TIP] Or type 'ALL' to use all cookies{RESET}")
+    print(LINE)
+    
+    selection = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT COOKIES {W}➤{RESET} ").strip().upper()
+    
+    if not selection or selection in ['0', '00', 'X']:
+        return
+    
+    selected_cookies = []
+    
+    if selection == 'ALL':
+        selected_cookies = accounts_data
+    else:
+        # Parse selection
+        selections = [s.strip() for s in selection.split(',')]
+        for sel in selections:
+            try:
+                if sel.isdigit():
+                    idx = int(sel) - 1
+                    if 0 <= idx < len(accounts_data):
+                        selected_cookies.append(accounts_data[idx])
+                elif len(sel) == 1 and sel.isalpha():
+                    idx = ord(sel) - 65
+                    if 0 <= idx < len(accounts_data):
+                        selected_cookies.append(accounts_data[idx])
+            except:
+                continue
+    
+    if not selected_cookies:
+        print(f" {R}[ERROR] No valid cookies selected{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return
+    
+    # Confirm selection
+    refresh_screen()
+    print(f" {Y}[CONFIRM SELECTION]{RESET}")
+    print(LINE)
+    print(f" {Y}Selected {G}{len(selected_cookies)}{Y} cookies:{RESET}")
+    for i, acc in enumerate(selected_cookies, 1):
         print(f" {W}[{i}]{RESET} {M}{acc['name']}{RESET}")
     print(LINE)
-    selection = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT (comma separated or ALL) {W}➤{RESET} ").strip().upper()
-    if not selection:
+    
+    confirm = input(f" {W}[{W}➤{W}]{RESET} {Y}Proceed with these cookies? (Y/N) {W}➤{RESET} ").strip().upper()
+    
+    if confirm != 'Y':
         return
-    selected = []
-    if selection == 'ALL':
-        selected = accounts
-    else:
-        for s in selection.split(','):
-            try:
-                idx = int(s.strip()) - 1
-                if 0 <= idx < len(accounts):
-                    selected.append(accounts[idx])
-            except:
-                pass
-    if not selected:
-        return
-    print(f" {G}[!] Converting {len(selected)} cookies to EAAG tokens...{RESET}")
-    for acc in selected:
-        token = cookie_to_eaag_token(acc['cookie'])
+    
+    refresh_screen()
+    print(f" {G}[!] CONVERTING COOKIES TO EAAG TOKENS...{RESET}")
+    nice_loader("CONVERTING")
+    
+    # Convert selected cookies to EAAG tokens
+    for i, acc in enumerate(selected_cookies, 1):
+        cookie = acc['cookie']
+        print(f" {Y}[{i}/{len(selected_cookies)}]{RESET} Converting {M}{acc['name']}{RESET}...", end="", flush=True)
+        token = cookie_to_eaag_token(cookie)
         if token:
-            eaag_tokens.append({'cookie': acc['cookie'], 'token': token, 'name': acc['name']})
-            print(f" {G}✓{RESET} {acc['name']}")
+            eaag_tokens.append({
+                'cookie': cookie,
+                'token': token,
+                'name': acc['name'],
+                'index': i
+            })
+            print(f" {G}✓ Token extracted{RESET}")
         else:
-            print(f" {R}✗{RESET} {acc['name']}")
+            print(f" {R}✗ Failed{RESET}")
+    
     if not eaag_tokens:
-        print(f" {R}[ERROR] No valid tokens{RESET}")
+        print(f" {R}[ERROR] No valid EAAG tokens extracted!{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
+    
+    # Extract post ID
     async with aiohttp.ClientSession() as session:
+        refresh_screen()
+        print(f" {G}[!] EXTRACTING POST ID...{RESET}")
+        nice_loader("EXTRACTING")
+        
         post_id = await getid(session, link)
         if not post_id:
             print(f" {R}[ERROR] Failed to get post ID{RESET}")
+            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
             return
-        print(f" {G}[STARTED] Running {len(eaag_tokens)} threads...{RESET}")
+        
+        refresh_screen()
+        print(f" {M}[SHARE CONFIGURATION]{RESET}")
         print(LINE)
-        tasks = [asyncio.create_task(share_loop_v2(session, t['cookie'], t['token'], post_id, t['name'])) for t in eaag_tokens]
+        print(f" {Y}Mode: {C}NORM ACC (EAAG Tokens){RESET}")
+        print(f" {Y}Total Accounts: {G}{len(eaag_tokens)}{RESET}")
+        print(f" {Y}Share Speed: {C}0.5-0.6 seconds delay per share{RESET}")
+        print(f" {Y}Post ID: {G}{post_id}{RESET}")
+        print(f" {Y}Your Plan: {G}{user_data['plan'].upper()}{RESET}")
+        print(LINE)
+        print(f" {G}[!] STARTING AUTO SHARE V2 (NORM ACC MODE)...{RESET}")
+        print(f" {Y}[TIP] Press Ctrl+C to stop{RESET}")
+        print(LINE)
+        
+        tasks = []
+        for acc in eaag_tokens:
+            task = asyncio.create_task(share_loop_v2(
+                session,
+                acc['cookie'],
+                acc['token'],
+                post_id,
+                acc['name']
+            ))
+            tasks.append(task)
+        
+        print(f" {G}[STARTED] Running {len(tasks)} parallel share threads with 0.5-0.6s delays...{RESET}")
+        print(LINE)
+        
         await asyncio.gather(*tasks)
 
 def start_auto_share_v1():
+    """Entry point for auto share V1 feature (PAGE & NORM ACCOUNTS)."""
     refresh_screen()
     print(f" {G}[AUTO SHARE - PAGE & NORM ACCOUNTS]{RESET}")
     print(LINE)
-    link = input(f" {W}[{W}➤{W}]{RESET} {C}POST LINK/ID {W}➤{RESET} ").strip()
-    if not link:
+    print(f" {Y}[!] ENTER POST LINK OR ID (Leave empty to back){RESET}")
+    
+    prompt = f" {W}[{W}➤{W}]{RESET} {C}POST LINK/ID {W}➤{RESET} "
+    
+    try:
+        link = input(prompt)
+    except KeyboardInterrupt:
         return
+    
+    if not link.strip():
+        return
+    
     try:
         asyncio.run(auto_share_v1_main(link))
     except KeyboardInterrupt:
-        print(f"\n {Y}[!] STOPPED | Total: {success_count}{RESET}")
+        refresh_screen()
+        print(f" {Y}[!] AUTO SHARE STOPPED BY USER{RESET}")
+        stop_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f" {Y}[!] Stop Time: {stop_time}{RESET}")
+        
+        print(f" {G}[!] Total Successful Shares: {success_count}{RESET}")
+        print(LINE)
+        
         if success_count > 0:
             api_request("POST", "/share/complete", {"totalShares": success_count})
+            print(f" {G}[!] Shares recorded to your account{RESET}")
+        
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+    except Exception as e:
+        refresh_screen()
+        print(f" {R}[ERROR] An unexpected error occurred:{RESET}")
+        print(f" {R}{str(e)}{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
 def start_auto_share_v2():
+    """Entry point for auto share V2 feature (NORMAL ACCOUNTS)."""
     refresh_screen()
     print(f" {C}[AUTO SHARE V2 - NORMAL ACCOUNTS]{RESET}")
     print(LINE)
-    link = input(f" {W}[{W}➤{W}]{RESET} {C}POST LINK/ID {W}➤{RESET} ").strip()
-    if not link:
+    print(f" {Y}[!] ENTER POST LINK OR ID (Leave empty to back){RESET}")
+    
+    prompt = f" {W}[{W}➤{W}]{RESET} {C}POST LINK/ID {W}➤{RESET} "
+    
+    try:
+        link = input(prompt)
+    except KeyboardInterrupt:
         return
+    
+    if not link.strip():
+        return
+    
     try:
         asyncio.run(auto_share_v2_main(link))
     except KeyboardInterrupt:
-        print(f"\n {Y}[!] STOPPED | Total: {success_count_v2}{RESET}")
+        refresh_screen()
+        print(f" {Y}[!] AUTO SHARE V2 STOPPED BY USER{RESET}")
+        stop_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f" {Y}[!] Stop Time: {stop_time}{RESET}")
+        
+        print(f" {G}[!] Total Successful Shares: {success_count_v2}{RESET}")
+        print(LINE)
+        
         if success_count_v2 > 0:
             api_request("POST", "/share/complete", {"totalShares": success_count_v2})
+            print(f" {G}[!] Shares recorded to your account{RESET}")
+        
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+    except Exception as e:
+        refresh_screen()
+        print(f" {R}[ERROR] An unexpected error occurred:{RESET}")
+        print(f" {R}{str(e)}{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
-# ============ MAIN ============
+# ============ MAIN FUNCTION ============
 
 def main():
     global user_token, user_data
+    
     while True:
         refresh_screen()
+        
+        prompt = f" {W}[{W}➤{W}]{RESET} {C}CHOICE {W}➤{RESET} "
         try:
-            choice = input(f" {W}[{W}➤{W}]{RESET} {C}CHOICE {W}➤{RESET} ").upper()
+            choice = input(prompt).upper()
         except KeyboardInterrupt:
             sys.exit()
+
         refresh_screen()
+
         if not user_token:
             if choice in ['1', '01', 'A']:
                 login_user()
             elif choice in ['2', '02', 'B']:
                 register_user()
             elif choice in ['0', '00', 'X']:
-                print(f"\n {R}[!] EXITING...{RESET}")
+                print(f"\n {R}[!] EXITING TOOL...{RESET}")
                 sys.exit()
+            else:
+                print(f"\n {R}[!] INVALID SELECTION{RESET}")
+                time.sleep(0.8)
         else:
             if choice in ['1', '01', 'A']:
                 start_auto_share_v1()
+                
             elif choice in ['2', '02', 'B']:
                 start_auto_share_v2()
+                
             elif choice in ['3', '03', 'C']:
-                start_auto_create_page()
-            elif choice in ['4', '04', 'D']:
                 cookie_to_token_tool()
-            elif choice in ['5', '05', 'E']:
+                
+            elif choice in ['4', '04', 'D']:
                 manage_cookie_token()
-            elif choice in ['6', '06', 'F']:
+                
+            elif choice in ['5', '05', 'E']:
                 show_user_stats()
-            elif choice in ['7', '07', 'G']:
+            
+            elif choice in ['6', '06', 'F']:
                 if user_data and user_data.get('isAdmin'):
                     admin_panel()
                 else:
                     update_tool_logic()
-            elif choice in ['8', '08', 'H']:
+            
+            elif choice in ['7', '07', 'G']:
                 if user_data and user_data.get('isAdmin'):
                     update_tool_logic()
+                else:
+                    print(f"\n {R}[!] INVALID SELECTION{RESET}")
+                    time.sleep(0.8)
+                
             elif choice in ['0', '00', 'X']:
                 print(f"\n {Y}[!] LOGGING OUT...{RESET}")
                 user_token = None
                 user_data = None
                 time.sleep(1)
+                
+            else:
+                print(f"\n {R}[!] INVALID SELECTION{RESET}")
+                time.sleep(0.8)
 
 if __name__ == "__main__":
     main()
