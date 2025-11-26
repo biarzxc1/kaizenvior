@@ -118,26 +118,26 @@ def banner_header():
 def show_menu():
     """Prints the Menu Options with colored background numbers."""
     if not user_token:
-        print(f" {W}[{BG_G}{W}01{RESET}{Y}/{BG_G}{W}A{RESET}{W}]{RESET} {G}LOGIN{RESET}")
-        print(f" {W}[{BG_C}{W}02{RESET}{Y}/{BG_C}{W}B{RESET}{W}]{RESET} {C}REGISTER{RESET}")
-        print(f" {W}[{BG_R}{W}00{RESET}{Y}/{BG_R}{W}X{RESET}{W}]{RESET} {R}EXIT{RESET}")
+        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}LOGIN{RESET}")
+        print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}REGISTER{RESET}")
+        print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}EXIT{RESET}")
     elif user_data and user_data.get('isAdmin'):
-        print(f" {W}[{BG_G}{W}01{RESET}{Y}/{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — PAGE & NORM{RESET}")
-        print(f" {W}[{BG_C}{W}02{RESET}{Y}/{BG_C}{W}B{RESET}{W}]{RESET} {C}AUTO SHARE V2           — NORM ACCOUNTS{RESET}")
-        print(f" {W}[{BG_M}{W}03{RESET}{Y}/{BG_M}{W}C{RESET}{W}]{RESET} {M}COOKIE TO TOKEN         — CONVERT{RESET}")
-        print(f" {W}[{BG_Y}{W}04{RESET}{Y}/{BG_Y}{W}D{RESET}{W}]{RESET} {Y}MANAGE COOKIE & TOKEN   — DATABASE{RESET}")
-        print(f" {W}[{BG_B}{W}05{RESET}{Y}/{BG_B}{W}E{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
-        print(f" {W}[{BG_M}{W}06{RESET}{Y}/{BG_M}{W}F{RESET}{W}]{RESET} {M}ADMIN PANEL             — MANAGEMENT{RESET}")
-        print(f" {W}[{BG_G}{W}07{RESET}{Y}/{BG_G}{W}G{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
-        print(f" {W}[{BG_R}{W}00{RESET}{Y}/{BG_R}{W}X{RESET}{W}]{RESET} {R}LOGOUT{RESET}")
+        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — PAGE & NORM{RESET}")
+        print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}AUTO SHARE V2           — NORM ACCOUNTS{RESET}")
+        print(f" {W}[{RESET}{BG_M}{W}03{RESET}{BG_M}{Y}/{RESET}{BG_M}{W}C{RESET}{W}]{RESET} {M}COOKIE TO TOKEN         — CONVERT{RESET}")
+        print(f" {W}[{RESET}{BG_Y}{W}04{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}D{RESET}{W}]{RESET} {Y}MANAGE COOKIE & TOKEN   — DATABASE{RESET}")
+        print(f" {W}[{RESET}{BG_B}{W}05{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}E{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
+        print(f" {W}[{RESET}{BG_M}{W}06{RESET}{BG_M}{Y}/{RESET}{BG_M}{W}F{RESET}{W}]{RESET} {M}ADMIN PANEL             — MANAGEMENT{RESET}")
+        print(f" {W}[{RESET}{BG_G}{W}07{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}G{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
+        print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}LOGOUT{RESET}")
     else:
-        print(f" {W}[{BG_G}{W}01{RESET}{Y}/{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — PAGE & NORM{RESET}")
-        print(f" {W}[{BG_C}{W}02{RESET}{Y}/{BG_C}{W}B{RESET}{W}]{RESET} {C}AUTO SHARE V2           — NORM ACCOUNTS{RESET}")
-        print(f" {W}[{BG_M}{W}03{RESET}{Y}/{BG_M}{W}C{RESET}{W}]{RESET} {M}COOKIE TO TOKEN         — CONVERT{RESET}")
-        print(f" {W}[{BG_Y}{W}04{RESET}{Y}/{BG_Y}{W}D{RESET}{W}]{RESET} {Y}MANAGE COOKIE & TOKEN   — DATABASE{RESET}")
-        print(f" {W}[{BG_B}{W}05{RESET}{Y}/{BG_B}{W}E{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
-        print(f" {W}[{BG_G}{W}06{RESET}{Y}/{BG_G}{W}F{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
-        print(f" {W}[{BG_R}{W}00{RESET}{Y}/{BG_R}{W}X{RESET}{W}]{RESET} {R}LOGOUT{RESET}")
+        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — PAGE & NORM{RESET}")
+        print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}AUTO SHARE V2           — NORM ACCOUNTS{RESET}")
+        print(f" {W}[{RESET}{BG_M}{W}03{RESET}{BG_M}{Y}/{RESET}{BG_M}{W}C{RESET}{W}]{RESET} {M}COOKIE TO TOKEN         — CONVERT{RESET}")
+        print(f" {W}[{RESET}{BG_Y}{W}04{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}D{RESET}{W}]{RESET} {Y}MANAGE COOKIE & TOKEN   — DATABASE{RESET}")
+        print(f" {W}[{RESET}{BG_B}{W}05{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}E{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
+        print(f" {W}[{RESET}{BG_G}{W}06{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}F{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
+        print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}LOGOUT{RESET}")
     
     print(LINE)
 
@@ -1301,8 +1301,6 @@ async def auto_share_page_mode(link):
         print(f" {Y}Your Plan: {G}{user_data['plan'].upper()}{RESET}")
         print(f" {Y}Pause Mode: {C}SYNCHRONIZED (All accounts pause together){RESET}")
         print(LINE)
-        print(f" {R}[!] NOTE: This is fast but may quickly limit sharing on video FB posts{RESET}")
-        print(LINE)
         print(f" {G}[!] STARTING CONTINUOUS SHARING...{RESET}")
         print(f" {Y}[TIP] Press Ctrl+C to stop{RESET}")
         print(LINE)
@@ -1325,6 +1323,42 @@ async def auto_share_page_mode(link):
 
 def start_auto_share():
     """Entry point for auto share feature (PAGE & NORM ACC)."""
+    refresh_screen()
+    
+    # Display warning message
+    print(f" {R}[!] IMPORTANT WARNING{RESET}")
+    print(LINE)
+    print(f" {Y}⚠ This method is NOT RECOMMENDED for video FB posts!{RESET}")
+    print(f" {Y}⚠ Fast sharing can quickly limit both pages and normal accounts!{RESET}")
+    print(LINE)
+    print(f" {C}[!] PLEASE READ CAREFULLY:{RESET}")
+    print(f" {W}• Make sure your post is set to PUBLIC{RESET}")
+    print(f" {W}• Video posts may get limited faster{RESET}")
+    print(f" {W}• This uses MAXIMUM SPEED (zero delays){RESET}")
+    print(f" {W}• Both page and normal accounts can be affected{RESET}")
+    print(LINE)
+    
+    # Delay to let user read
+    for i in range(5, 0, -1):
+        sys.stdout.write(f"\r {Y}[CONTINUE IN {i} SECONDS]{RESET} {W}Reading time...{RESET}")
+        sys.stdout.flush()
+        time.sleep(1)
+    
+    sys.stdout.write(f"\r{' ' * 60}\r")
+    sys.stdout.flush()
+    
+    # Ask for confirmation
+    print(f" {Y}[CONFIRMATION REQUIRED]{RESET}")
+    print(LINE)
+    confirm = input(f" {W}[{W}➤{W}]{RESET} {R}Are you sure you want to proceed? (YES/NO) {W}➤{RESET} ").strip().upper()
+    
+    if confirm != 'YES':
+        refresh_screen()
+        print(f" {Y}[!] AUTO SHARE CANCELLED{RESET}")
+        print(LINE)
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return
+    
     refresh_screen()
     print(f" {G}[!] CHECKING COOLDOWN STATUS...{RESET}")
     nice_loader("CHECKING")
@@ -1676,6 +1710,28 @@ def select_cookies_for_v2():
 
 def start_auto_share_v2():
     """Entry point for auto share V2 feature (NORM ACC with EAAG tokens)."""
+    refresh_screen()
+    
+    # Display informational message
+    print(f" {C}[!] AUTO SHARE V2 - NORMAL ACCOUNTS{RESET}")
+    print(LINE)
+    print(f" {G}[✓] INFORMATION:{RESET}")
+    print(f" {W}• Make sure your post is set to PUBLIC{RESET}")
+    print(f" {W}• This uses EAAG tokens (business.facebook.com method){RESET}")
+    print(f" {W}• Shares run at MAXIMUM SPEED (zero delays){RESET}")
+    print(f" {W}• Tokens auto-renew every 5 minutes{RESET}")
+    print(f" {W}• Best for normal accounts without pages{RESET}")
+    print(LINE)
+    
+    # Brief delay to let user read
+    for i in range(3, 0, -1):
+        sys.stdout.write(f"\r {C}[CONTINUE IN {i} SECONDS]{RESET} {W}Reading time...{RESET}")
+        sys.stdout.flush()
+        time.sleep(1)
+    
+    sys.stdout.write(f"\r{' ' * 60}\r")
+    sys.stdout.flush()
+    
     selected_cookies = select_cookies_for_v2()
     
     if not selected_cookies:
