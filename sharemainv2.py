@@ -1895,7 +1895,7 @@ async def show_countdown(seconds):
     sys.stdout.write("\r" + " " * 100 + "\r")
     sys.stdout.flush()
 
-async def share_loop(session, tk, ck, post, page_id, target=None, display_mode='detailed'):
+async def share_loop(session, tk, ck, post, page_id, target=None, display_mode='detailed', total_pages_count=1):
     """
     Continuous sharing loop for a single page with display mode support.
     ZERO DELAY - Maximum speed with synchronized pause handling.
@@ -1906,6 +1906,9 @@ async def share_loop(session, tk, ck, post, page_id, target=None, display_mode='
     consecutive_block_count = 0 
     page_count = 0  # Track count per page
     
+    # Calculate total expected shares across all pages
+    total_target = (target * total_pages_count) if target else None
+    
     while True:
         # Check if target reached for this page
         if target and page_count >= target:
@@ -1913,7 +1916,7 @@ async def share_loop(session, tk, ck, post, page_id, target=None, display_mode='
             current_time = now.strftime("%H:%M:%S")
             
             if display_mode == 'minimal':
-                sys.stdout.write(f"\r {G}[TARGET REACHED {page_count}/{target}]{RESET}                                          \n")
+                sys.stdout.write(f"\r {G}[TARGET REACHED]{RESET} {W}|{RESET} {C}[{page_id}]{RESET} {W}|{RESET} {Y}{page_count}/{target}{RESET}                    \n")
                 sys.stdout.flush()
             else:
                 print(f" {G}[TARGET REACHED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {Y}Completed: {page_count}/{target}{RESET}")
@@ -1936,11 +1939,11 @@ async def share_loop(session, tk, ck, post, page_id, target=None, display_mode='
                 consecutive_block_count = 0 
                 
                 if display_mode == 'minimal':
-                    # Minimal display - stay in one place
-                    if target:
-                        sys.stdout.write(f"\r {G}[SUCCESS SHARES {page_count}/{target}]{RESET} {W}|{RESET} {Y}Total: {current_success_count}{RESET}            ")
+                    # Minimal display - stay in one place, show TOTALSHARE/TARGET with page UID
+                    if total_target:
+                        sys.stdout.write(f"\r {G}[SUCCESS — {current_success_count}/{total_target}]{RESET} {W}|{RESET} {C}[{page_id}]{RESET}                    ")
                     else:
-                        sys.stdout.write(f"\r {G}[SUCCESS SHARES {current_success_count}]{RESET} {W}|{RESET} {C}Keep sharing...{RESET}            ")
+                        sys.stdout.write(f"\r {G}[SUCCESS — {current_success_count}]{RESET} {W}|{RESET} {C}[{page_id}]{RESET}                    ")
                     sys.stdout.flush()
                 else:
                     # Detailed display - full logs
@@ -1960,7 +1963,7 @@ async def share_loop(session, tk, ck, post, page_id, target=None, display_mode='
                     next_published_status = 1 if current_published_status == 0 else 0
                     
                     if display_mode == 'minimal':
-                        sys.stdout.write(f"\r {Y}[RETRY]{RESET} {W}|{RESET} {C}Switching status...{RESET}                         ")
+                        sys.stdout.write(f"\r {Y}[RETRY]{RESET} {W}|{RESET} {C}[{page_id}]{RESET} {W}Switching...{RESET}                         ")
                         sys.stdout.flush()
                     else:
                         print(f" {Y}[RETRY]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {Y}Switching status...{RESET}")
@@ -1972,7 +1975,7 @@ async def share_loop(session, tk, ck, post, page_id, target=None, display_mode='
                     current_published_status = 0
                     
                     if display_mode == 'minimal':
-                        sys.stdout.write(f"\r {R}[BLOCKED]{RESET} {W}|{RESET} {Y}Global pause triggered...{RESET}                    \n")
+                        sys.stdout.write(f"\r {R}[BLOCKED]{RESET} {W}|{RESET} {C}[{page_id}]{RESET} {W}Global pause...{RESET}                    \n")
                         sys.stdout.flush()
                         time.sleep(2)
                     else:
@@ -1988,7 +1991,7 @@ async def share_loop(session, tk, ck, post, page_id, target=None, display_mode='
                     consecutive_block_count = 0
                     
                     if display_mode == 'minimal':
-                        sys.stdout.write(f"\r {G}[RESUMED]{RESET} {W}|{RESET} {C}All accounts resumed{RESET}                        ")
+                        sys.stdout.write(f"\r {G}[RESUMED]{RESET} {W}All accounts resumed{RESET}                                    ")
                         sys.stdout.flush()
                     else:
                         print(f" {G}[RESUMED]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {G}All accounts resumed{RESET}")
@@ -2239,8 +2242,9 @@ async def auto_share_page_mode(link):
                 page["ck"], 
                 post, 
                 page["page_id"],
-                target_count,  # Pass target to share_loop
-                display_mode   # Pass display mode
+                target_count,      # Pass target to share_loop
+                display_mode,      # Pass display mode
+                len(list_pages)    # Pass total pages count
             ))
             tasks.append(task)
         
@@ -2445,7 +2449,7 @@ async def share_loop_v2(session, cookie, token, post_id, account_name, display_m
                     last_token_renewal = time.time()
                     
                     if display_mode == 'minimal':
-                        sys.stdout.write(f"\r {Y}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}{account_name}{RESET}                              ")
+                        sys.stdout.write(f"\r {Y}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[{account_name}]{RESET}                              ")
                         sys.stdout.flush()
                         time.sleep(1)
                     else:
@@ -2467,8 +2471,8 @@ async def share_loop_v2(session, cookie, token, post_id, account_name, display_m
                 failed_consecutive = 0
                 
                 if display_mode == 'minimal':
-                    # Minimal display - stay in one place
-                    sys.stdout.write(f"\r {G}[SUCCESS SHARES {current_count}]{RESET} {W}|{RESET} {C}{account_name[:15]}{RESET}            ")
+                    # Minimal display - stay in one place, show total with account name
+                    sys.stdout.write(f"\r {G}[SUCCESS — {current_count}]{RESET} {W}|{RESET} {C}[{account_name[:20]}]{RESET}                    ")
                     sys.stdout.flush()
                 else:
                     # Detailed display - full logs
@@ -2482,7 +2486,7 @@ async def share_loop_v2(session, cookie, token, post_id, account_name, display_m
                 # If failed 3 times consecutively, try to renew token
                 if failed_consecutive >= 3:
                     if display_mode == 'minimal':
-                        sys.stdout.write(f"\r {Y}[RENEWING TOKEN...]{RESET} {W}|{RESET} {B}{account_name}{RESET}                          ")
+                        sys.stdout.write(f"\r {Y}[RENEWING...]{RESET} {W}|{RESET} {B}[{account_name[:20]}]{RESET}                          ")
                         sys.stdout.flush()
                     else:
                         print(f" {Y}[RENEWING]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {Y}Attempting token renewal...{RESET}")
@@ -2495,7 +2499,7 @@ async def share_loop_v2(session, cookie, token, post_id, account_name, display_m
                         failed_consecutive = 0
                         
                         if display_mode == 'minimal':
-                            sys.stdout.write(f"\r {G}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}{account_name}{RESET}                            ")
+                            sys.stdout.write(f"\r {G}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[{account_name[:20]}]{RESET}                            ")
                             sys.stdout.flush()
                             time.sleep(1)
                         else:
