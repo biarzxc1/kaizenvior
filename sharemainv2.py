@@ -2003,18 +2003,6 @@ async def share_loop(session, tk, ck, post, page_id, target=None, display_mode='
             if display_mode != 'minimal':
                 print(f" {R}[EXCEPTION]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {R}{str(e)[:40]}{RESET}")
             await asyncio.sleep(30)
-                    
-                    global_pause_event.set()
-                    consecutive_block_count = 0
-                    print(f" {G}[RESUMED]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {G}All accounts resumed{RESET}")
-                    continue
-
-                print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {R}{error_message[:30]}{RESET}")
-                await asyncio.sleep(5)
-
-        except Exception as e:
-            print(f" {R}[EXCEPTION]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {B}{page_id}{RESET} {W}|{RESET} {R}{str(e)[:40]}{RESET}")
-            await asyncio.sleep(30)
 
 async def auto_share_page_mode(link):
     """PAGE & NORM ACC MODE - Uses paired accounts from database OR manual cookie input."""
