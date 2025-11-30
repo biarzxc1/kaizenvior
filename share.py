@@ -69,7 +69,7 @@ def banner_header():
     print(LINE)
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'DEVELOPER':<13} {W}➤{RESET} {G}KEN DRICK{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'GITHUB':<13} {W}➤{RESET} {G}RYO GRAHHH{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}1.0.1{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}1.0.2{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}facebook.com/ryoevisu{RESET}")
     
     tool_name = f"{R}[ {BG_R}{W}RPWTOOLS{RESET}{R} ]{RESET}"
@@ -1036,7 +1036,7 @@ async def renew_eaag_token(cookie):
     """Renew EAAG token for a cookie."""
     return cookie_to_eaag(cookie)
 
-async def share_loop(session, cookie, token, post_id, account_name, display_mode='detailed'):
+async def share_loop(session, cookie, token, post_id, account_name, account_uid, cookie_id, display_mode='detailed'):
     """
     Continuous sharing loop for NORM ACC mode with ZERO DELAYS and token renewal every 3 minutes.
     """
@@ -1059,7 +1059,7 @@ async def share_loop(session, cookie, token, post_id, account_name, display_mode
                     if display_mode == 'minimal':
                         sys.stdout.write(f"\r {Y}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[{account_name[:20]}]{RESET}                              ")
                         sys.stdout.flush()
-                        time.sleep(1)
+                        time.sleep(0.5)
                     else:
                         now = datetime.datetime.now()
                         current_time = now.strftime("%H:%M:%S")
@@ -1106,17 +1106,17 @@ async def share_loop(session, cookie, token, post_id, account_name, display_mode
                         if display_mode == 'minimal':
                             sys.stdout.write(f"\r {G}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[{account_name[:20]}]{RESET}                            ")
                             sys.stdout.flush()
-                            time.sleep(1)
+                            time.sleep(0.5)
                         else:
                             print(f" {G}[RENEWED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {G}Token renewed successfully{RESET}")
                     else:
                         if display_mode != 'minimal':
                             print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
-                        await asyncio.sleep(10)
+                        await asyncio.sleep(5)  # Brief pause after failed renewal
                 else:
                     if display_mode != 'minimal':
                         print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
-                    await asyncio.sleep(5)
+                    # ZERO DELAY - Continue immediately even after errors
         
         except asyncio.CancelledError:
             break
@@ -1127,7 +1127,7 @@ async def share_loop(session, cookie, token, post_id, account_name, display_mode
             if "asyncio" not in error_msg.lower() and "event" not in error_msg.lower():
                 if display_mode != 'minimal':
                     print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {R}{error_msg[:40]}{RESET}")
-            await asyncio.sleep(30)
+            # ZERO DELAY - Continue immediately after exceptions
 
 async def auto_share_main(link_or_id, selected_cookies):
     """Main auto share function using selected database cookies with EAAG tokens."""
