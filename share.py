@@ -89,7 +89,10 @@ def banner_header():
         # Color-coded plan display
         user_plan = user_data['plan']
         if user_plan == 'max':
-            plan_display = f"{M}[ \033[45m{W}MAX{RESET}{M} ]{RESET}"
+            if user_data.get('planExpiry'):
+                plan_display = f"{M}[ \033[45m{W}MAX{RESET}{M} ]{RESET}"
+            else:
+                plan_display = f"{M}[ \033[45m{W}MAX LIFETIME{RESET}{M} ]{RESET}"
         else:  # free
             plan_display = f"{W}[ \033[47m\033[30mFREE{RESET}{W} ]{RESET}"
         
@@ -111,17 +114,19 @@ def show_menu():
         print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}REGISTER{RESET}")
         print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}EXIT{RESET}")
     elif user_data and user_data.get('isAdmin'):
-        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — NORM ACCOUNTS{RESET}")
-        print(f" {W}[{RESET}{BG_Y}{W}02{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}B{RESET}{W}]{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
-        print(f" {W}[{RESET}{BG_B}{W}03{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}C{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
-        print(f" {W}[{RESET}{BG_M}{W}04{RESET}{BG_M}{Y}/{RESET}{BG_M}{W}D{RESET}{W}]{RESET} {M}ADMIN PANEL             — MANAGEMENT{RESET}")
-        print(f" {W}[{RESET}{BG_G}{W}05{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}E{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
+        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE V1           — NORM ACCOUNTS{RESET}")
+        print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}AUTO SHARE V2           — NORM ACCOUNTS (ALT){RESET}")
+        print(f" {W}[{RESET}{BG_Y}{W}03{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}C{RESET}{W}]{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
+        print(f" {W}[{RESET}{BG_B}{W}04{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}D{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
+        print(f" {W}[{RESET}{BG_M}{W}05{RESET}{BG_M}{Y}/{RESET}{BG_M}{W}E{RESET}{W}]{RESET} {M}ADMIN PANEL             — MANAGEMENT{RESET}")
+        print(f" {W}[{RESET}{BG_G}{W}06{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}F{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
         print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}LOGOUT{RESET}")
     else:
-        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — NORM ACCOUNTS{RESET}")
-        print(f" {W}[{RESET}{BG_Y}{W}02{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}B{RESET}{W}]{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
-        print(f" {W}[{RESET}{BG_B}{W}03{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}C{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
-        print(f" {W}[{RESET}{BG_G}{W}04{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}D{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
+        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE V1           — NORM ACCOUNTS{RESET}")
+        print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}AUTO SHARE V2           — NORM ACCOUNTS (ALT){RESET}")
+        print(f" {W}[{RESET}{BG_Y}{W}03{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}C{RESET}{W}]{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
+        print(f" {W}[{RESET}{BG_B}{W}04{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}D{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
+        print(f" {W}[{RESET}{BG_G}{W}05{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}E{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
         print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}LOGOUT{RESET}")
     
     print(LINE)
@@ -931,6 +936,287 @@ def dashboard_stats():
     
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
+# ============ AUTO SHARE V2 FUNCTIONS (ALTERNATIVE HEADERS) ============
+
+async def share_with_eaag_v2(session, cookie, token, post_id):
+    """Share a post using EAAG token with ALTERNATIVE headers (V2)."""
+    headers = {
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
+        'sec-ch-ua': '"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': "Windows",
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'none',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
+        'accept-encoding': 'gzip, deflate',
+        'host': 'b-graph.facebook.com',
+        'cookie': cookie
+    }
+    
+    try:
+        url = f'https://b-graph.facebook.com/me/feed?link=https://mbasic.facebook.com/{post_id}&published=0&access_token={token}'
+        async with session.post(url, headers=headers, timeout=10) as response:
+            json_data = await response.json()
+            
+            if 'id' in json_data:
+                return True, json_data.get('id', 'N/A')
+            else:
+                error_msg = json_data.get('error', {}).get('message', 'Unknown error')
+                return False, error_msg
+    except Exception as e:
+        return False, str(e)
+
+async def share_loop_v2(session, cookie, token, post_id, account_name, account_uid, cookie_id, display_mode='detailed'):
+    """
+    Continuous sharing loop for V2 mode with ALTERNATIVE HEADERS and ZERO DELAYS.
+    """
+    global success_count
+    
+    last_token_renewal = time.time()
+    current_token = token
+    failed_consecutive = 0
+    
+    while True:
+        try:
+            # Auto-renew token every 3 minutes (180 seconds)
+            if time.time() - last_token_renewal >= 180:
+                new_token = await renew_eaag_token(cookie)
+                
+                if new_token:
+                    current_token = new_token
+                    last_token_renewal = time.time()
+                    
+                    if display_mode == 'minimal':
+                        sys.stdout.write(f"\r {Y}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                              ")
+                        sys.stdout.flush()
+                        time.sleep(0.5)
+                    else:
+                        now = datetime.datetime.now()
+                        current_time = now.strftime("%H:%M:%S")
+                        print(f" {Y}[RENEWED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {C}Token renewed{RESET}")
+            
+            now = datetime.datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+            
+            is_success, result = await share_with_eaag_v2(session, cookie, current_token, post_id)
+            
+            if is_success:
+                async with lock:
+                    success_count += 1
+                    current_count = success_count
+                
+                failed_consecutive = 0
+                
+                if display_mode == 'minimal':
+                    sys.stdout.write(f"\r {G}[SUCCESS — {current_count}]{RESET} {W}|{RESET} {C}[UID: {account_uid}]{RESET}                    ")
+                    sys.stdout.flush()
+                else:
+                    print(f" {G}[SUCCESS]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {Y}Total: {current_count}{RESET}")
+                
+                # ZERO DELAY - Continue immediately
+            else:
+                failed_consecutive += 1
+                error_message = result
+                
+                # If failed 3 times consecutively, try to renew token
+                if failed_consecutive >= 3:
+                    if display_mode == 'minimal':
+                        sys.stdout.write(f"\r {Y}[RENEWING...]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                          ")
+                        sys.stdout.flush()
+                    else:
+                        print(f" {Y}[RENEWING]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {Y}Attempting token renewal...{RESET}")
+                    
+                    new_token = await renew_eaag_token(cookie)
+                    
+                    if new_token:
+                        current_token = new_token
+                        last_token_renewal = time.time()
+                        failed_consecutive = 0
+                        
+                        if display_mode == 'minimal':
+                            sys.stdout.write(f"\r {G}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                            ")
+                            sys.stdout.flush()
+                            time.sleep(0.5)
+                        else:
+                            print(f" {G}[RENEWED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {G}Token renewed successfully{RESET}")
+                    else:
+                        if display_mode != 'minimal':
+                            print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
+                        await asyncio.sleep(5)  # Brief pause after failed renewal
+                else:
+                    if display_mode != 'minimal':
+                        print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
+                    # ZERO DELAY - Continue immediately even after errors
+        
+        except asyncio.CancelledError:
+            break
+        except KeyboardInterrupt:
+            break
+        except Exception as e:
+            error_msg = str(e)
+            if "asyncio" not in error_msg.lower() and "event" not in error_msg.lower():
+                if display_mode != 'minimal':
+                    print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_msg[:40]}{RESET}")
+            # ZERO DELAY - Continue immediately after exceptions
+
+async def auto_share_main_v2(link_or_id, selected_cookies):
+    """Main auto share V2 function using alternative headers."""
+    global success_count
+    success_count = 0
+    
+    refresh_screen()
+    print(f" {C}[!] CONVERTING SELECTED COOKIES TO EAAG TOKENS...{RESET}")
+    nice_loader("CONVERTING")
+    
+    eaag_tokens = []
+    
+    # Convert selected cookies to EAAG tokens
+    for cookie_data in selected_cookies:
+        token = cookie_to_eaag(cookie_data['cookie'])
+        if token:
+            eaag_tokens.append({
+                'id': cookie_data['id'],
+                'cookie': cookie_data['cookie'],
+                'token': token,
+                'name': cookie_data['name'],
+                'uid': cookie_data['uid'],
+                'status': cookie_data.get('status', 'active')
+            })
+            status_indicator = f"{R}[RESTRICTED]{RESET}" if cookie_data.get('status') == 'restricted' else f"{G}[ACTIVE]{RESET}"
+            print(f" {G}✓{RESET} {Y}{cookie_data['name']}{RESET} {W}({C}UID: {cookie_data['uid']}{W}){RESET} {status_indicator}")
+        else:
+            print(f" {R}✗{RESET} {Y}{cookie_data['name']}{RESET} {R}Failed to extract EAAG token{RESET}")
+    
+    if not eaag_tokens:
+        print(f" {R}[ERROR] No valid EAAG tokens extracted!{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return
+    
+    # Extract post ID
+    async with aiohttp.ClientSession() as session:
+        post_id = extract_post_id_from_link(link_or_id)
+        
+        # If extraction failed or looks like a full URL, try API method
+        if not post_id.isdigit():
+            refresh_screen()
+            print(f" {G}[!] EXTRACTING POST ID FROM LINK...{RESET}")
+            nice_loader("EXTRACTING")
+            
+            post_id = await getid(session, link_or_id)
+            if not post_id:
+                print(f" {R}[ERROR] Failed to get post ID{RESET}")
+                input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+                return
+    
+    # Select display mode
+    display_mode = select_progress_display()
+    
+    refresh_screen()
+    print(f" {G}[SUCCESS] Extracted {len(eaag_tokens)} EAAG tokens{RESET}")
+    print(LINE)
+    print(f" {Y}Post ID: {G}{post_id}{RESET}")
+    print(LINE)
+    
+    async with aiohttp.ClientSession() as session:
+        print(f" {M}[AUTO SHARE V2 CONFIGURATION]{RESET}")
+        print(LINE)
+        print(f" {Y}Mode: {C}V2 - ALTERNATIVE HEADERS{RESET}")
+        print(f" {Y}Total Accounts: {G}{len(eaag_tokens)}{RESET}")
+        print(f" {Y}Share Speed: {G}MAXIMUM (ZERO DELAYS){RESET}")
+        print(f" {Y}Token Renewal: {C}Auto every 3 minutes{RESET}")
+        print(f" {Y}Headers: {C}Windows Desktop (Chrome 107){RESET}")
+        print(LINE)
+        print(f" {G}[!] STARTING AUTO SHARE V2...{RESET}")
+        print(f" {Y}[TIP] Press Ctrl+C to stop{RESET}")
+        print(LINE)
+        
+        tasks = []
+        for acc in eaag_tokens:
+            task = asyncio.create_task(share_loop_v2(
+                session,
+                acc['cookie'],
+                acc['token'],
+                post_id,
+                acc['name'],
+                acc['uid'],
+                acc['id'],
+                display_mode
+            ))
+            tasks.append(task)
+        
+        print(f" {G}[STARTED] Running {len(tasks)} parallel V2 share threads at MAXIMUM SPEED...{RESET}")
+        print(LINE)
+        
+        try:
+            await asyncio.gather(*tasks, return_exceptions=True)
+        except Exception as e:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+def start_auto_share_v2():
+    """Entry point for auto share V2 feature."""
+    refresh_screen()
+    
+    # Display informational message
+    print(f" {C}[!] AUTO SHARE V2 - ALTERNATIVE HEADERS{RESET}")
+    print(LINE)
+    print(f" {G}[✓] INFORMATION:{RESET}")
+    print(f" {W}• Make sure your post is set to PUBLIC{RESET}")
+    print(f" {W}• Uses ALTERNATIVE headers (Windows Desktop){RESET}")
+    print(f" {W}• Shares run at MAXIMUM SPEED (zero delays){RESET}")
+    print(f" {W}• Tokens auto-renew every 3 minutes{RESET}")
+    print(f" {W}• Enhanced cookie validation with restriction detection{RESET}")
+    print(f" {W}• Best for accounts that fail with V1{RESET}")
+    print(LINE)
+    
+    # Brief delay to let user read
+    for i in range(3, 0, -1):
+        sys.stdout.write(f"\r {C}[CONTINUE IN {i} SECONDS]{RESET} {W}Reading time...{RESET}")
+        sys.stdout.flush()
+        time.sleep(1)
+    
+    sys.stdout.write(f"\r{' ' * 60}\r")
+    sys.stdout.flush()
+    
+    selected_cookies = select_cookies_for_sharing()
+    
+    if not selected_cookies:
+        return
+    
+    refresh_screen()
+    print(f" {C}[AUTO SHARE V2]{RESET}")
+    print(LINE)
+    
+    link_or_id = input(f" {W}[{W}➤{W}]{RESET} {C}POST LINK OR ID {W}➤{RESET} ").strip()
+    
+    if not link_or_id:
+        return
+    
+    try:
+        asyncio.run(auto_share_main_v2(link_or_id, selected_cookies))
+    except KeyboardInterrupt:
+        refresh_screen()
+        print(f" {Y}[!] AUTO SHARE V2 STOPPED BY USER{RESET}")
+        stop_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f" {Y}[!] Stop Time: {stop_time}{RESET}")
+        print(f" {G}[!] Total Successful Shares: {success_count}{RESET}")
+        print(LINE)
+        
+        if success_count > 0:
+            api_request("POST", "/share/complete", {"totalShares": success_count})
+            print(f" {G}[!] Shares recorded to your account{RESET}")
+        
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+    except Exception as e:
+        refresh_screen()
+        print(f" {R}[ERROR] An unexpected error occurred:{RESET}")
+        print(f" {R}{str(e)}{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+
 # ============ POST ID EXTRACTION ============
 
 def extract_post_id_from_link(link):
@@ -1408,18 +1694,21 @@ def main():
                 start_auto_share()
                 
             elif choice in ['2', '02', 'B']:
-                manage_cookies()
+                start_auto_share_v2()
             
             elif choice in ['3', '03', 'C']:
-                show_user_stats()
+                manage_cookies()
             
             elif choice in ['4', '04', 'D']:
+                show_user_stats()
+            
+            elif choice in ['5', '05', 'E']:
                 if user_data and user_data.get('isAdmin'):
                     admin_panel()
                 else:
                     update_tool_logic()
             
-            elif choice in ['5', '05', 'E']:
+            elif choice in ['6', '06', 'F']:
                 if user_data and user_data.get('isAdmin'):
                     update_tool_logic()
                 else:
