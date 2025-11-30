@@ -69,7 +69,7 @@ def banner_header():
     print(LINE)
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'DEVELOPER':<13} {W}➤{RESET} {G}KEN DRICK{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'GITHUB':<13} {W}➤{RESET} {G}RYO GRAHHH{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}1.0.2{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}1.0.3{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}facebook.com/ryoevisu{RESET}")
     
     tool_name = f"{R}[ {BG_R}{W}RPWTOOLS{RESET}{R} ]{RESET}"
@@ -114,16 +114,16 @@ def show_menu():
         print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}REGISTER{RESET}")
         print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}EXIT{RESET}")
     elif user_data and user_data.get('isAdmin'):
-        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE V1           — NORM ACCOUNTS{RESET}")
-        print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}AUTO SHARE V2           — NORM ACCOUNTS (ALT){RESET}")
+        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — NORM ACCOUNTS{RESET}")
+        print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}TIKTOK BOOSTER          — VIEWS & LIKES{RESET}")
         print(f" {W}[{RESET}{BG_Y}{W}03{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}C{RESET}{W}]{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
         print(f" {W}[{RESET}{BG_B}{W}04{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}D{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
         print(f" {W}[{RESET}{BG_M}{W}05{RESET}{BG_M}{Y}/{RESET}{BG_M}{W}E{RESET}{W}]{RESET} {M}ADMIN PANEL             — MANAGEMENT{RESET}")
         print(f" {W}[{RESET}{BG_G}{W}06{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}F{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
         print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}LOGOUT{RESET}")
     else:
-        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE V1           — NORM ACCOUNTS{RESET}")
-        print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}AUTO SHARE V2           — NORM ACCOUNTS (ALT){RESET}")
+        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — NORM ACCOUNTS{RESET}")
+        print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}TIKTOK BOOSTER          — VIEWS & LIKES{RESET}")
         print(f" {W}[{RESET}{BG_Y}{W}03{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}C{RESET}{W}]{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
         print(f" {W}[{RESET}{BG_B}{W}04{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}D{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
         print(f" {W}[{RESET}{BG_G}{W}05{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}E{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
@@ -936,6 +936,256 @@ def dashboard_stats():
     
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
+# ============ TIKTOK BOOSTER FUNCTIONS ============
+
+def random_ip():
+    """Generate random IP address."""
+    return '.'.join([str(random.randint(0, 255)) for _ in range(4)])
+
+def random_user_agent():
+    """Generate random mobile user agent."""
+    agents = [
+        'Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
+        'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 13_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1 Mobile/15E148 Safari/604.1'
+    ]
+    return random.choice(agents)
+
+def clean_tiktok_url(url):
+    """Clean TikTok URL to standard format."""
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+    except:
+        return url
+
+def resolve_short_url(short_url):
+    """Resolve TikTok short URL to full URL."""
+    try:
+        response = requests.head(short_url, headers={'User-Agent': random_user_agent()}, allow_redirects=True, timeout=10)
+        final_url = response.url
+        if 'tiktok.com/@' in final_url and '/video/' in final_url:
+            return final_url
+        return short_url
+    except:
+        return short_url
+
+def prepare_tiktok_url(url):
+    """Prepare TikTok URL for boosting."""
+    if 'vt.tiktok.com' in url or 'vm.tiktok.com' in url:
+        url = resolve_short_url(url)
+    return clean_tiktok_url(url)
+
+def generate_bypass_url(url):
+    """Generate bypassed URL with random parameters."""
+    rand = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=10))
+    timestamp = int(time.time() * 1000)
+    return f"{url}?ref=boost{rand}{timestamp}&t={timestamp}"
+
+async def boost_tiktok(session, url):
+    """Boost TikTok video with views and likes."""
+    BASE_URL = "https://boostgrams.com"
+    API_URL = f"{BASE_URL}/action/"
+    
+    ip = random_ip()
+    ua = random_user_agent()
+    
+    cookies = {}
+    
+    headers_page = {
+        'User-Agent': ua,
+        'Accept-Language': 'en-US,en;q=0.9',
+        'X-Forwarded-For': ip,
+        'X-Real-IP': ip,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+    }
+    
+    headers_api = {
+        'User-Agent': ua,
+        'Accept-Language': 'en-US,en;q=0.9',
+        'X-Forwarded-For': ip,
+        'X-Real-IP': ip,
+        'Accept': 'application/json, */*;q=0.1',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'X-Requested-With': 'XMLHttpRequest'
+    }
+    
+    try:
+        # Initialize session
+        async with session.get(BASE_URL, headers=headers_page, timeout=15) as response:
+            if response.cookies:
+                for cookie in response.cookies:
+                    cookies[cookie.key] = cookie.value
+        
+        async with session.get(f"{BASE_URL}/free-tiktok-views/", headers=headers_page, timeout=15) as response:
+            if response.cookies:
+                for cookie in response.cookies:
+                    cookies[cookie.key] = cookie.value
+        
+        # Generate bypass URL
+        bypass_url = generate_bypass_url(url)
+        
+        # Step 1: Get token
+        data1 = {
+            'ns_action': 'freetool_start',
+            'freetool[id]': '22',
+            'freetool[token]': '',
+            'freetool[process_item]': bypass_url,
+            'freetool[quantity]': '100'
+        }
+        
+        async with session.post(API_URL, data=data1, headers=headers_api, cookies=cookies, timeout=20) as response:
+            result = await response.json()
+            if response.cookies:
+                for cookie in response.cookies:
+                    cookies[cookie.key] = cookie.value
+            
+            token = result.get('freetool_process_token')
+            if not token:
+                return {'success': False, 'stage': 'token'}
+        
+        # Step 2: Execute boost
+        data2 = {
+            'ns_action': 'freetool_start',
+            'freetool[id]': '22',
+            'freetool[token]': token,
+            'freetool[process_item]': bypass_url,
+            'freetool[quantity]': '100'
+        }
+        
+        async with session.post(API_URL, data=data2, headers=headers_api, cookies=cookies, timeout=20) as response:
+            result = await response.json()
+            
+            if result.get('statu') or result.get('success'):
+                return {'success': True, 'views': 100, 'likes': 100}
+            else:
+                return {'success': False, 'stage': 'execute'}
+    
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+async def tiktok_booster_main(url):
+    """Main TikTok booster function."""
+    refresh_screen()
+    print(f" {C}[!] PREPARING TIKTOK URL...{RESET}")
+    nice_loader("PREPARING")
+    
+    target_url = prepare_tiktok_url(url)
+    
+    refresh_screen()
+    print(f" {C}[TIKTOK BOOSTER]{RESET}")
+    print(LINE)
+    print(f" {Y}Target URL:{RESET}")
+    print(f" {C}{target_url}{RESET}")
+    print(LINE)
+    print(f" {G}[✓] Each boost adds +100 views and +100 likes{RESET}")
+    print(f" {Y}[!] Press Ctrl+C to stop{RESET}")
+    print(LINE)
+    
+    success_count = 0
+    failed_count = 0
+    total_views = 0
+    total_likes = 0
+    consecutive_fails = 0
+    
+    async with aiohttp.ClientSession() as session:
+        while True:
+            try:
+                result = await boost_tiktok(session, target_url)
+                
+                if result['success']:
+                    success_count += 1
+                    total_views += 100
+                    total_likes += 100
+                    consecutive_fails = 0
+                    
+                    now = datetime.datetime.now().strftime("%H:%M:%S")
+                    print(f" {G}[SUCCESS]{RESET} {W}|{RESET} {M}{now}{RESET} {W}|{RESET} Boost #{success_count} {W}|{RESET} {C}{total_views:,}{RESET} views {W}|{RESET} {M}{total_likes:,}{RESET} likes")
+                    
+                    # Show summary every 50 boosts
+                    if success_count % 50 == 0:
+                        print(LINE)
+                        print(f" {Y}[SUMMARY]{RESET}")
+                        print(f" {G}Successful: {success_count}{RESET}")
+                        print(f" {C}Total Views: {total_views:,}{RESET}")
+                        print(f" {M}Total Likes: {total_likes:,}{RESET}")
+                        print(f" {R}Failed: {failed_count}{RESET}")
+                        print(LINE)
+                else:
+                    failed_count += 1
+                    consecutive_fails += 1
+                    reason = result.get('stage') or result.get('error') or 'unknown'
+                    
+                    now = datetime.datetime.now().strftime("%H:%M:%S")
+                    print(f" {R}[FAILED]{RESET} {W}|{RESET} {M}{now}{RESET} {W}|{RESET} Reason: {reason} {W}|{RESET} Consecutive: {consecutive_fails}")
+                    
+                    # Cooldown after 5 consecutive failures
+                    if consecutive_fails >= 5:
+                        print(f" {Y}[!] Too many failures, cooling down for 5 seconds...{RESET}")
+                        await asyncio.sleep(5)
+                        consecutive_fails = 0
+            
+            except asyncio.CancelledError:
+                break
+            except KeyboardInterrupt:
+                break
+            except Exception as e:
+                print(f" {R}[ERROR] {str(e)}{RESET}")
+                await asyncio.sleep(2)
+
+def start_tiktok_booster():
+    """Entry point for TikTok booster feature."""
+    refresh_screen()
+    
+    print(f" {C}[!] TIKTOK BOOSTER - VIEWS & LIKES{RESET}")
+    print(LINE)
+    print(f" {G}[✓] INFORMATION:{RESET}")
+    print(f" {W}• Each boost adds +100 views and +100 likes{RESET}")
+    print(f" {W}• Works with any TikTok video URL{RESET}")
+    print(f" {W}• Supports short URLs (vt.tiktok.com, vm.tiktok.com){RESET}")
+    print(f" {W}• Automatic session management{RESET}")
+    print(f" {W}• Shows real-time progress{RESET}")
+    print(f" {W}• Free and unlimited{RESET}")
+    print(LINE)
+    
+    # Brief delay to let user read
+    for i in range(3, 0, -1):
+        sys.stdout.write(f"\r {C}[CONTINUE IN {i} SECONDS]{RESET} {W}Reading time...{RESET}")
+        sys.stdout.flush()
+        time.sleep(1)
+    
+    sys.stdout.write(f"\r{' ' * 60}\r")
+    sys.stdout.flush()
+    
+    refresh_screen()
+    print(f" {C}[TIKTOK BOOSTER]{RESET}")
+    print(LINE)
+    
+    tiktok_url = input(f" {W}[{W}➤{W}]{RESET} {C}TIKTOK VIDEO URL {W}➤{RESET} ").strip()
+    
+    if not tiktok_url:
+        return
+    
+    if 'tiktok.com' not in tiktok_url:
+        print(f" {R}[ERROR] Invalid TikTok URL{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return
+    
+    try:
+        asyncio.run(tiktok_booster_main(tiktok_url))
+    except KeyboardInterrupt:
+        refresh_screen()
+        print(f" {Y}[!] TIKTOK BOOSTER STOPPED BY USER{RESET}")
+        print(LINE)
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+    except Exception as e:
+        refresh_screen()
+        print(f" {R}[ERROR] An unexpected error occurred:{RESET}")
+        print(f" {R}{str(e)}{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+
 # ============ AUTO SHARE V2 FUNCTIONS (ALTERNATIVE HEADERS) ============
 
 async def share_with_eaag_v2(session, cookie, token, post_id):
@@ -1694,7 +1944,7 @@ def main():
                 start_auto_share()
                 
             elif choice in ['2', '02', 'B']:
-                start_auto_share_v2()
+                start_tiktok_booster()
             
             elif choice in ['3', '03', 'C']:
                 manage_cookies()
