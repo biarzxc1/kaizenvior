@@ -1057,13 +1057,13 @@ async def share_loop(session, cookie, token, post_id, account_name, account_uid,
                     last_token_renewal = time.time()
                     
                     if display_mode == 'minimal':
-                        sys.stdout.write(f"\r {Y}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[{account_name[:20]}]{RESET}                              ")
+                        sys.stdout.write(f"\r {Y}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                              ")
                         sys.stdout.flush()
                         time.sleep(0.5)
                     else:
                         now = datetime.datetime.now()
                         current_time = now.strftime("%H:%M:%S")
-                        print(f" {Y}[RENEWED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {C}Token renewed{RESET}")
+                        print(f" {Y}[RENEWED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {C}Token renewed{RESET}")
             
             now = datetime.datetime.now()
             current_time = now.strftime("%H:%M:%S")
@@ -1078,10 +1078,10 @@ async def share_loop(session, cookie, token, post_id, account_name, account_uid,
                 failed_consecutive = 0
                 
                 if display_mode == 'minimal':
-                    sys.stdout.write(f"\r {G}[SUCCESS — {current_count}]{RESET} {W}|{RESET} {C}[{account_name[:20]}]{RESET}                    ")
+                    sys.stdout.write(f"\r {G}[SUCCESS — {current_count}]{RESET} {W}|{RESET} {C}[UID: {account_uid}]{RESET}                    ")
                     sys.stdout.flush()
                 else:
-                    print(f" {G}[SUCCESS]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {Y}Total: {current_count}{RESET}")
+                    print(f" {G}[SUCCESS]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {Y}Total: {current_count}{RESET}")
                 
                 # ZERO DELAY - Continue immediately
             else:
@@ -1091,10 +1091,10 @@ async def share_loop(session, cookie, token, post_id, account_name, account_uid,
                 # If failed 3 times consecutively, try to renew token
                 if failed_consecutive >= 3:
                     if display_mode == 'minimal':
-                        sys.stdout.write(f"\r {Y}[RENEWING...]{RESET} {W}|{RESET} {B}[{account_name[:20]}]{RESET}                          ")
+                        sys.stdout.write(f"\r {Y}[RENEWING...]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                          ")
                         sys.stdout.flush()
                     else:
-                        print(f" {Y}[RENEWING]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {Y}Attempting token renewal...{RESET}")
+                        print(f" {Y}[RENEWING]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {Y}Attempting token renewal...{RESET}")
                     
                     new_token = await renew_eaag_token(cookie)
                     
@@ -1104,18 +1104,18 @@ async def share_loop(session, cookie, token, post_id, account_name, account_uid,
                         failed_consecutive = 0
                         
                         if display_mode == 'minimal':
-                            sys.stdout.write(f"\r {G}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[{account_name[:20]}]{RESET}                            ")
+                            sys.stdout.write(f"\r {G}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                            ")
                             sys.stdout.flush()
                             time.sleep(0.5)
                         else:
-                            print(f" {G}[RENEWED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {G}Token renewed successfully{RESET}")
+                            print(f" {G}[RENEWED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {G}Token renewed successfully{RESET}")
                     else:
                         if display_mode != 'minimal':
-                            print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
+                            print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
                         await asyncio.sleep(5)  # Brief pause after failed renewal
                 else:
                     if display_mode != 'minimal':
-                        print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
+                        print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
                     # ZERO DELAY - Continue immediately even after errors
         
         except asyncio.CancelledError:
@@ -1126,7 +1126,7 @@ async def share_loop(session, cookie, token, post_id, account_name, account_uid,
             error_msg = str(e)
             if "asyncio" not in error_msg.lower() and "event" not in error_msg.lower():
                 if display_mode != 'minimal':
-                    print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {B}{account_name}{RESET} {W}|{RESET} {R}{error_msg[:40]}{RESET}")
+                    print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_msg[:40]}{RESET}")
             # ZERO DELAY - Continue immediately after exceptions
 
 async def auto_share_main(link_or_id, selected_cookies):
