@@ -69,7 +69,7 @@ def banner_header():
     print(LINE)
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'DEVELOPER':<13} {W}➤{RESET} {G}KEN DRICK{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'GITHUB':<13} {W}➤{RESET} {G}RYO GRAHHH{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}2.0 - SIMPLIFIED{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}1.0.1{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}facebook.com/ryoevisu{RESET}")
     
     tool_name = f"{R}[ {BG_R}{W}RPWTOOLS{RESET}{R} ]{RESET}"
@@ -447,6 +447,21 @@ def add_cookie():
     print(f" {G}[ADD COOKIE]{RESET}")
     print(LINE)
     
+    # Check if user can add more cookies
+    if user_data['plan'] == 'free' and user_data.get('cookieCount', 0) >= 10:
+        print(f" {R}[LIMIT REACHED]{RESET}")
+        print(LINE)
+        print(f" {Y}FREE plan users can only store up to 10 cookies.{RESET}")
+        print(f" {Y}You currently have: {R}{user_data.get('cookieCount', 0)}/10{RESET}")
+        print(LINE)
+        print(f" {G}[UPGRADE TO MAX]{RESET}")
+        print(f" {Y}• Unlimited cookies{RESET}")
+        print(f" {Y}• No cooldowns{RESET}")
+        print(f" {Y}• Rental: 1 month (₱150) or 3 months (₱250){RESET}")
+        print(LINE)
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return
+    
     cookie = input(f" {W}[{W}➤{W}]{RESET} {C}COOKIE {W}➤{RESET} ").strip()
     if not cookie:
         return
@@ -463,10 +478,16 @@ def add_cookie():
         print(LINE)
         print(f" {Y}Name: {M}{response.get('name', 'Unknown')}{RESET}")
         print(f" {Y}UID: {C}{response.get('uid', 'Unknown')}{RESET}")
-        print(LINE)
         
         if user_data:
             user_data['cookieCount'] = response.get('totalCookies', 0)
+            
+            # Show remaining slots for FREE users
+            if user_data['plan'] == 'free':
+                remaining = 10 - user_data['cookieCount']
+                print(f" {Y}Remaining Slots: {C}{remaining}/10{RESET}")
+        
+        print(LINE)
     else:
         error_msg = response if isinstance(response, str) else response.get('message', 'Failed to add cookie') if isinstance(response, dict) else 'Failed to add cookie'
         print(f" {R}[ERROR] {error_msg}{RESET}")
@@ -1284,33 +1305,6 @@ def start_auto_share():
     
     sys.stdout.write(f"\r{' ' * 60}\r")
     sys.stdout.flush()
-    
-    # Check cooldown
-    refresh_screen()
-    print(f" {G}[!] CHECKING COOLDOWN STATUS...{RESET}")
-    nice_loader("CHECKING")
-    
-    status, response = api_request("POST", "/share/start")
-    
-    if status == 429:
-        refresh_screen()
-        print(f" {Y}[PLAN COOLDOWN ACTIVE]{RESET}")
-        print(LINE)
-        print(f" {Y}You must wait before starting another share session.{RESET}")
-        print(f" {Y}This is based on your subscription plan.{RESET}")
-        print(LINE)
-        print(f" {R}Remaining Time: {response.get('remainingSeconds', 0)}s{RESET}")
-        print(f" {Y}Available At: {W}{response.get('cooldownEnd', 'N/A')}{RESET}")
-        print(LINE)
-        print(f" {C}[PLAN INFO]{RESET}")
-        print(f" {Y}Your Plan: {W}{user_data['plan'].upper()}{RESET}")
-        
-        if user_data['plan'] == 'free':
-            print(f" {Y}Upgrade to MAX for no cooldown{RESET}")
-        
-        print(LINE)
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        return
     
     selected_cookies = select_cookies_for_sharing()
     
