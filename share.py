@@ -189,7 +189,7 @@ def get_country_from_ip():
     """Auto-detect country from IP address"""
     try:
         response = requests.get('http://ip-api.com/json/', timeout=5)
-        if response.status == 200:
+        if response.status_code == 200:
             data = response.json()
             return data.get('country', 'Unknown')
     except:
@@ -428,11 +428,18 @@ def view_cookies():
             print(f" {Y}No cookies stored yet.{RESET}")
         else:
             for i, cookie_data in enumerate(cookies, 1):
+                status_color = G if cookie_data['status'] == 'active' else R if cookie_data['status'] == 'restricted' else Y
+                status_display = cookie_data['status'].upper()
+                
                 print(f" {W}[{i:02d}]{RESET} {M}{cookie_data['name']}{RESET} {W}({C}UID: {cookie_data['uid']}{W}){RESET}")
                 cookie_preview = cookie_data['cookie'][:50] + "..." if len(cookie_data['cookie']) > 50 else cookie_data['cookie']
                 print(f"      Cookie: {C}{cookie_preview}{RESET}")
                 print(f"      Added: {Y}{cookie_data['addedAt']}{RESET}")
-                print(f"      Status: {G if cookie_data['status'] == 'active' else R}{cookie_data['status'].upper()}{RESET}")
+                print(f"      Status: {status_color}{status_display}{RESET}")
+                
+                if cookie_data['status'] == 'restricted':
+                    print(f"      {R}⚠ WARNING: This account is restricted!{RESET}")
+                
                 print(LINE)
         
     else:
@@ -467,6 +474,9 @@ def add_cookie():
         return
     
     refresh_screen()
+    print(f" {Y}[!] VALIDATING COOKIE...{RESET}")
+    print(f" {C}This may take 10-15 seconds{RESET}")
+    print(LINE)
     nice_loader("VALIDATING")
     
     status, response = api_request("POST", "/user/cookies", {
@@ -478,6 +488,13 @@ def add_cookie():
         print(LINE)
         print(f" {Y}Name: {M}{response.get('name', 'Unknown')}{RESET}")
         print(f" {Y}UID: {C}{response.get('uid', 'Unknown')}{RESET}")
+        print(f" {Y}Status: {G if response.get('status') == 'active' else R}{response.get('status', 'unknown').upper()}{RESET}")
+        
+        # Show restriction warning
+        if response.get('restricted'):
+            print(LINE)
+            print(f" {R}⚠ WARNING: This account is RESTRICTED!{RESET}")
+            print(f" {Y}Restricted accounts may not be able to share posts.{RESET}")
         
         if user_data:
             user_data['cookieCount'] = response.get('totalCookies', 0)
@@ -485,6 +502,7 @@ def add_cookie():
             # Show remaining slots for FREE users
             if user_data['plan'] == 'free':
                 remaining = 10 - user_data['cookieCount']
+                print(LINE)
                 print(f" {Y}Remaining Slots: {C}{remaining}/10{RESET}")
         
         print(LINE)
@@ -522,7 +540,8 @@ def delete_cookie():
     print(LINE)
     
     for i, cookie_data in enumerate(cookies, 1):
-        print(f" {W}[{i}]{RESET} {M}{cookie_data['name']}{RESET} {W}({C}UID: {cookie_data['uid']}{W}){RESET}")
+        status_indicator = f"{R}[RESTRICTED]{RESET}" if cookie_data['status'] == 'restricted' else f"{G}[ACTIVE]{RESET}"
+        print(f" {W}[{i}]{RESET} {M}{cookie_data['name']}{RESET} {W}({C}UID: {cookie_data['uid']}{W}){RESET} {status_indicator}")
     
     print(LINE)
     
@@ -707,8 +726,8 @@ def change_user_plan():
     refresh_screen()
     print(f" {Y}[CHANGE PLAN FOR: {selected_user['username'].upper()}]{RESET}")
     print(LINE)
-    print(f" {W}[1]{RESET} {W}FREE{RESET} - 5min share cooldown")
-    print(f" {W}[2]{RESET} {G}MAX{RESET} - No cooldowns, unlimited (RENTAL)")
+    print(f" {W}[1]{RESET} {W}FREE{RESET} - 10 cookies max")
+    print(f" {W}[2]{RESET} {G}MAX{RESET} - Unlimited cookies (RENTAL)")
     print(LINE)
     
     plan_choice = input(f" {W}[{W}➤{W}]{RESET} {C}SELECT PLAN NUMBER {W}➤{RESET} ").strip()
@@ -975,7 +994,7 @@ def cookie_to_eaag(cookie):
     }
     
     try:
-        response = requests.get('https://business.facebook.com/business_locations', headers=headers, timeout=10)
+        response = requests.get('https://business.facebook.com/business_locations', headers=headers, timeout=15)
         eaag_match = re.search(r'(EAAG\w+)', response.text)
         if eaag_match:
             return eaag_match.group(1)
@@ -1002,7 +1021,7 @@ async def share_with_eaag(session, cookie, token, post_id):
     
     try:
         url = f'https://b-graph.facebook.com/me/feed?link=https://mbasic.facebook.com/{post_id}&published=0&access_token={token}'
-        async with session.post(url, headers=headers) as response:
+        async with session.post(url, headers=headers, timeout=10) as response:
             json_data = await response.json()
             
             if 'id' in json_data:
@@ -1019,7 +1038,7 @@ async def renew_eaag_token(cookie):
 
 async def share_loop(session, cookie, token, post_id, account_name, display_mode='detailed'):
     """
-    Continuous sharing loop for NORM ACC mode with ZERO DELAYS and token renewal.
+    Continuous sharing loop for NORM ACC mode with ZERO DELAYS and token renewal every 3 minutes.
     """
     global success_count
     
@@ -1029,8 +1048,8 @@ async def share_loop(session, cookie, token, post_id, account_name, display_mode
     
     while True:
         try:
-            # Auto-renew token every 5 minutes (300 seconds)
-            if time.time() - last_token_renewal >= 300:
+            # Auto-renew token every 3 minutes (180 seconds)
+            if time.time() - last_token_renewal >= 180:
                 new_token = await renew_eaag_token(cookie)
                 
                 if new_token:
@@ -1038,7 +1057,7 @@ async def share_loop(session, cookie, token, post_id, account_name, display_mode
                     last_token_renewal = time.time()
                     
                     if display_mode == 'minimal':
-                        sys.stdout.write(f"\r {Y}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[{account_name}]{RESET}                              ")
+                        sys.stdout.write(f"\r {Y}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[{account_name[:20]}]{RESET}                              ")
                         sys.stdout.flush()
                         time.sleep(1)
                     else:
@@ -1126,12 +1145,15 @@ async def auto_share_main(link_or_id, selected_cookies):
         token = cookie_to_eaag(cookie_data['cookie'])
         if token:
             eaag_tokens.append({
+                'id': cookie_data['id'],
                 'cookie': cookie_data['cookie'],
                 'token': token,
                 'name': cookie_data['name'],
-                'uid': cookie_data['uid']
+                'uid': cookie_data['uid'],
+                'status': cookie_data.get('status', 'active')
             })
-            print(f" {G}✓{RESET} {Y}{cookie_data['name']}{RESET} {W}({C}UID: {cookie_data['uid']}{W}){RESET}")
+            status_indicator = f"{R}[RESTRICTED]{RESET}" if cookie_data.get('status') == 'restricted' else f"{G}[ACTIVE]{RESET}"
+            print(f" {G}✓{RESET} {Y}{cookie_data['name']}{RESET} {W}({C}UID: {cookie_data['uid']}{W}){RESET} {status_indicator}")
         else:
             print(f" {R}✗{RESET} {Y}{cookie_data['name']}{RESET} {R}Failed to extract EAAG token{RESET}")
     
@@ -1171,7 +1193,8 @@ async def auto_share_main(link_or_id, selected_cookies):
         print(f" {Y}Mode: {C}NORM ACC (EAAG Tokens){RESET}")
         print(f" {Y}Total Accounts: {G}{len(eaag_tokens)}{RESET}")
         print(f" {Y}Share Speed: {G}MAXIMUM (ZERO DELAYS){RESET}")
-        print(f" {Y}Token Renewal: {C}Auto every 5 minutes{RESET}")
+        print(f" {Y}Token Renewal: {C}Auto every 3 minutes{RESET}")
+        print(f" {Y}Renewal Safety: {G}Detection & Error Handling{RESET}")
         print(LINE)
         print(f" {G}[!] STARTING AUTO SHARE...{RESET}")
         print(f" {Y}[TIP] Press Ctrl+C to stop{RESET}")
@@ -1185,6 +1208,8 @@ async def auto_share_main(link_or_id, selected_cookies):
                 acc['token'],
                 post_id,
                 acc['name'],
+                acc['uid'],
+                acc['id'],
                 display_mode
             ))
             tasks.append(task)
@@ -1229,7 +1254,8 @@ def select_cookies_for_sharing():
     
     for i, cookie_data in enumerate(cookies, 1):
         letter = chr(64 + i) if i <= 26 else str(i)
-        print(f" {W}[{BG_C}{W}{i:02d}{RESET}{Y}/{BG_C}{W}{letter}{RESET}{W}]{RESET} {C}{cookie_data['name']}{RESET} {W}({Y}UID: {cookie_data['uid']}{W}){RESET}")
+        status_indicator = f"{R}[RESTRICTED]{RESET}" if cookie_data.get('status') == 'restricted' else f"{G}[ACTIVE]{RESET}"
+        print(f" {W}[{BG_C}{W}{i:02d}{RESET}{Y}/{BG_C}{W}{letter}{RESET}{W}]{RESET} {C}{cookie_data['name']}{RESET} {W}({Y}UID: {cookie_data['uid']}{W}){RESET} {status_indicator}")
     
     print(LINE)
     print(f" {Y}[TIP] Enter numbers separated by commas (e.g., 1,2,3) or type 'ALL'{RESET}")
@@ -1272,8 +1298,16 @@ def select_cookies_for_sharing():
     print(LINE)
     print(f" {Y}Selected {G}{len(selected_cookies)}{Y} cookie(s):{RESET}")
     for cookie_data in selected_cookies:
-        print(f"   • {C}{cookie_data['name']}{RESET} {W}({Y}UID: {cookie_data['uid']}{W}){RESET}")
+        status_indicator = f"{R}[RESTRICTED]{RESET}" if cookie_data.get('status') == 'restricted' else f"{G}[ACTIVE]{RESET}"
+        print(f"   • {C}{cookie_data['name']}{RESET} {W}({Y}UID: {cookie_data['uid']}{W}){RESET} {status_indicator}")
     print(LINE)
+    
+    # Check for restricted cookies
+    restricted_count = sum(1 for c in selected_cookies if c.get('status') == 'restricted')
+    if restricted_count > 0:
+        print(f" {R}⚠ WARNING: {restricted_count} restricted account(s) detected!{RESET}")
+        print(f" {Y}Restricted accounts may not be able to share posts.{RESET}")
+        print(LINE)
     
     confirm = input(f" {W}[{W}➤{W}]{RESET} {Y}Confirm? (Y/N) {W}➤{RESET} ").strip().upper()
     
@@ -1293,7 +1327,8 @@ def start_auto_share():
     print(f" {W}• Make sure your post is set to PUBLIC{RESET}")
     print(f" {W}• This uses EAAG tokens (business.facebook.com method){RESET}")
     print(f" {W}• Shares run at MAXIMUM SPEED (zero delays){RESET}")
-    print(f" {W}• Tokens auto-renew every 5 minutes{RESET}")
+    print(f" {W}• Tokens auto-renew every 3 minutes{RESET}")
+    print(f" {W}• Enhanced cookie validation with restriction detection{RESET}")
     print(f" {W}• Best for normal accounts{RESET}")
     print(LINE)
     
