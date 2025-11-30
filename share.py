@@ -992,7 +992,15 @@ async def boost_tiktok(session, url):
     ip = random_ip()
     ua = random_user_agent()
     
-    cookies = {}
+    cookie_jar = {}
+    
+    def cookies_to_header():
+        return '; '.join([f"{k}={v}" for k, v in cookie_jar.items()])
+    
+    def merge_cookies(response):
+        if response.cookies:
+            for key, cookie in response.cookies.items():
+                cookie_jar[key] = cookie.value
     
     headers_page = {
         'User-Agent': ua,
@@ -1015,14 +1023,11 @@ async def boost_tiktok(session, url):
     try:
         # Initialize session
         async with session.get(BASE_URL, headers=headers_page, timeout=15) as response:
-            if response.cookies:
-                for cookie in response.cookies:
-                    cookies[cookie.key] = cookie.value
+            merge_cookies(response)
         
+        headers_page['Cookie'] = cookies_to_header()
         async with session.get(f"{BASE_URL}/free-tiktok-views/", headers=headers_page, timeout=15) as response:
-            if response.cookies:
-                for cookie in response.cookies:
-                    cookies[cookie.key] = cookie.value
+            merge_cookies(response)
         
         # Generate bypass URL
         bypass_url = generate_bypass_url(url)
@@ -1036,11 +1041,19 @@ async def boost_tiktok(session, url):
             'freetool[quantity]': '100'
         }
         
-        async with session.post(API_URL, data=data1, headers=headers_api, cookies=cookies, timeout=20) as response:
-            result = await response.json()
-            if response.cookies:
-                for cookie in response.cookies:
-                    cookies[cookie.key] = cookie.value
+        headers_api['Cookie'] = cookies_to_header()
+        async with session.post(API_URL, data=data1, headers=headers_api, timeout=20) as response:
+            merge_cookies(response)
+            
+            # Check content type
+            content_type = response.headers.get('Content-Type', '')
+            if 'application/json' not in content_type:
+                return {'success': False, 'stage': 'invalid_response'}
+            
+            try:
+                result = await response.json()
+            except:
+                return {'success': False, 'stage': 'json_parse_error'}
             
             token = result.get('freetool_process_token')
             if not token:
@@ -1055,16 +1068,29 @@ async def boost_tiktok(session, url):
             'freetool[quantity]': '100'
         }
         
-        async with session.post(API_URL, data=data2, headers=headers_api, cookies=cookies, timeout=20) as response:
-            result = await response.json()
+        headers_api['Cookie'] = cookies_to_header()
+        async with session.post(API_URL, data=data2, headers=headers_api, timeout=20) as response:
+            merge_cookies(response)
+            
+            # Check content type
+            content_type = response.headers.get('Content-Type', '')
+            if 'application/json' not in content_type:
+                return {'success': False, 'stage': 'invalid_response'}
+            
+            try:
+                result = await response.json()
+            except:
+                return {'success': False, 'stage': 'json_parse_error'}
             
             if result.get('statu') or result.get('success'):
                 return {'success': True, 'views': 100, 'likes': 100}
             else:
                 return {'success': False, 'stage': 'execute'}
     
+    except asyncio.TimeoutError:
+        return {'success': False, 'error': 'timeout'}
     except Exception as e:
-        return {'success': False, 'error': str(e)}
+        return {'success': False, 'error': str(e)[:50]}
 
 async def tiktok_booster_main(url):
     """Main TikTok booster function."""
