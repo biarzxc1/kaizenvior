@@ -1132,16 +1132,24 @@ async def deep_scrape(url, depth=2):
         'json_data': [],
         'javascript_variables': {},
         'cookies': {},
-        'headers': {},
+        'request_headers': {},
+        'response_headers': {},
         'forms': [],
         'links': [],
         'all_urls': set(),
         'graphql_queries': [],
         'websocket_endpoints': [],
-        'ajax_calls': []
+        'ajax_calls': [],
+        'fetch_requests': [],
+        'xhr_requests': [],
+        'scripts': [],
+        'stylesheets': [],
+        'images': [],
+        'meta_tags': {}
     }
     
-    headers = {
+    # Request headers that will be sent
+    request_headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
@@ -1151,64 +1159,111 @@ async def deep_scrape(url, depth=2):
         'Sec-Fetch-Dest': 'document',
         'Sec-Fetch-Mode': 'navigate',
         'Sec-Fetch-Site': 'none',
-        'Cache-Control': 'max-age=0'
+        'Cache-Control': 'max-age=0',
+        'DNT': '1'
     }
+    
+    all_data['request_headers'] = request_headers
     
     async with aiohttp.ClientSession() as session:
         # Scrape main page
-        print(f" {C}[1/1] Scraping main page...{RESET}")
-        result = await fetch_with_session(session, url, headers)
+        print(f" {C}[1/15] Scraping main page...{RESET}")
+        result = await fetch_with_session(session, url, request_headers)
         
         if not result:
             return None
         
         html_content = result['text']
         all_data['pages_scraped'] += 1
-        all_data['headers'] = result['headers']
+        all_data['response_headers'] = result['headers']
         all_data['cookies'].update(result['cookies'])
         
         # Extract all data
-        print(f" {C}[2/9] Extracting API endpoints...{RESET}")
+        print(f" {C}[2/15] Extracting API endpoints...{RESET}")
         endpoints = extract_api_endpoints(html_content)
         all_data['api_endpoints'].update(endpoints)
         print(f" {G}   ✓ Found {len(endpoints)} API endpoints{RESET}")
         
-        print(f" {C}[3/9] Extracting JSON data...{RESET}")
+        print(f" {C}[3/15] Extracting JSON data...{RESET}")
         json_data = extract_json_data(html_content)
         all_data['json_data'].extend(json_data)
         print(f" {G}   ✓ Found {len(json_data)} JSON objects{RESET}")
         
-        print(f" {C}[4/9] Extracting JavaScript variables...{RESET}")
+        print(f" {C}[4/15] Extracting JavaScript variables...{RESET}")
         js_vars = extract_javascript_variables(html_content)
         all_data['javascript_variables'].update(js_vars)
         print(f" {G}   ✓ Found {len(js_vars)} JavaScript variables{RESET}")
         
-        print(f" {C}[5/9] Extracting forms...{RESET}")
+        print(f" {C}[5/15] Extracting forms...{RESET}")
         forms = extract_forms(html_content)
         all_data['forms'].extend(forms)
         print(f" {G}   ✓ Found {len(forms)} forms{RESET}")
         
-        print(f" {C}[6/9] Extracting links...{RESET}")
+        print(f" {C}[6/15] Extracting links...{RESET}")
         links = extract_links(html_content)
         all_data['links'].extend(links)
         print(f" {G}   ✓ Found {len(links)} links{RESET}")
         
-        print(f" {C}[7/9] Extracting all URLs...{RESET}")
+        print(f" {C}[7/15] Extracting all URLs...{RESET}")
         urls = extract_all_urls(html_content, url)
         all_data['all_urls'].update(urls)
         print(f" {G}   ✓ Found {len(urls)} URLs{RESET}")
         
-        print(f" {C}[8/9] Extracting GraphQL queries...{RESET}")
+        print(f" {C}[8/15] Extracting GraphQL queries...{RESET}")
         graphql_pattern = r'(query|mutation)\s+(\w+)[^{]*(\{[^}]+\})'
         graphql = re.findall(graphql_pattern, html_content, re.IGNORECASE)
         all_data['graphql_queries'] = [{'type': q[0], 'name': q[1]} for q in graphql]
         print(f" {G}   ✓ Found {len(graphql)} GraphQL queries{RESET}")
         
-        print(f" {C}[9/9] Extracting WebSocket endpoints...{RESET}")
+        print(f" {C}[9/15] Extracting WebSocket endpoints...{RESET}")
         ws_pattern = r'wss?://[^"\'>\s]+'
         websockets = re.findall(ws_pattern, html_content)
         all_data['websocket_endpoints'] = list(set(websockets))
         print(f" {G}   ✓ Found {len(websockets)} WebSocket endpoints{RESET}")
+        
+        print(f" {C}[10/15] Extracting AJAX/Fetch calls...{RESET}")
+        fetch_pattern = r'fetch\(["\']([^"\']+)["\']'
+        fetch_calls = re.findall(fetch_pattern, html_content, re.IGNORECASE)
+        all_data['fetch_requests'] = list(set(fetch_calls))
+        print(f" {G}   ✓ Found {len(fetch_calls)} Fetch requests{RESET}")
+        
+        print(f" {C}[11/15] Extracting XHR requests...{RESET}")
+        xhr_pattern = r'\.(?:open|send)\(["\'](?:GET|POST|PUT|DELETE)["\'],\s*["\']([^"\']+)["\']'
+        xhr_calls = re.findall(xhr_pattern, html_content, re.IGNORECASE)
+        all_data['xhr_requests'] = list(set(xhr_calls))
+        print(f" {G}   ✓ Found {len(xhr_calls)} XHR requests{RESET}")
+        
+        print(f" {C}[12/15] Extracting script sources...{RESET}")
+        script_pattern = r'<script[^>]*src=["\']([^"\']+)["\']'
+        scripts = re.findall(script_pattern, html_content, re.IGNORECASE)
+        all_data['scripts'] = list(set(scripts))
+        print(f" {G}   ✓ Found {len(scripts)} external scripts{RESET}")
+        
+        print(f" {C}[13/15] Extracting stylesheet links...{RESET}")
+        css_pattern = r'<link[^>]*href=["\']([^"\']+\.css[^"\']*)["\']'
+        stylesheets = re.findall(css_pattern, html_content, re.IGNORECASE)
+        all_data['stylesheets'] = list(set(stylesheets))
+        print(f" {G}   ✓ Found {len(stylesheets)} stylesheets{RESET}")
+        
+        print(f" {C}[14/15] Extracting image sources...{RESET}")
+        img_pattern = r'<img[^>]*src=["\']([^"\']+)["\']'
+        images = re.findall(img_pattern, html_content, re.IGNORECASE)
+        all_data['images'] = list(set(images))[:50]  # Limit to 50
+        print(f" {G}   ✓ Found {len(images)} images (saved 50){RESET}")
+        
+        print(f" {C}[15/15] Extracting meta tags...{RESET}")
+        meta_pattern = r'<meta\s+([^>]+)>'
+        meta_tags = re.findall(meta_pattern, html_content, re.IGNORECASE)
+        
+        meta_data = {}
+        for meta in meta_tags:
+            name_match = re.search(r'(?:name|property)=["\']([^"\']+)["\']', meta)
+            content_match = re.search(r'content=["\']([^"\']+)["\']', meta)
+            if name_match and content_match:
+                meta_data[name_match.group(1)] = content_match.group(1)
+        
+        all_data['meta_tags'] = meta_data
+        print(f" {G}   ✓ Found {len(meta_data)} meta tags{RESET}")
     
     # Convert sets to lists for JSON serialization
     all_data['api_endpoints'] = list(all_data['api_endpoints'])
@@ -1291,8 +1346,15 @@ def scrape_website():
         print(f" {Y}All URLs: {G}{len(results['all_urls'])}{RESET}")
         print(f" {Y}GraphQL Queries: {G}{len(results['graphql_queries'])}{RESET}")
         print(f" {Y}WebSocket Endpoints: {G}{len(results['websocket_endpoints'])}{RESET}")
+        print(f" {Y}Fetch Requests: {G}{len(results['fetch_requests'])}{RESET}")
+        print(f" {Y}XHR Requests: {G}{len(results['xhr_requests'])}{RESET}")
+        print(f" {Y}External Scripts: {G}{len(results['scripts'])}{RESET}")
+        print(f" {Y}Stylesheets: {G}{len(results['stylesheets'])}{RESET}")
+        print(f" {Y}Images: {G}{len(results['images'])}{RESET}")
         print(f" {Y}Cookies: {G}{len(results['cookies'])}{RESET}")
-        print(f" {Y}Response Headers: {G}{len(results['headers'])}{RESET}")
+        print(f" {Y}Request Headers: {G}{len(results['request_headers'])}{RESET}")
+        print(f" {Y}Response Headers: {G}{len(results['response_headers'])}{RESET}")
+        print(f" {Y}Meta Tags: {G}{len(results['meta_tags'])}{RESET}")
         print(LINE)
         
         # Ask to display specific results
@@ -1301,6 +1363,8 @@ def scrape_website():
         print(f" {W}[2]{RESET} View JavaScript Variables")
         print(f" {W}[3]{RESET} View Forms")
         print(f" {W}[4]{RESET} View WebSocket Endpoints")
+        print(f" {W}[5]{RESET} View Request Headers (Sent)")
+        print(f" {W}[6]{RESET} View Response Headers (Received)")
         print(f" {W}[0]{RESET} Skip")
         print(LINE)
         
@@ -1348,6 +1412,25 @@ def scrape_website():
                 print(f" {W}[{i:02d}]{RESET} {M}{ws}{RESET}")
             print(LINE)
             input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+            
+        elif view_choice == '5' and results['request_headers']:
+            refresh_screen()
+            print(f" {G}[REQUEST HEADERS - SENT TO SERVER] Total: {len(results['request_headers'])}{RESET}")
+            print(LINE)
+            for i, (key, value) in enumerate(results['request_headers'].items(), 1):
+                print(f" {W}[{i:02d}]{RESET} {Y}{key}:{RESET} {C}{value}{RESET}")
+            print(LINE)
+            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+            
+        elif view_choice == '6' and results['response_headers']:
+            refresh_screen()
+            print(f" {G}[RESPONSE HEADERS - RECEIVED FROM SERVER] Total: {len(results['response_headers'])}{RESET}")
+            print(LINE)
+            for i, (key, value) in enumerate(results['response_headers'].items(), 1):
+                value_display = str(value)[:200]
+                print(f" {W}[{i:02d}]{RESET} {Y}{key}:{RESET} {C}{value_display}{RESET}")
+            print(LINE)
+            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         
     except Exception as e:
         refresh_screen()
@@ -1355,7 +1438,7 @@ def scrape_website():
         print(f" {R}{str(e)}{RESET}")
         print(LINE)
     
-    input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")]{RESET}")
+    input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
             print(LINE)
             for i, endpoint in enumerate(list(api_endpoints)[:50], 1):
                 print(f" {W}[{i:02d}]{RESET} {C}{endpoint}{RESET}")
