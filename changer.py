@@ -22,13 +22,20 @@ class FBUtil:
         if not cookie:
             return None
         
-        c_user_match = re.search(r'(?:^|;)\s*c_user=([^;]+)', cookie)
-        i_user_match = re.search(r'(?:^|;)\s*i_user=([^;]+)', cookie)
+        # For Facebook cookies
+        c_user_match = re.search(r'(?:^|;|\s)c_user=([^;]+)', cookie)
+        i_user_match = re.search(r'(?:^|;|\s)i_user=([^;]+)', cookie)
+        
+        # For Instagram cookies - try to extract from ds_user_id
+        ds_user_match = re.search(r'(?:^|;|\s)ds_user_id=([^;]+)', cookie)
         
         if c_user_match:
-            return c_user_match.group(1)
+            return c_user_match.group(1).strip()
         elif i_user_match:
-            return i_user_match.group(1)
+            return i_user_match.group(1).strip()
+        elif ds_user_match:
+            return ds_user_match.group(1).strip()
+        
         return None
     
     @staticmethod
@@ -94,7 +101,12 @@ class FBUtil:
                         raise Exception("Cookies are invalid or expired - redirected to login")
             
             user_id = FBUtil.get_uid(cookie)
-            if not user_id:
+            
+            # For Instagram, user_id might not be in cookies, we can skip it or use a placeholder
+            if not user_id and is_instagram:
+                print("⚠️  Warning: No user ID in Instagram cookies, using placeholder")
+                user_id = "0"  # Instagram API often doesn't require this
+            elif not user_id:
                 raise Exception("Could not extract user ID from cookies")
             
             fb_dtsg = FBUtil.get_from(html, '["DTSGInitData",[],{"token":"', '","')
@@ -132,12 +144,17 @@ class FBUtil:
             raise
     
     @staticmethod
-    async def exec_graph(cookie, data, is_accounts_center=False, is_instagram=False):
+    async def exec_graph(cookie, data, is_accounts_center=False, is_instagram=False, override_user_id=None):
         """Execute GraphQL API call"""
         try:
             fb_data = await FBUtil.get_fb_data(cookie, is_instagram)
             form_data = fb_data["data"]
             headers = fb_data["headers"]
+            
+            # Override user ID if provided (useful for Instagram)
+            if override_user_id:
+                form_data["av"] = override_user_id
+                form_data["__user"] = override_user_id
             
             platform = "instagram" if is_instagram else "facebook"
             subdomain = "accountscenter" if is_accounts_center else "www"
@@ -400,7 +417,7 @@ async def main():
             "fb_api_caller_class": "RelayModern",
             "server_timestamps": "true",
             "doc_id": "28573275658982428",
-        }, is_accounts_center=True, is_instagram=True)
+        }, is_accounts_center=True, is_instagram=True, override_user_id=ig_acc["uid"])
         
         if debug:
             print(f"[DEBUG] IG Result: {json.dumps(ig_result, indent=2)}")
