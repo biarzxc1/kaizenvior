@@ -188,37 +188,9 @@ util.parseAppstate = (input) => {
     
     throw new Error("Invalid appstate format");
   } catch (error) {
-    console.log("❌ Failed to parse appstate as JSON, using as raw string");
     // Return as is, might be cookie string
     return input;
   }
-};
-
-// ========== MULTILINE INPUT HANDLER ==========
-const getMultilineInput = (rl, prompt) => {
-  return new Promise((resolve) => {
-    console.log(prompt);
-    console.log("(Paste your input, then press ENTER twice to confirm)\n");
-    
-    let input = '';
-    let emptyLineCount = 0;
-    
-    const lineHandler = (line) => {
-      if (line === '') {
-        emptyLineCount++;
-        if (emptyLineCount >= 1 && input.trim()) {
-          rl.removeListener('line', lineHandler);
-          resolve(input.trim());
-          return;
-        }
-      } else {
-        emptyLineCount = 0;
-        input += line + '\n';
-      }
-    };
-    
-    rl.on('line', lineHandler);
-  });
 };
 
 // ========== MAIN PROGRAM ==========
@@ -242,12 +214,11 @@ const getMultilineInput = (rl, prompt) => {
   try {
     console.log("📝 INSTRUCTIONS:");
     console.log("• Paste your appstates when prompted");
-    console.log("• Press ENTER after pasting to confirm");
-    console.log("• Wait for each confirmation before proceeding\n");
+    console.log("• Press ENTER after pasting to confirm\n");
     console.log("=".repeat(50) + "\n");
     
     // ========== PROMPT FOR FACEBOOK APPSTATE ==========
-    const appstateFbInput = await getMultilineInput(rl, "📘 FACEBOOK APPSTATE:");
+    const appstateFbInput = await ask("📘 FACEBOOK APPSTATE: ");
     
     if (!appstateFbInput.trim()) {
       console.log("❌ No Facebook appstate provided!");
@@ -255,10 +226,9 @@ const getMultilineInput = (rl, prompt) => {
       return;
     }
     console.log("✅ Facebook appstate received!\n");
-    console.log("-".repeat(50) + "\n");
 
     // ========== PROMPT FOR INSTAGRAM APPSTATE ==========
-    const appstateIgInput = await getMultilineInput(rl, "📸 INSTAGRAM APPSTATE:");
+    const appstateIgInput = await ask("📸 INSTAGRAM APPSTATE: ");
     
     if (!appstateIgInput.trim()) {
       console.log("❌ No Instagram appstate provided!");
@@ -266,7 +236,6 @@ const getMultilineInput = (rl, prompt) => {
       return;
     }
     console.log("✅ Instagram appstate received!\n");
-    console.log("-".repeat(50) + "\n");
 
     // ========== PROMPT FOR NEW NAME ==========
     const newName = await ask("✏️  ENTER NEW NAME: ");
