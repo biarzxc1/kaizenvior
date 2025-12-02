@@ -64,6 +64,14 @@ class FBUtil:
     async def get_fb_data(cookie, is_instagram=False):
         """Fetch Facebook/Instagram data including DTSG token"""
         try:
+            # Validate cookie has required fields
+            if is_instagram:
+                if not any(x in cookie for x in ['sessionid', 'csrftoken']):
+                    raise Exception("Invalid Instagram cookie - missing sessionid or csrftoken")
+            else:
+                if 'c_user' not in cookie and 'i_user' not in cookie:
+                    raise Exception("Invalid Facebook cookie - missing c_user or i_user")
+            
             platform = "instagram" if is_instagram else "facebook"
             headers = {
                 "user-agent": FBUtil.FB_USER_AGENT,
@@ -72,15 +80,28 @@ class FBUtil:
                 "upgrade-insecure-requests": "1",
                 "referer": f"https://www.{platform}.com/",
                 "origin": f"https://www.{platform}.com",
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "accept-language": "en-US,en;q=0.9",
             }
             
             timeout = aiohttp.ClientTimeout(total=10)
             async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.get(f"https://www.{platform}.com", headers=headers) as response:
+                async with session.get(f"https://www.{platform}.com", headers=headers, allow_redirects=True) as response:
                     html = await response.text()
+                    
+                    # Check if we got redirected to login
+                    if "login" in str(response.url) or response.status == 302:
+                        raise Exception("Cookies are invalid or expired - redirected to login")
             
             user_id = FBUtil.get_uid(cookie)
+            if not user_id:
+                raise Exception("Could not extract user ID from cookies")
+            
             fb_dtsg = FBUtil.get_from(html, '["DTSGInitData",[],{"token":"', '","')
+            if not fb_dtsg:
+                print("⚠️  Warning: Could not find fb_dtsg token in response")
+                # Try alternative pattern
+                fb_dtsg = FBUtil.get_from(html, '"DTSGInitialData",[],"', '"')
             
             # Calculate jazoest
             jazoest = "2"
@@ -88,11 +109,16 @@ class FBUtil:
                 for char in fb_dtsg:
                     jazoest += str(ord(char))
             
+            lsd_token = FBUtil.get_from(html, '["LSD",[],{"token":"', '"}')
+            if not lsd_token:
+                # Try alternative pattern
+                lsd_token = FBUtil.get_from(html, '"LSDToken",[],"', '"')
+            
             return {
                 "data": {
                     "fb_dtsg": fb_dtsg or "",
                     "jazoest": jazoest,
-                    "lsd": FBUtil.get_from(html, '["LSD",[],{"token":"', '"}') or "",
+                    "lsd": lsd_token or "",
                     "av": user_id,
                     "__a": "1",
                     "__user": user_id,
@@ -123,12 +149,43 @@ class FBUtil:
             headers_post = {
                 **headers,
                 "content-type": "application/x-www-form-urlencoded",
+                "accept": "*/*",
+                "accept-language": "en-US,en;q=0.9",
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "same-origin",
+                "x-fb-friendly-name": data.get("fb_api_req_friendly_name", ""),
+                "x-fb-lsd": form_data.get("lsd", ""),
             }
             
             timeout = aiohttp.ClientTimeout(total=15)
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.post(url, data=urlencode(post_data), headers=headers_post) as response:
-                    return await response.json()
+                    # Get response text first
+                    response_text = await response.text()
+                    
+                    # Check if response is JSON
+                    if response.content_type and 'json' in response.content_type:
+                        return json.loads(response_text)
+                    elif response_text.strip().startswith('{') or response_text.strip().startswith('['):
+                        # Try to parse as JSON even if content-type is wrong
+                        return json.loads(response_text)
+                    else:
+                        # Not JSON, probably HTML error page
+                        print(f"❌ Server returned HTML instead of JSON")
+                        print(f"Response status: {response.status}")
+                        print(f"Response preview: {response_text[:500]}")
+                        
+                        # Check for common Facebook errors
+                        if "login" in response_text.lower() or "checkpoint" in response_text.lower():
+                            raise Exception("Invalid or expired cookies. Please get fresh appstate.")
+                        elif "rate limit" in response_text.lower():
+                            raise Exception("Rate limited by Facebook. Please wait and try again.")
+                        else:
+                            raise Exception(f"Facebook returned error page. Check your cookies.")
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {e}")
+            raise
         except Exception as e:
             print(f"Graph API error: {e}")
             raise
@@ -233,6 +290,10 @@ async def main():
     print("   FB NAME CHANGER (TERMINAL TOOL)")
     print("=" * 50 + "\n")
     
+    # Debug mode
+    import sys
+    debug = '--debug' in sys.argv
+    
     try:
         print("📝 PASTE INSTRUCTIONS:")
         print("1. Copy your FULL Facebook appstate (entire JSON array)")
@@ -275,6 +336,12 @@ async def main():
         
         print("✅ Appstates processed successfully!")
         
+        if debug:
+            print(f"\n[DEBUG] FB Cookie length: {len(appstate_fb)}")
+            print(f"[DEBUG] IG Cookie length: {len(appstate_ig)}")
+            print(f"[DEBUG] FB has c_user: {'c_user' in appstate_fb}")
+            print(f"[DEBUG] IG has sessionid: {'sessionid' in appstate_ig}")
+        
         # Validate Instagram appstate
         if not FBUtil.is_instagram(appstate_ig):
             print("❌ Invalid Instagram appstate! Make sure it contains sessionid or csrftoken")
@@ -282,17 +349,32 @@ async def main():
         
         print("\n🔍 Fetching account data...")
         
-        # Get linked accounts
-        accounts = await FBUtil.get_accounts_center(appstate_fb)
-        if not accounts:
-            raise Exception("No accounts found. Check your Facebook appstate.")
+        try:
+            # Get linked accounts
+            accounts = await FBUtil.get_accounts_center(appstate_fb)
+            if not accounts:
+                raise Exception("No accounts found. Check your Facebook appstate.")
+            
+            if debug:
+                print(f"[DEBUG] Found {len(accounts)} accounts")
+                for acc in accounts:
+                    print(f"[DEBUG] Account: {acc['type']} - {acc['name']}")
+        except Exception as e:
+            print(f"\n❌ Failed to get accounts: {e}")
+            print("\n💡 Troubleshooting:")
+            print("1. Make sure your Facebook cookie is fresh (not expired)")
+            print("2. Try getting new appstate from browser")
+            print("3. Ensure Facebook and Instagram accounts are linked")
+            print("4. Check if your account needs security verification")
+            raise
         
         # Find Facebook and Instagram accounts
         fb_acc = next((acc for acc in accounts if acc["type"] == "FACEBOOK"), None)
         ig_acc = next((acc for acc in accounts if acc["type"] == "INSTAGRAM"), None)
         
-        print(f"Facebook Account: {fb_acc}")
-        print(f"Instagram Account: {ig_acc}")
+        if debug:
+            print(f"\n[DEBUG] Facebook Account: {fb_acc}")
+            print(f"[DEBUG] Instagram Account: {ig_acc}")
         
         if not fb_acc or not ig_acc:
             raise Exception("Couldn't find connected Facebook and Instagram accounts.")
@@ -319,6 +401,9 @@ async def main():
             "server_timestamps": "true",
             "doc_id": "28573275658982428",
         }, is_accounts_center=True, is_instagram=True)
+        
+        if debug:
+            print(f"[DEBUG] IG Result: {json.dumps(ig_result, indent=2)}")
         
         # Check for errors
         if ig_result.get("errors") or ig_result.get("data", {}).get("fxim_update_identity_name", {}).get("error"):
@@ -352,6 +437,9 @@ async def main():
             "doc_id": "9388416374608398",
         }, is_accounts_center=True, is_instagram=False)
         
+        if debug:
+            print(f"[DEBUG] FB Result: {json.dumps(fb_result, indent=2)}")
+        
         # Check for errors
         if fb_result.get("errors") or fb_result.get("data", {}).get("fxim_sync_resources_v2", {}).get("error"):
             error_msg = (
@@ -368,6 +456,10 @@ async def main():
         
     except Exception as e:
         print(f"\n❌ Error: {e}")
+        if debug:
+            import traceback
+            print("\n[DEBUG] Full traceback:")
+            traceback.print_exc()
 
 
 if __name__ == "__main__":
