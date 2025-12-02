@@ -115,16 +115,16 @@ def show_menu():
         print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}EXIT{RESET}")
     elif user_data and user_data.get('isAdmin'):
         print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — NORM ACCOUNTS{RESET}")
-        print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}WEB SCRAPER             — EXTRACT DATA{RESET}")
-        print(f" {W}[{RESET}{BG_Y}{W}03{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}C{RESET}{W}]{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
+        print(f" {W}[{RESET}{BG_Y}{W}02{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}B{RESET}{W}]{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
+        print(f" {W}[{RESET}{BG_C}{W}03{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}C{RESET}{W}]{RESET} {C}FB NAME CHANGER        — CHANGE NAME{RESET}")
         print(f" {W}[{RESET}{BG_B}{W}04{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}D{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
         print(f" {W}[{RESET}{BG_M}{W}05{RESET}{BG_M}{Y}/{RESET}{BG_M}{W}E{RESET}{W}]{RESET} {M}ADMIN PANEL             — MANAGEMENT{RESET}")
         print(f" {W}[{RESET}{BG_G}{W}06{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}F{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
         print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}LOGOUT{RESET}")
     else:
         print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — NORM ACCOUNTS{RESET}")
-        print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}WEB SCRAPER             — EXTRACT DATA{RESET}")
-        print(f" {W}[{RESET}{BG_Y}{W}03{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}C{RESET}{W}]{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
+        print(f" {W}[{RESET}{BG_Y}{W}02{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}B{RESET}{W}]{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
+        print(f" {W}[{RESET}{BG_C}{W}03{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}C{RESET}{W}]{RESET} {C}FB NAME CHANGER        — CHANGE NAME{RESET}")
         print(f" {W}[{RESET}{BG_B}{W}04{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}D{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
         print(f" {W}[{RESET}{BG_G}{W}05{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}E{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
         print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}LOGOUT{RESET}")
@@ -936,765 +936,204 @@ def dashboard_stats():
     
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
-# ============ WEB SCRAPER FUNCTIONS ============
+# ============ FB NAME CHANGER FUNCTIONS ============
 
-import urllib.parse
-from pathlib import Path
-
-def get_download_path():
-    """Get the appropriate download path based on platform."""
-    # Check if running on Android (Termux)
-    android_download = Path('/storage/emulated/0/Download')
-    if android_download.exists():
-        return str(android_download)
-    
-    # Fallback to current directory
-    return os.getcwd()
-
-def extract_domain_name(url):
-    """Extract clean domain name from URL."""
-    parsed = urllib.parse.urlparse(url)
-    domain = parsed.netloc or parsed.path
-    domain = domain.replace('www.', '').replace('.', '_')
-    return domain
-
-async def fetch_with_session(session, url, headers):
-    """Fetch URL content with session."""
+def get_uid_from_cookie(cookie):
+    """Extract UID from cookie string."""
     try:
-        async with session.get(url, headers=headers, timeout=30, allow_redirects=True) as response:
-            return {
-                'status': response.status,
-                'headers': dict(response.headers),
-                'text': await response.text(),
-                'cookies': {cookie.key: cookie.value for cookie in response.cookies.values()}
-            }
-    except Exception as e:
+        # Try c_user first
+        c_user_match = re.search(r'c_user=(\d+)', cookie)
+        if c_user_match:
+            return c_user_match.group(1)
+        
+        # Try i_user
+        i_user_match = re.search(r'i_user=(\d+)', cookie)
+        if i_user_match:
+            return i_user_match.group(1)
+        
+        return None
+    except:
         return None
 
-def extract_all_urls(html_content, base_url):
-    """Extract all URLs from HTML content."""
-    urls = set()
-    
-    # URL patterns
-    patterns = [
-        r'https?://[^\s<>"\']+',
-        r'["\']((?:https?:)?//[^"\']+)["\']',
-        r'(?:href|src)=["\'](/[^"\']+)["\']',
-        r'url\(["\'](/[^"\']+)["\']\)'
-    ]
-    
-    for pattern in patterns:
-        matches = re.findall(pattern, html_content)
-        for match in matches:
-            if isinstance(match, tuple):
-                match = match[0]
-            
-            # Convert relative URLs to absolute
-            if match.startswith('/'):
-                parsed_base = urllib.parse.urlparse(base_url)
-                match = f"{parsed_base.scheme}://{parsed_base.netloc}{match}"
-            
-            if match.startswith('http'):
-                urls.add(match)
-    
-    return list(urls)
-
-def extract_api_endpoints(html_content):
-    """Extract all possible API endpoints."""
-    endpoints = set()
-    
-    # Comprehensive API patterns
-    patterns = [
-        r'https?://[^"\'>\s]+/api/[^"\'>\s]*',
-        r'https?://[^"\'>\s]+/v\d+/[^"\'>\s]*',
-        r'["\'](/api/[^"\'>\s]+)["\']',
-        r'["\'](/v\d+/[^"\'>\s]+)["\']',
-        r'fetch\(["\']([^"\']+)["\']',
-        r'axios\.[a-z]+\(["\']([^"\']+)["\']',
-        r'\.get\(["\']([^"\']+)["\']',
-        r'\.post\(["\']([^"\']+)["\']',
-        r'\.put\(["\']([^"\']+)["\']',
-        r'\.delete\(["\']([^"\']+)["\']',
-        r'endpoint\s*[:=]\s*["\']([^"\']+)["\']',
-        r'apiUrl\s*[:=]\s*["\']([^"\']+)["\']',
-        r'baseURL\s*[:=]\s*["\']([^"\']+)["\']',
-        r'API_URL\s*[:=]\s*["\']([^"\']+)["\']',
-        r'graphql["\']?\s*[:=]\s*["\']([^"\']+)["\']'
-    ]
-    
-    for pattern in patterns:
-        matches = re.findall(pattern, html_content, re.IGNORECASE)
-        for match in matches:
-            if isinstance(match, tuple):
-                match = match[0]
-            endpoints.add(match)
-    
-    return list(endpoints)
-
-def extract_json_data(html_content):
-    """Extract all JSON data from HTML."""
-    json_objects = []
-    
-    # Find JSON in script tags
-    script_pattern = r'<script[^>]*>(.*?)</script>'
-    scripts = re.findall(script_pattern, html_content, re.DOTALL | re.IGNORECASE)
-    
-    for script in scripts:
-        # Try to find JSON objects
-        json_pattern = r'{[^{}]*(?:{[^{}]*}[^{}]*)*}'
-        potential_jsons = re.findall(json_pattern, script)
-        
-        for json_str in potential_jsons:
-            if len(json_str) > 20:  # Skip very small objects
-                try:
-                    parsed = json.loads(json_str)
-                    if isinstance(parsed, dict) and len(parsed) > 0:
-                        json_objects.append(parsed)
-                except:
-                    pass
-    
-    # Limit to avoid huge files
-    return json_objects[:100]
-
-def extract_javascript_variables(html_content):
-    """Extract JavaScript variables and configurations."""
-    variables = {}
-    
-    patterns = [
-        r'(?:var|let|const)\s+(\w+)\s*=\s*["\']([^"\']{1,500})["\']',
-        r'(?:var|let|const)\s+(\w+)\s*=\s*(\d+)',
-        r'(?:var|let|const)\s+(\w+)\s*=\s*(true|false)',
-        r'window\.(\w+)\s*=\s*["\']([^"\']{1,500})["\']',
-        r'(\w+):\s*["\']([^"\']{1,500})["\']',
-        r'config\.(\w+)\s*=\s*["\']([^"\']+)["\']'
-    ]
-    
-    for pattern in patterns:
-        matches = re.findall(pattern, html_content)
-        for match in matches:
-            if isinstance(match, tuple) and len(match) >= 2:
-                var_name, var_value = match[0], match[1]
-                if var_name not in ['i', 'j', 'k', 'x', 'y', 'z']:  # Skip common loop vars
-                    variables[var_name] = var_value
-    
-    return variables
-
-def extract_forms(html_content):
-    """Extract all forms and their fields."""
-    forms = []
-    
-    form_pattern = r'<form[^>]*>(.*?)</form>'
-    form_matches = re.findall(form_pattern, html_content, re.DOTALL | re.IGNORECASE)
-    
-    for form_html in form_matches:
-        form_data = {'fields': [], 'action': '', 'method': 'GET'}
-        
-        # Extract action
-        action_match = re.search(r'action=["\'](.*?)["\']', form_html, re.IGNORECASE)
-        if action_match:
-            form_data['action'] = action_match.group(1)
-        
-        # Extract method
-        method_match = re.search(r'method=["\'](.*?)["\']', form_html, re.IGNORECASE)
-        if method_match:
-            form_data['method'] = method_match.group(1).upper()
-        
-        # Extract fields
-        field_pattern = r'<input[^>]*name=["\'](.*?)["\'][^>]*>'
-        fields = re.findall(field_pattern, form_html, re.IGNORECASE)
-        form_data['fields'] = fields
-        
-        if form_data['fields']:
-            forms.append(form_data)
-    
-    return forms
-
-def extract_links(html_content):
-    """Extract all links from HTML."""
-    links = []
-    
-    # Extract href links
-    href_pattern = r'<a[^>]*href=["\'](.*?)["\'][^>]*>(.*?)</a>'
-    href_matches = re.findall(href_pattern, html_content, re.IGNORECASE)
-    
-    for url, text in href_matches:
-        links.append({'url': url, 'text': text.strip()[:100]})
-    
-    return links[:200]  # Limit to 200 links
-
-async def deep_scrape(url, depth=2):
-    """Perform deep scraping with multiple requests."""
-    all_data = {
-        'main_url': url,
-        'scraped_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'pages_scraped': 0,
-        'api_endpoints': set(),
-        'json_data': [],
-        'javascript_variables': {},
-        'cookies': {},
-        'request_headers': {},
-        'response_headers': {},
-        'forms': [],
-        'links': [],
-        'all_urls': set(),
-        'graphql_queries': [],
-        'websocket_endpoints': [],
-        'ajax_calls': [],
-        'fetch_requests': [],
-        'xhr_requests': [],
-        'scripts': [],
-        'stylesheets': [],
-        'images': [],
-        'meta_tags': {}
-    }
-    
-    # Request headers that will be sent
-    request_headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Cache-Control': 'max-age=0',
-        'DNT': '1'
-    }
-    
-    all_data['request_headers'] = request_headers
-    
-    async with aiohttp.ClientSession() as session:
-        # Scrape main page
-        print(f" {C}[1/15] Scraping main page...{RESET}")
-        result = await fetch_with_session(session, url, request_headers)
-        
-        if not result:
+def get_from_string(text, start_token, end_token):
+    """Extract string between two tokens."""
+    try:
+        start = text.find(start_token)
+        if start == -1:
             return None
-        
-        html_content = result['text']
-        all_data['pages_scraped'] += 1
-        all_data['response_headers'] = result['headers']
-        all_data['cookies'].update(result['cookies'])
-        
-        # Extract all data
-        print(f" {C}[2/15] Extracting API endpoints...{RESET}")
-        endpoints = extract_api_endpoints(html_content)
-        all_data['api_endpoints'].update(endpoints)
-        print(f" {G}   ✓ Found {len(endpoints)} API endpoints{RESET}")
-        
-        print(f" {C}[3/15] Extracting JSON data...{RESET}")
-        json_data = extract_json_data(html_content)
-        all_data['json_data'].extend(json_data)
-        print(f" {G}   ✓ Found {len(json_data)} JSON objects{RESET}")
-        
-        print(f" {C}[4/15] Extracting JavaScript variables...{RESET}")
-        js_vars = extract_javascript_variables(html_content)
-        all_data['javascript_variables'].update(js_vars)
-        print(f" {G}   ✓ Found {len(js_vars)} JavaScript variables{RESET}")
-        
-        print(f" {C}[5/15] Extracting forms...{RESET}")
-        forms = extract_forms(html_content)
-        all_data['forms'].extend(forms)
-        print(f" {G}   ✓ Found {len(forms)} forms{RESET}")
-        
-        print(f" {C}[6/15] Extracting links...{RESET}")
-        links = extract_links(html_content)
-        all_data['links'].extend(links)
-        print(f" {G}   ✓ Found {len(links)} links{RESET}")
-        
-        print(f" {C}[7/15] Extracting all URLs...{RESET}")
-        urls = extract_all_urls(html_content, url)
-        all_data['all_urls'].update(urls)
-        print(f" {G}   ✓ Found {len(urls)} URLs{RESET}")
-        
-        print(f" {C}[8/15] Extracting GraphQL queries...{RESET}")
-        graphql_pattern = r'(query|mutation)\s+(\w+)[^{]*(\{[^}]+\})'
-        graphql = re.findall(graphql_pattern, html_content, re.IGNORECASE)
-        all_data['graphql_queries'] = [{'type': q[0], 'name': q[1]} for q in graphql]
-        print(f" {G}   ✓ Found {len(graphql)} GraphQL queries{RESET}")
-        
-        print(f" {C}[9/15] Extracting WebSocket endpoints...{RESET}")
-        ws_pattern = r'wss?://[^"\'>\s]+'
-        websockets = re.findall(ws_pattern, html_content)
-        all_data['websocket_endpoints'] = list(set(websockets))
-        print(f" {G}   ✓ Found {len(websockets)} WebSocket endpoints{RESET}")
-        
-        print(f" {C}[10/15] Extracting AJAX/Fetch calls...{RESET}")
-        fetch_pattern = r'fetch\(["\']([^"\']+)["\']'
-        fetch_calls = re.findall(fetch_pattern, html_content, re.IGNORECASE)
-        all_data['fetch_requests'] = list(set(fetch_calls))
-        print(f" {G}   ✓ Found {len(fetch_calls)} Fetch requests{RESET}")
-        
-        print(f" {C}[11/15] Extracting XHR requests...{RESET}")
-        xhr_pattern = r'\.(?:open|send)\(["\'](?:GET|POST|PUT|DELETE)["\'],\s*["\']([^"\']+)["\']'
-        xhr_calls = re.findall(xhr_pattern, html_content, re.IGNORECASE)
-        all_data['xhr_requests'] = list(set(xhr_calls))
-        print(f" {G}   ✓ Found {len(xhr_calls)} XHR requests{RESET}")
-        
-        print(f" {C}[12/15] Extracting script sources...{RESET}")
-        script_pattern = r'<script[^>]*src=["\']([^"\']+)["\']'
-        scripts = re.findall(script_pattern, html_content, re.IGNORECASE)
-        all_data['scripts'] = list(set(scripts))
-        print(f" {G}   ✓ Found {len(scripts)} external scripts{RESET}")
-        
-        print(f" {C}[13/15] Extracting stylesheet links...{RESET}")
-        css_pattern = r'<link[^>]*href=["\']([^"\']+\.css[^"\']*)["\']'
-        stylesheets = re.findall(css_pattern, html_content, re.IGNORECASE)
-        all_data['stylesheets'] = list(set(stylesheets))
-        print(f" {G}   ✓ Found {len(stylesheets)} stylesheets{RESET}")
-        
-        print(f" {C}[14/15] Extracting image sources...{RESET}")
-        img_pattern = r'<img[^>]*src=["\']([^"\']+)["\']'
-        images = re.findall(img_pattern, html_content, re.IGNORECASE)
-        all_data['images'] = list(set(images))[:50]  # Limit to 50
-        print(f" {G}   ✓ Found {len(images)} images (saved 50){RESET}")
-        
-        print(f" {C}[15/15] Extracting meta tags...{RESET}")
-        meta_pattern = r'<meta\s+([^>]+)>'
-        meta_tags = re.findall(meta_pattern, html_content, re.IGNORECASE)
-        
-        meta_data = {}
-        for meta in meta_tags:
-            name_match = re.search(r'(?:name|property)=["\']([^"\']+)["\']', meta)
-            content_match = re.search(r'content=["\']([^"\']+)["\']', meta)
-            if name_match and content_match:
-                meta_data[name_match.group(1)] = content_match.group(1)
-        
-        all_data['meta_tags'] = meta_data
-        print(f" {G}   ✓ Found {len(meta_data)} meta tags{RESET}")
-    
-    # Convert sets to lists for JSON serialization
-    all_data['api_endpoints'] = list(all_data['api_endpoints'])
-    all_data['all_urls'] = list(all_data['all_urls'])
-    
-    return all_data
+        start_index = start + len(start_token)
+        last_half = text[start_index:]
+        end = last_half.find(end_token)
+        if end == -1:
+            return None
+        return last_half[:end]
+    except:
+        return None
 
-def scrape_website():
-    """Advanced web scraper to extract ALL data from any website."""
-    refresh_screen()
-    print(f" {C}[ADVANCED WEB SCRAPER]{RESET}")
-    print(LINE)
-    print(f" {G}[✓] SMART FEATURES:{RESET}")
-    print(f" {W}• Auto-detect and extract ALL API endpoints{RESET}")
-    print(f" {W}• Deep scrape JSON data and configurations{RESET}")
-    print(f" {W}• Extract JavaScript variables and objects{RESET}")
-    print(f" {W}• Find GraphQL queries and WebSocket endpoints{RESET}")
-    print(f" {W}• Discover all forms and AJAX calls{RESET}")
-    print(f" {W}• Extract cookies, headers, and meta data{RESET}")
-    print(f" {W}• Auto-save to Download folder (Mobile/Desktop){RESET}")
-    print(f" {W}• Extract ALL URLs and links from website{RESET}")
-    print(LINE)
-    
-    url = input(f" {W}[{W}➤{W}]{RESET} {C}WEBSITE URL {W}➤{RESET} ").strip()
-    
-    if not url:
-        return
-    
-    # Add https:// if not present
-    if not url.startswith('http'):
-        url = 'https://' + url
-    
-    refresh_screen()
-    print(f" {G}[!] STARTING ADVANCED SCRAPER...{RESET}")
-    print(f" {Y}Target: {C}{url}{RESET}")
-    print(LINE)
-    nice_loader("INITIALIZING")
-    
+def get_fb_dtsg(cookie):
+    """Get fb_dtsg token from Facebook."""
     try:
-        # Run deep scraper
-        refresh_screen()
-        print(f" {G}[!] DEEP SCRAPING IN PROGRESS...{RESET}")
-        print(LINE)
+        headers = {
+            'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+            'cookie': cookie,
+            'cache-control': 'max-age=0',
+            'upgrade-insecure-requests': '1',
+            'referer': 'https://www.facebook.com/',
+            'origin': 'https://www.facebook.com',
+        }
         
-        results = asyncio.run(deep_scrape(url))
+        response = requests.get('https://www.facebook.com', headers=headers, timeout=10)
         
-        if not results:
-            raise Exception("Failed to fetch website content")
-        
-        print(LINE)
-        
-        # Get download path
-        download_path = get_download_path()
-        domain_name = extract_domain_name(url)
-        filename = f"{domain_name}_scrape.json"
-        filepath = os.path.join(download_path, filename)
-        
-        # Save results
-        print(f" {G}[!] SAVING RESULTS...{RESET}")
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(results, f, indent=2, ensure_ascii=False)
-        
-        nice_loader("SAVING")
-        
-        refresh_screen()
-        print(f" {G}[SUCCESS] SCRAPING COMPLETED!{RESET}")
-        print(LINE)
-        print(f" {Y}Saved to: {G}{filepath}{RESET}")
-        print(LINE)
-        
-        # Display comprehensive summary
-        print(f" {M}[COMPREHENSIVE SUMMARY]{RESET}")
-        print(LINE)
-        print(f" {Y}Pages Scraped: {G}{results['pages_scraped']}{RESET}")
-        print(f" {Y}API Endpoints: {G}{len(results['api_endpoints'])}{RESET}")
-        print(f" {Y}JSON Objects: {G}{len(results['json_data'])}{RESET}")
-        print(f" {Y}JS Variables: {G}{len(results['javascript_variables'])}{RESET}")
-        print(f" {Y}Forms: {G}{len(results['forms'])}{RESET}")
-        print(f" {Y}Links: {G}{len(results['links'])}{RESET}")
-        print(f" {Y}All URLs: {G}{len(results['all_urls'])}{RESET}")
-        print(f" {Y}GraphQL Queries: {G}{len(results['graphql_queries'])}{RESET}")
-        print(f" {Y}WebSocket Endpoints: {G}{len(results['websocket_endpoints'])}{RESET}")
-        print(f" {Y}Fetch Requests: {G}{len(results['fetch_requests'])}{RESET}")
-        print(f" {Y}XHR Requests: {G}{len(results['xhr_requests'])}{RESET}")
-        print(f" {Y}External Scripts: {G}{len(results['scripts'])}{RESET}")
-        print(f" {Y}Stylesheets: {G}{len(results['stylesheets'])}{RESET}")
-        print(f" {Y}Images: {G}{len(results['images'])}{RESET}")
-        print(f" {Y}Cookies: {G}{len(results['cookies'])}{RESET}")
-        print(f" {Y}Request Headers: {G}{len(results['request_headers'])}{RESET}")
-        print(f" {Y}Response Headers: {G}{len(results['response_headers'])}{RESET}")
-        print(f" {Y}Meta Tags: {G}{len(results['meta_tags'])}{RESET}")
-        print(LINE)
-        
-        # Ask to display specific results
-        print(f" {C}[VIEW RESULTS]{RESET}")
-        print(f" {W}[1]{RESET} View API Endpoints")
-        print(f" {W}[2]{RESET} View JavaScript Variables")
-        print(f" {W}[3]{RESET} View Forms")
-        print(f" {W}[4]{RESET} View WebSocket Endpoints")
-        print(f" {W}[5]{RESET} View Request Headers (Sent)")
-        print(f" {W}[6]{RESET} View Response Headers (Received)")
-        print(f" {W}[0]{RESET} Skip")
-        print(LINE)
-        
-        view_choice = input(f" {W}[{W}➤{W}]{RESET} {C}CHOICE {W}➤{RESET} ").strip()
-        
-        if view_choice == '1' and results['api_endpoints']:
-            refresh_screen()
-            print(f" {G}[API ENDPOINTS] Total: {len(results['api_endpoints'])}{RESET}")
-            print(LINE)
-            for i, endpoint in enumerate(results['api_endpoints'][:100], 1):
-                print(f" {W}[{i:03d}]{RESET} {C}{endpoint}{RESET}")
-            if len(results['api_endpoints']) > 100:
-                print(f" {Y}... and {len(results['api_endpoints']) - 100} more (see JSON file){RESET}")
-            print(LINE)
-            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        if response.status_code == 200:
+            fb_dtsg = get_from_string(response.text, '["DTSGInitData",[],{"token":"', '","')
+            lsd = get_from_string(response.text, '["LSD",[],{"token":"', '"}')
             
-        elif view_choice == '2' and results['javascript_variables']:
-            refresh_screen()
-            print(f" {G}[JAVASCRIPT VARIABLES] Total: {len(results['javascript_variables'])}{RESET}")
-            print(LINE)
-            for i, (key, value) in enumerate(list(results['javascript_variables'].items())[:50], 1):
-                value_display = str(value)[:100]
-                print(f" {W}[{i:02d}]{RESET} {Y}{key}{RESET} = {C}{value_display}{RESET}")
-            if len(results['javascript_variables']) > 50:
-                print(f" {Y}... and {len(results['javascript_variables']) - 50} more (see JSON file){RESET}")
-            print(LINE)
-            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+            # Calculate jazoest
+            jazoest = "2"
+            if fb_dtsg:
+                for char in fb_dtsg:
+                    jazoest += str(ord(char))
             
-        elif view_choice == '3' and results['forms']:
-            refresh_screen()
-            print(f" {G}[FORMS] Total: {len(results['forms'])}{RESET}")
-            print(LINE)
-            for i, form in enumerate(results['forms'], 1):
-                print(f" {W}[{i:02d}]{RESET} {Y}Action:{RESET} {C}{form['action']}{RESET}")
-                print(f"      {Y}Method:{RESET} {G}{form['method']}{RESET}")
-                print(f"      {Y}Fields:{RESET} {W}{', '.join(form['fields'][:10])}{RESET}")
-                print(LINE)
-            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+            user_id = get_uid_from_cookie(cookie)
             
-        elif view_choice == '4' and results['websocket_endpoints']:
-            refresh_screen()
-            print(f" {G}[WEBSOCKET ENDPOINTS] Total: {len(results['websocket_endpoints'])}{RESET}")
-            print(LINE)
-            for i, ws in enumerate(results['websocket_endpoints'], 1):
-                print(f" {W}[{i:02d}]{RESET} {M}{ws}{RESET}")
-            print(LINE)
-            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-            
-        elif view_choice == '5' and results['request_headers']:
-            refresh_screen()
-            print(f" {G}[REQUEST HEADERS - SENT TO SERVER] Total: {len(results['request_headers'])}{RESET}")
-            print(LINE)
-            for i, (key, value) in enumerate(results['request_headers'].items(), 1):
-                print(f" {W}[{i:02d}]{RESET} {Y}{key}:{RESET} {C}{value}{RESET}")
-            print(LINE)
-            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-            
-        elif view_choice == '6' and results['response_headers']:
-            refresh_screen()
-            print(f" {G}[RESPONSE HEADERS - RECEIVED FROM SERVER] Total: {len(results['response_headers'])}{RESET}")
-            print(LINE)
-            for i, (key, value) in enumerate(results['response_headers'].items(), 1):
-                value_display = str(value)[:200]
-                print(f" {W}[{i:02d}]{RESET} {Y}{key}:{RESET} {C}{value_display}{RESET}")
-            print(LINE)
-            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        
+            return {
+                'fb_dtsg': fb_dtsg or '',
+                'lsd': lsd or '',
+                'jazoest': jazoest,
+                'user_id': user_id
+            }
+        return None
     except Exception as e:
-        refresh_screen()
-        print(f" {R}[ERROR] Scraping failed{RESET}")
-        print(f" {R}{str(e)}{RESET}")
-        print(LINE)
-    
-    input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-            print(LINE)
-            for i, endpoint in enumerate(list(api_endpoints)[:50], 1):
-                print(f" {W}[{i:02d}]{RESET} {C}{endpoint}{RESET}")
-            if len(api_endpoints) > 50:
-                print(f" {Y}... and {len(api_endpoints) - 50} more{RESET}")
-            print(LINE)
-            input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        
-    except requests.exceptions.RequestException as e:
-        refresh_screen()
-        print(f" {R}[ERROR] Failed to scrape website{RESET}")
-        print(f" {R}{str(e)}{RESET}")
-        print(LINE)
-    except Exception as e:
-        refresh_screen()
-        print(f" {R}[ERROR] An unexpected error occurred{RESET}")
-        print(f" {R}{str(e)}{RESET}")
-        print(LINE)
-    
-    input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        print(f" {R}[ERROR] Failed to get fb_dtsg: {e}{RESET}")
+        return None
 
-# ============ AUTO SHARE V2 FUNCTIONS (ALTERNATIVE HEADERS) ============
-
-async def share_with_eaag_v2(session, cookie, token, post_id):
-    """Share a post using EAAG token with ALTERNATIVE headers (V2)."""
-    headers = {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
-        'sec-ch-ua': '"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': "Windows",
-        'sec-fetch-dest': 'document',
-        'sec-fetch-mode': 'navigate',
-        'sec-fetch-site': 'none',
-        'sec-fetch-user': '?1',
-        'upgrade-insecure-requests': '1',
-        'accept-encoding': 'gzip, deflate',
-        'host': 'b-graph.facebook.com',
-        'cookie': cookie
-    }
-    
+def change_facebook_name(cookie, first_name, last_name):
+    """Change Facebook account name."""
     try:
-        url = f'https://b-graph.facebook.com/me/feed?link=https://mbasic.facebook.com/{post_id}&published=0&access_token={token}'
-        async with session.post(url, headers=headers, timeout=10) as response:
-            json_data = await response.json()
-            
-            if 'id' in json_data:
-                return True, json_data.get('id', 'N/A')
-            else:
-                error_msg = json_data.get('error', {}).get('message', 'Unknown error')
-                return False, error_msg
-    except Exception as e:
-        return False, str(e)
-
-async def share_loop_v2(session, cookie, token, post_id, account_name, account_uid, cookie_id, display_mode='detailed'):
-    """
-    Continuous sharing loop for V2 mode with ALTERNATIVE HEADERS and ZERO DELAYS.
-    """
-    global success_count
-    
-    last_token_renewal = time.time()
-    current_token = token
-    failed_consecutive = 0
-    
-    while True:
-        try:
-            # Auto-renew token every 3 minutes (180 seconds)
-            if time.time() - last_token_renewal >= 180:
-                new_token = await renew_eaag_token(cookie)
-                
-                if new_token:
-                    current_token = new_token
-                    last_token_renewal = time.time()
-                    
-                    if display_mode == 'minimal':
-                        sys.stdout.write(f"\r {Y}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                              ")
-                        sys.stdout.flush()
-                        time.sleep(0.5)
-                    else:
-                        now = datetime.datetime.now()
-                        current_time = now.strftime("%H:%M:%S")
-                        print(f" {Y}[RENEWED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {C}Token renewed{RESET}")
-            
-            now = datetime.datetime.now()
-            current_time = now.strftime("%H:%M:%S")
-            
-            is_success, result = await share_with_eaag_v2(session, cookie, current_token, post_id)
-            
-            if is_success:
-                async with lock:
-                    success_count += 1
-                    current_count = success_count
-                
-                failed_consecutive = 0
-                
-                if display_mode == 'minimal':
-                    sys.stdout.write(f"\r {G}[SUCCESS — {current_count}]{RESET} {W}|{RESET} {C}[UID: {account_uid}]{RESET}                    ")
-                    sys.stdout.flush()
-                else:
-                    print(f" {G}[SUCCESS]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {Y}Total: {current_count}{RESET}")
-                
-                # ZERO DELAY - Continue immediately
-            else:
-                failed_consecutive += 1
-                error_message = result
-                
-                # If failed 3 times consecutively, try to renew token
-                if failed_consecutive >= 3:
-                    if display_mode == 'minimal':
-                        sys.stdout.write(f"\r {Y}[RENEWING...]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                          ")
-                        sys.stdout.flush()
-                    else:
-                        print(f" {Y}[RENEWING]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {Y}Attempting token renewal...{RESET}")
-                    
-                    new_token = await renew_eaag_token(cookie)
-                    
-                    if new_token:
-                        current_token = new_token
-                        last_token_renewal = time.time()
-                        failed_consecutive = 0
-                        
-                        if display_mode == 'minimal':
-                            sys.stdout.write(f"\r {G}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                            ")
-                            sys.stdout.flush()
-                            time.sleep(0.5)
-                        else:
-                            print(f" {G}[RENEWED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {G}Token renewed successfully{RESET}")
-                    else:
-                        if display_mode != 'minimal':
-                            print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
-                        await asyncio.sleep(5)  # Brief pause after failed renewal
-                else:
-                    if display_mode != 'minimal':
-                        print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
-                    # ZERO DELAY - Continue immediately even after errors
+        print(f" {Y}[!] Extracting Facebook tokens...{RESET}")
+        nice_loader("EXTRACTING")
         
-        except asyncio.CancelledError:
-            break
-        except KeyboardInterrupt:
-            break
-        except Exception as e:
-            error_msg = str(e)
-            if "asyncio" not in error_msg.lower() and "event" not in error_msg.lower():
-                if display_mode != 'minimal':
-                    print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_msg[:40]}{RESET}")
-            # ZERO DELAY - Continue immediately after exceptions
-
-async def auto_share_main_v2(link_or_id, selected_cookies):
-    """Main auto share V2 function using alternative headers."""
-    global success_count
-    success_count = 0
-    
-    refresh_screen()
-    print(f" {C}[!] CONVERTING SELECTED COOKIES TO EAAG TOKENS...{RESET}")
-    nice_loader("CONVERTING")
-    
-    eaag_tokens = []
-    
-    # Convert selected cookies to EAAG tokens
-    for cookie_data in selected_cookies:
-        token = cookie_to_eaag(cookie_data['cookie'])
-        if token:
-            eaag_tokens.append({
-                'id': cookie_data['id'],
-                'cookie': cookie_data['cookie'],
-                'token': token,
-                'name': cookie_data['name'],
-                'uid': cookie_data['uid'],
-                'status': cookie_data.get('status', 'active')
-            })
-            status_indicator = f"{R}[RESTRICTED]{RESET}" if cookie_data.get('status') == 'restricted' else f"{G}[ACTIVE]{RESET}"
-            print(f" {G}✓{RESET} {Y}{cookie_data['name']}{RESET} {W}({C}UID: {cookie_data['uid']}{W}){RESET} {status_indicator}")
+        fb_data = get_fb_dtsg(cookie)
+        
+        if not fb_data or not fb_data['fb_dtsg']:
+            print(f" {R}[ERROR] Failed to extract fb_dtsg token{RESET}")
+            print(f" {Y}[TIP] Make sure your cookie is valid and active{RESET}")
+            return False
+        
+        user_id = fb_data['user_id']
+        
+        print(f" {G}[SUCCESS] Tokens extracted{RESET}")
+        print(f" {Y}User ID: {C}{user_id}{RESET}")
+        print(LINE)
+        
+        print(f" {Y}[!] Changing name to: {G}{first_name} {last_name}{RESET}")
+        nice_loader("CHANGING")
+        
+        # Prepare GraphQL mutation
+        variables = json.dumps({
+            "input": {
+                "first_name": first_name,
+                "last_name": last_name,
+                "actor_id": user_id,
+                "client_mutation_id": str(random.randint(1, 9999))
+            }
+        })
+        
+        form_data = {
+            'av': user_id,
+            '__user': user_id,
+            '__a': '1',
+            '__req': '1',
+            '__hs': '',
+            'dpr': '1',
+            '__ccg': 'EXCELLENT',
+            '__rev': '',
+            '__s': '',
+            '__hsi': '',
+            '__dyn': '',
+            '__csr': '',
+            '__comet_req': '15',
+            'fb_dtsg': fb_data['fb_dtsg'],
+            'jazoest': fb_data['jazoest'],
+            'lsd': fb_data['lsd'],
+            'fb_api_caller_class': 'RelayModern',
+            'fb_api_req_friendly_name': 'ProfileCometNameSaveMutation',
+            'variables': variables,
+            'server_timestamps': 'true',
+            'doc_id': '7259554250755162'
+        }
+        
+        headers = {
+            'authority': 'www.facebook.com',
+            'accept': '*/*',
+            'accept-language': 'en-US,en;q=0.9',
+            'content-type': 'application/x-www-form-urlencoded',
+            'cookie': cookie,
+            'origin': 'https://www.facebook.com',
+            'referer': 'https://www.facebook.com/',
+            'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            'sec-ch-ua-mobile': '?1',
+            'sec-ch-ua-platform': '"Android"',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-origin',
+            'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+            'x-asbd-id': '129477',
+            'x-fb-friendly-name': 'ProfileCometNameSaveMutation',
+            'x-fb-lsd': fb_data['lsd']
+        }
+        
+        response = requests.post(
+            'https://www.facebook.com/api/graphql/',
+            data=form_data,
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            try:
+                result = response.json()
+                
+                # Check for errors
+                if 'errors' in result:
+                    error_msg = result['errors'][0].get('message', 'Unknown error')
+                    print(f" {R}[ERROR] {error_msg}{RESET}")
+                    return False
+                
+                # Check for successful mutation
+                if 'data' in result:
+                    print(f" {G}[SUCCESS] Name changed successfully!{RESET}")
+                    print(LINE)
+                    print(f" {Y}New Name: {G}{first_name} {last_name}{RESET}")
+                    print(f" {Y}User ID: {C}{user_id}{RESET}")
+                    print(LINE)
+                    return True
+                else:
+                    print(f" {R}[ERROR] Unexpected response format{RESET}")
+                    return False
+                    
+            except json.JSONDecodeError:
+                print(f" {R}[ERROR] Failed to parse response{RESET}")
+                return False
         else:
-            print(f" {R}✗{RESET} {Y}{cookie_data['name']}{RESET} {R}Failed to extract EAAG token{RESET}")
-    
-    if not eaag_tokens:
-        print(f" {R}[ERROR] No valid EAAG tokens extracted!{RESET}")
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        return
-    
-    # Extract post ID
-    async with aiohttp.ClientSession() as session:
-        post_id = extract_post_id_from_link(link_or_id)
-        
-        # If extraction failed or looks like a full URL, try API method
-        if not post_id.isdigit():
-            refresh_screen()
-            print(f" {G}[!] EXTRACTING POST ID FROM LINK...{RESET}")
-            nice_loader("EXTRACTING")
+            print(f" {R}[ERROR] Request failed with status code: {response.status_code}{RESET}")
+            return False
             
-            post_id = await getid(session, link_or_id)
-            if not post_id:
-                print(f" {R}[ERROR] Failed to get post ID{RESET}")
-                input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-                return
-    
-    # Select display mode
-    display_mode = select_progress_display()
-    
-    refresh_screen()
-    print(f" {G}[SUCCESS] Extracted {len(eaag_tokens)} EAAG tokens{RESET}")
-    print(LINE)
-    print(f" {Y}Post ID: {G}{post_id}{RESET}")
-    print(LINE)
-    
-    async with aiohttp.ClientSession() as session:
-        print(f" {M}[AUTO SHARE V2 CONFIGURATION]{RESET}")
-        print(LINE)
-        print(f" {Y}Mode: {C}V2 - ALTERNATIVE HEADERS{RESET}")
-        print(f" {Y}Total Accounts: {G}{len(eaag_tokens)}{RESET}")
-        print(f" {Y}Share Speed: {G}MAXIMUM (ZERO DELAYS){RESET}")
-        print(f" {Y}Token Renewal: {C}Auto every 3 minutes{RESET}")
-        print(f" {Y}Headers: {C}Windows Desktop (Chrome 107){RESET}")
-        print(LINE)
-        print(f" {G}[!] STARTING AUTO SHARE V2...{RESET}")
-        print(f" {Y}[TIP] Press Ctrl+C to stop{RESET}")
-        print(LINE)
-        
-        tasks = []
-        for acc in eaag_tokens:
-            task = asyncio.create_task(share_loop_v2(
-                session,
-                acc['cookie'],
-                acc['token'],
-                post_id,
-                acc['name'],
-                acc['uid'],
-                acc['id'],
-                display_mode
-            ))
-            tasks.append(task)
-        
-        print(f" {G}[STARTED] Running {len(tasks)} parallel V2 share threads at MAXIMUM SPEED...{RESET}")
-        print(LINE)
-        
-        try:
-            await asyncio.gather(*tasks, return_exceptions=True)
-        except Exception as e:
-            for task in tasks:
-                if not task.done():
-                    task.cancel()
-            await asyncio.gather(*tasks, return_exceptions=True)
+    except Exception as e:
+        print(f" {R}[ERROR] An error occurred: {str(e)}{RESET}")
+        return False
 
-def start_auto_share_v2():
-    """Entry point for auto share V2 feature."""
+def fb_name_changer():
+    """Entry point for Facebook Name Changer."""
     refresh_screen()
     
-    # Display informational message
-    print(f" {C}[!] AUTO SHARE V2 - ALTERNATIVE HEADERS{RESET}")
+    print(f" {C}[!] FACEBOOK NAME CHANGER{RESET}")
     print(LINE)
     print(f" {G}[✓] INFORMATION:{RESET}")
-    print(f" {W}• Make sure your post is set to PUBLIC{RESET}")
-    print(f" {W}• Uses ALTERNATIVE headers (Windows Desktop){RESET}")
-    print(f" {W}• Shares run at MAXIMUM SPEED (zero delays){RESET}")
-    print(f" {W}• Tokens auto-renew every 3 minutes{RESET}")
-    print(f" {W}• Enhanced cookie validation with restriction detection{RESET}")
-    print(f" {W}• Best for accounts that fail with V1{RESET}")
+    print(f" {W}• This will change your Facebook account name{RESET}")
+    print(f" {W}• You can change your name back anytime{RESET}")
+    print(f" {W}• Make sure your cookie is valid and active{RESET}")
+    print(f" {W}• Use at your own risk - may trigger review{RESET}")
     print(LINE)
     
     # Brief delay to let user read
@@ -1706,319 +1145,78 @@ def start_auto_share_v2():
     sys.stdout.write(f"\r{' ' * 60}\r")
     sys.stdout.flush()
     
-    selected_cookies = select_cookies_for_sharing()
-    
-    if not selected_cookies:
-        return
-    
     refresh_screen()
-    print(f" {C}[AUTO SHARE V2]{RESET}")
+    print(f" {C}[FACEBOOK NAME CHANGER]{RESET}")
     print(LINE)
     
-    link_or_id = input(f" {W}[{W}➤{W}]{RESET} {C}POST LINK OR ID {W}➤{RESET} ").strip()
+    # Get cookie input
+    print(f" {Y}[!] Enter your Facebook cookie{RESET}")
+    cookie = input(f" {W}[{W}➤{W}]{RESET} {C}COOKIE {W}➤{RESET} ").strip()
     
-    if not link_or_id:
-        return
-    
-    try:
-        asyncio.run(auto_share_main_v2(link_or_id, selected_cookies))
-    except KeyboardInterrupt:
-        refresh_screen()
-        print(f" {Y}[!] AUTO SHARE V2 STOPPED BY USER{RESET}")
-        stop_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f" {Y}[!] Stop Time: {stop_time}{RESET}")
-        print(f" {G}[!] Total Successful Shares: {success_count}{RESET}")
-        print(LINE)
-        
-        if success_count > 0:
-            api_request("POST", "/share/complete", {"totalShares": success_count})
-            print(f" {G}[!] Shares recorded to your account{RESET}")
-        
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-    except Exception as e:
-        refresh_screen()
-        print(f" {R}[ERROR] An unexpected error occurred:{RESET}")
-        print(f" {R}{str(e)}{RESET}")
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-
-# ============ POST ID EXTRACTION ============
-    """Share a post using EAAG token with ALTERNATIVE headers (V2)."""
-    headers = {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
-        'sec-ch-ua': '"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': "Windows",
-        'sec-fetch-dest': 'document',
-        'sec-fetch-mode': 'navigate',
-        'sec-fetch-site': 'none',
-        'sec-fetch-user': '?1',
-        'upgrade-insecure-requests': '1',
-        'accept-encoding': 'gzip, deflate',
-        'host': 'b-graph.facebook.com',
-        'cookie': cookie
-    }
-    
-    try:
-        url = f'https://b-graph.facebook.com/me/feed?link=https://mbasic.facebook.com/{post_id}&published=0&access_token={token}'
-        async with session.post(url, headers=headers, timeout=10) as response:
-            json_data = await response.json()
-            
-            if 'id' in json_data:
-                return True, json_data.get('id', 'N/A')
-            else:
-                error_msg = json_data.get('error', {}).get('message', 'Unknown error')
-                return False, error_msg
-    except Exception as e:
-        return False, str(e)
-
-async def share_loop_v2(session, cookie, token, post_id, account_name, account_uid, cookie_id, display_mode='detailed'):
-    """
-    Continuous sharing loop for V2 mode with ALTERNATIVE HEADERS and ZERO DELAYS.
-    """
-    global success_count
-    
-    last_token_renewal = time.time()
-    current_token = token
-    failed_consecutive = 0
-    
-    while True:
-        try:
-            # Auto-renew token every 3 minutes (180 seconds)
-            if time.time() - last_token_renewal >= 180:
-                new_token = await renew_eaag_token(cookie)
-                
-                if new_token:
-                    current_token = new_token
-                    last_token_renewal = time.time()
-                    
-                    if display_mode == 'minimal':
-                        sys.stdout.write(f"\r {Y}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                              ")
-                        sys.stdout.flush()
-                        time.sleep(0.5)
-                    else:
-                        now = datetime.datetime.now()
-                        current_time = now.strftime("%H:%M:%S")
-                        print(f" {Y}[RENEWED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {C}Token renewed{RESET}")
-            
-            now = datetime.datetime.now()
-            current_time = now.strftime("%H:%M:%S")
-            
-            is_success, result = await share_with_eaag_v2(session, cookie, current_token, post_id)
-            
-            if is_success:
-                async with lock:
-                    success_count += 1
-                    current_count = success_count
-                
-                failed_consecutive = 0
-                
-                if display_mode == 'minimal':
-                    sys.stdout.write(f"\r {G}[SUCCESS — {current_count}]{RESET} {W}|{RESET} {C}[UID: {account_uid}]{RESET}                    ")
-                    sys.stdout.flush()
-                else:
-                    print(f" {G}[SUCCESS]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {Y}Total: {current_count}{RESET}")
-                
-                # ZERO DELAY - Continue immediately
-            else:
-                failed_consecutive += 1
-                error_message = result
-                
-                # If failed 3 times consecutively, try to renew token
-                if failed_consecutive >= 3:
-                    if display_mode == 'minimal':
-                        sys.stdout.write(f"\r {Y}[RENEWING...]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                          ")
-                        sys.stdout.flush()
-                    else:
-                        print(f" {Y}[RENEWING]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {Y}Attempting token renewal...{RESET}")
-                    
-                    new_token = await renew_eaag_token(cookie)
-                    
-                    if new_token:
-                        current_token = new_token
-                        last_token_renewal = time.time()
-                        failed_consecutive = 0
-                        
-                        if display_mode == 'minimal':
-                            sys.stdout.write(f"\r {G}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                            ")
-                            sys.stdout.flush()
-                            time.sleep(0.5)
-                        else:
-                            print(f" {G}[RENEWED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {G}Token renewed successfully{RESET}")
-                    else:
-                        if display_mode != 'minimal':
-                            print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
-                        await asyncio.sleep(5)  # Brief pause after failed renewal
-                else:
-                    if display_mode != 'minimal':
-                        print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
-                    # ZERO DELAY - Continue immediately even after errors
-        
-        except asyncio.CancelledError:
-            break
-        except KeyboardInterrupt:
-            break
-        except Exception as e:
-            error_msg = str(e)
-            if "asyncio" not in error_msg.lower() and "event" not in error_msg.lower():
-                if display_mode != 'minimal':
-                    print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_msg[:40]}{RESET}")
-            # ZERO DELAY - Continue immediately after exceptions
-
-async def auto_share_main_v2(link_or_id, selected_cookies):
-    """Main auto share V2 function using alternative headers."""
-    global success_count
-    success_count = 0
-    
-    refresh_screen()
-    print(f" {C}[!] CONVERTING SELECTED COOKIES TO EAAG TOKENS...{RESET}")
-    nice_loader("CONVERTING")
-    
-    eaag_tokens = []
-    
-    # Convert selected cookies to EAAG tokens
-    for cookie_data in selected_cookies:
-        token = cookie_to_eaag(cookie_data['cookie'])
-        if token:
-            eaag_tokens.append({
-                'id': cookie_data['id'],
-                'cookie': cookie_data['cookie'],
-                'token': token,
-                'name': cookie_data['name'],
-                'uid': cookie_data['uid'],
-                'status': cookie_data.get('status', 'active')
-            })
-            status_indicator = f"{R}[RESTRICTED]{RESET}" if cookie_data.get('status') == 'restricted' else f"{G}[ACTIVE]{RESET}"
-            print(f" {G}✓{RESET} {Y}{cookie_data['name']}{RESET} {W}({C}UID: {cookie_data['uid']}{W}){RESET} {status_indicator}")
-        else:
-            print(f" {R}✗{RESET} {Y}{cookie_data['name']}{RESET} {R}Failed to extract EAAG token{RESET}")
-    
-    if not eaag_tokens:
-        print(f" {R}[ERROR] No valid EAAG tokens extracted!{RESET}")
+    if not cookie:
+        print(f" {R}[ERROR] Cookie is required{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
     
-    # Extract post ID
-    async with aiohttp.ClientSession() as session:
-        post_id = extract_post_id_from_link(link_or_id)
-        
-        # If extraction failed or looks like a full URL, try API method
-        if not post_id.isdigit():
-            refresh_screen()
-            print(f" {G}[!] EXTRACTING POST ID FROM LINK...{RESET}")
-            nice_loader("EXTRACTING")
-            
-            post_id = await getid(session, link_or_id)
-            if not post_id:
-                print(f" {R}[ERROR] Failed to get post ID{RESET}")
-                input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-                return
-    
-    # Select display mode
-    display_mode = select_progress_display()
-    
-    refresh_screen()
-    print(f" {G}[SUCCESS] Extracted {len(eaag_tokens)} EAAG tokens{RESET}")
-    print(LINE)
-    print(f" {Y}Post ID: {G}{post_id}{RESET}")
-    print(LINE)
-    
-    async with aiohttp.ClientSession() as session:
-        print(f" {M}[AUTO SHARE V2 CONFIGURATION]{RESET}")
-        print(LINE)
-        print(f" {Y}Mode: {C}V2 - ALTERNATIVE HEADERS{RESET}")
-        print(f" {Y}Total Accounts: {G}{len(eaag_tokens)}{RESET}")
-        print(f" {Y}Share Speed: {G}MAXIMUM (ZERO DELAYS){RESET}")
-        print(f" {Y}Token Renewal: {C}Auto every 3 minutes{RESET}")
-        print(f" {Y}Headers: {C}Windows Desktop (Chrome 107){RESET}")
-        print(LINE)
-        print(f" {G}[!] STARTING AUTO SHARE V2...{RESET}")
-        print(f" {Y}[TIP] Press Ctrl+C to stop{RESET}")
-        print(LINE)
-        
-        tasks = []
-        for acc in eaag_tokens:
-            task = asyncio.create_task(share_loop_v2(
-                session,
-                acc['cookie'],
-                acc['token'],
-                post_id,
-                acc['name'],
-                acc['uid'],
-                acc['id'],
-                display_mode
-            ))
-            tasks.append(task)
-        
-        print(f" {G}[STARTED] Running {len(tasks)} parallel V2 share threads at MAXIMUM SPEED...{RESET}")
-        print(LINE)
-        
-        try:
-            await asyncio.gather(*tasks, return_exceptions=True)
-        except Exception as e:
-            for task in tasks:
-                if not task.done():
-                    task.cancel()
-            await asyncio.gather(*tasks, return_exceptions=True)
-
-def start_auto_share_v2():
-    """Entry point for auto share V2 feature."""
-    refresh_screen()
-    
-    # Display informational message
-    print(f" {C}[!] AUTO SHARE V2 - ALTERNATIVE HEADERS{RESET}")
-    print(LINE)
-    print(f" {G}[✓] INFORMATION:{RESET}")
-    print(f" {W}• Make sure your post is set to PUBLIC{RESET}")
-    print(f" {W}• Uses ALTERNATIVE headers (Windows Desktop){RESET}")
-    print(f" {W}• Shares run at MAXIMUM SPEED (zero delays){RESET}")
-    print(f" {W}• Tokens auto-renew every 3 minutes{RESET}")
-    print(f" {W}• Enhanced cookie validation with restriction detection{RESET}")
-    print(f" {W}• Best for accounts that fail with V1{RESET}")
-    print(LINE)
-    
-    # Brief delay to let user read
-    for i in range(3, 0, -1):
-        sys.stdout.write(f"\r {C}[CONTINUE IN {i} SECONDS]{RESET} {W}Reading time...{RESET}")
-        sys.stdout.flush()
-        time.sleep(1)
-    
-    sys.stdout.write(f"\r{' ' * 60}\r")
-    sys.stdout.flush()
-    
-    selected_cookies = select_cookies_for_sharing()
-    
-    if not selected_cookies:
+    # Validate cookie has UID
+    uid = get_uid_from_cookie(cookie)
+    if not uid:
+        print(f" {R}[ERROR] Invalid cookie - could not find user ID{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
     
     refresh_screen()
-    print(f" {C}[AUTO SHARE V2]{RESET}")
+    print(f" {C}[FACEBOOK NAME CHANGER]{RESET}")
+    print(LINE)
+    print(f" {G}[!] Cookie validated - UID: {C}{uid}{RESET}")
     print(LINE)
     
-    link_or_id = input(f" {W}[{W}➤{W}]{RESET} {C}POST LINK OR ID {W}➤{RESET} ").strip()
+    # Get first name
+    print(f" {Y}[!] Enter your desired first name{RESET}")
+    first_name = input(f" {W}[{W}➤{W}]{RESET} {C}FIRST NAME {W}➤{RESET} ").strip()
     
-    if not link_or_id:
+    if not first_name:
+        print(f" {R}[ERROR] First name is required{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
         return
     
-    try:
-        asyncio.run(auto_share_main_v2(link_or_id, selected_cookies))
-    except KeyboardInterrupt:
-        refresh_screen()
-        print(f" {Y}[!] AUTO SHARE V2 STOPPED BY USER{RESET}")
-        stop_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f" {Y}[!] Stop Time: {stop_time}{RESET}")
-        print(f" {G}[!] Total Successful Shares: {success_count}{RESET}")
-        print(LINE)
-        
-        if success_count > 0:
-            api_request("POST", "/share/complete", {"totalShares": success_count})
-            print(f" {G}[!] Shares recorded to your account{RESET}")
-        
+    # Get last name
+    print(f" {Y}[!] Enter your desired last name{RESET}")
+    last_name = input(f" {W}[{W}➤{W}]{RESET} {C}LAST NAME {W}➤{RESET} ").strip()
+    
+    if not last_name:
+        print(f" {R}[ERROR] Last name is required{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-    except Exception as e:
-        refresh_screen()
-        print(f" {R}[ERROR] An unexpected error occurred:{RESET}")
-        print(f" {R}{str(e)}{RESET}")
+        return
+    
+    # Confirmation
+    refresh_screen()
+    print(f" {Y}[CONFIRM NAME CHANGE]{RESET}")
+    print(LINE)
+    print(f" {Y}User ID: {C}{uid}{RESET}")
+    print(f" {Y}New Name: {G}{first_name} {last_name}{RESET}")
+    print(LINE)
+    
+    confirm = input(f" {W}[{W}➤{W}]{RESET} {Y}Proceed with name change? (Y/N) {W}➤{RESET} ").strip().upper()
+    
+    if confirm != 'Y':
+        print(f" {Y}[!] Name change cancelled{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return
+    
+    # Execute name change
+    refresh_screen()
+    print(f" {C}[CHANGING FACEBOOK NAME]{RESET}")
+    print(LINE)
+    
+    success = change_facebook_name(cookie, first_name, last_name)
+    
+    if not success:
+        print(f" {R}[!] Name change failed{RESET}")
+        print(f" {Y}[TIP] Try again with a fresh cookie or different name{RESET}")
+    
+    print(LINE)
+    input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
 # ============ POST ID EXTRACTION ============
 
@@ -2497,10 +1695,10 @@ def main():
                 start_auto_share()
                 
             elif choice in ['2', '02', 'B']:
-                scrape_website()
+                manage_cookies()
             
             elif choice in ['3', '03', 'C']:
-                manage_cookies()
+                fb_name_changer()
             
             elif choice in ['4', '04', 'D']:
                 show_user_stats()
