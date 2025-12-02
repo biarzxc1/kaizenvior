@@ -1,18 +1,35 @@
 #!/usr/bin/env python3
 # Facebook Name Changer Terminal Tool (Fixed for Termux)
 # by RIYO - Optimized for JSON appstate paste
-# Converted to Python
+# Converted to Python with Enhanced Timeout & Retry Logic
 
 import requests
 import json
 import re
 import uuid
-import hashlib
+import time
 from urllib.parse import urlencode
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 # ========== UTILITIES ==========
 class Util:
     fb_user_agent = "facebookexternalhit/1.1"
+    
+    @staticmethod
+    def create_session():
+        """Create a session with retry logic and longer timeouts"""
+        session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=2,
+            status_forcelist=[429, 500, 502, 503, 504],
+            method_whitelist=["HEAD", "GET", "OPTIONS", "POST"]
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+        return session
     
     @staticmethod
     def get_uid(cookie):
@@ -46,72 +63,143 @@ class Util:
         return last_half[:end]
     
     @staticmethod
-    def get_fb_data(cookie, is_instagram):
-        try:
-            headers = {
-                "user-agent": Util.fb_user_agent,
-                "cookie": cookie,
-                "cache-control": "max-age=0",
-                "upgrade-insecure-requests": "1",
-                "referer": f"https://www.{'instagram' if is_instagram else 'facebook'}.com/",
-                "origin": f"https://www.{'instagram' if is_instagram else 'facebook'}.com",
-            }
-            
-            platform = 'instagram' if is_instagram else 'facebook'
-            fb = requests.get(f"https://www.{platform}.com", headers=headers, timeout=10)
-            
-            user_id = Util.get_uid(cookie)
-            fb_dtsg = Util.get_from(fb.text, '["DTSGInitData",[],{"token":"', '","')
-            
-            req = 1
-            jazoest = "2"
-            if fb_dtsg:
-                for char in fb_dtsg:
-                    jazoest += str(ord(char))
-            
-            return {
-                "data": {
-                    "fb_dtsg": fb_dtsg or "",
-                    "jazoest": jazoest,
-                    "lsd": Util.get_from(fb.text, '["LSD",[],{"token":"', '"}') or "",
-                    "av": user_id,
-                    "__a": "1",
-                    "__user": user_id,
-                    "__req": format(req, 'x'),
-                },
-                "userID": user_id,
-                "headers": headers,
-            }
-        except Exception as error:
-            print(f"Error getting FB data: {str(error)}")
-            raise
+    def get_fb_data(cookie, is_instagram, session=None):
+        if session is None:
+            session = Util.create_session()
+        
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                headers = {
+                    "user-agent": Util.fb_user_agent,
+                    "cookie": cookie,
+                    "cache-control": "max-age=0",
+                    "upgrade-insecure-requests": "1",
+                    "referer": f"https://www.{'instagram' if is_instagram else 'facebook'}.com/",
+                    "origin": f"https://www.{'instagram' if is_instagram else 'facebook'}.com",
+                    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "accept-language": "en-US,en;q=0.9",
+                }
+                
+                platform = 'instagram' if is_instagram else 'facebook'
+                print(f"🔄 Fetching FB data (attempt {attempt + 1}/{max_retries})...")
+                
+                fb = session.get(
+                    f"https://www.{platform}.com", 
+                    headers=headers, 
+                    timeout=30
+                )
+                
+                user_id = Util.get_uid(cookie)
+                fb_dtsg = Util.get_from(fb.text, '["DTSGInitData",[],{"token":"', '","')
+                
+                req = 1
+                jazoest = "2"
+                if fb_dtsg:
+                    for char in fb_dtsg:
+                        jazoest += str(ord(char))
+                
+                return {
+                    "data": {
+                        "fb_dtsg": fb_dtsg or "",
+                        "jazoest": jazoest,
+                        "lsd": Util.get_from(fb.text, '["LSD",[],{"token":"', '"}') or "",
+                        "av": user_id,
+                        "__a": "1",
+                        "__user": user_id,
+                        "__req": format(req, 'x'),
+                    },
+                    "userID": user_id,
+                    "headers": headers,
+                    "session": session,
+                }
+            except requests.exceptions.Timeout:
+                print(f"⚠️ Timeout on attempt {attempt + 1}/{max_retries}")
+                if attempt < max_retries - 1:
+                    wait_time = (attempt + 1) * 2
+                    print(f"⏳ Waiting {wait_time} seconds before retry...")
+                    time.sleep(wait_time)
+                else:
+                    raise
+            except Exception as error:
+                print(f"Error getting FB data: {str(error)}")
+                if attempt < max_retries - 1:
+                    time.sleep(2)
+                else:
+                    raise
     
     @staticmethod
     def exec_graph(cookie, data, is_accounts_center, is_instagram):
-        try:
-            fb_data = Util.get_fb_data(cookie, is_instagram)
-            form_data = fb_data["data"]
-            headers = fb_data["headers"]
-            
-            subdomain = "accountscenter" if is_accounts_center else "www"
-            platform = "instagram" if is_instagram else "facebook"
-            url = f"https://{subdomain}.{platform}.com/api/graphql"
-            
-            combined_data = {**form_data, **data}
-            
-            headers.update({
-                "content-type": "application/x-www-form-urlencoded",
-            })
-            
-            res = requests.post(url, data=combined_data, headers=headers, timeout=15)
-            return res.json()
-        except Exception as error:
-            print(f"Graph API error: {str(error)}")
-            raise
+        session = Util.create_session()
+        max_retries = 3
+        
+        for attempt in range(max_retries):
+            try:
+                print(f"🔄 Executing graph API (attempt {attempt + 1}/{max_retries})...")
+                
+                fb_data = Util.get_fb_data(cookie, is_instagram, session)
+                form_data = fb_data["data"]
+                headers = fb_data["headers"]
+                
+                subdomain = "accountscenter" if is_accounts_center else "www"
+                platform = "instagram" if is_instagram else "facebook"
+                url = f"https://{subdomain}.{platform}.com/api/graphql"
+                
+                print(f"📡 Sending request to: {url}")
+                
+                combined_data = {**form_data, **data}
+                
+                headers.update({
+                    "content-type": "application/x-www-form-urlencoded",
+                    "x-fb-friendly-name": data.get("fb_api_req_friendly_name", ""),
+                    "x-fb-lsd": form_data.get("lsd", ""),
+                })
+                
+                res = session.post(
+                    url, 
+                    data=combined_data, 
+                    headers=headers, 
+                    timeout=45
+                )
+                
+                print(f"✅ Response received (status: {res.status_code})")
+                
+                if res.status_code == 200:
+                    return res.json()
+                else:
+                    print(f"⚠️ Unexpected status code: {res.status_code}")
+                    if attempt < max_retries - 1:
+                        time.sleep(3)
+                        continue
+                    else:
+                        return res.json()
+                        
+            except requests.exceptions.Timeout:
+                print(f"⚠️ Request timeout on attempt {attempt + 1}/{max_retries}")
+                if attempt < max_retries - 1:
+                    wait_time = (attempt + 1) * 3
+                    print(f"⏳ Waiting {wait_time} seconds before retry...")
+                    time.sleep(wait_time)
+                else:
+                    raise Exception("Request timed out after multiple retries. Please check your internet connection.")
+            except requests.exceptions.ConnectionError as e:
+                print(f"⚠️ Connection error on attempt {attempt + 1}/{max_retries}: {str(e)}")
+                if attempt < max_retries - 1:
+                    time.sleep(3)
+                else:
+                    raise Exception("Connection failed. Please check your internet connection.")
+            except Exception as error:
+                print(f"Graph API error: {str(error)}")
+                if attempt < max_retries - 1:
+                    time.sleep(2)
+                else:
+                    raise
     
     @staticmethod
     def get_accounts_center(cookie):
         try:
+            print("🔍 Fetching accounts center data...")
+            
             getinsta = Util.exec_graph(cookie, {
                 "fb_api_caller_class": "RelayModern",
                 "fb_api_req_friendly_name": "FXAccountsCenterProfilesPageV2Query",
@@ -202,6 +290,7 @@ class Util:
 def main():
     print("\n" + "=" * 50)
     print("   FB NAME CHANGER (TERMINAL TOOL)")
+    print("   Enhanced with Retry & Timeout Logic")
     print("=" * 50 + "\n")
     
     try:
@@ -246,6 +335,7 @@ def main():
             return
         
         print("\n🔍 Fetching account data...")
+        print("⏳ This may take 30-60 seconds, please wait...\n")
         
         accounts = Util.get_accounts_center(appstate_fb)
         if not accounts:
@@ -254,15 +344,17 @@ def main():
         fb_acc = next((a for a in accounts if a['type'] == 'FACEBOOK'), None)
         ig_acc = next((a for a in accounts if a['type'] == 'INSTAGRAM'), None)
         
-        print(fb_acc)
-        print(ig_acc)
+        print("\n📋 Account Information:")
+        print(f"Facebook: {fb_acc}")
+        print(f"Instagram: {ig_acc}")
         
         if not fb_acc or not ig_acc:
             raise Exception("Couldn't find connected Facebook and Instagram accounts.")
         
-        print(f"✅ Facebook: {fb_acc['name']} ({fb_acc['uid']})")
+        print(f"\n✅ Facebook: {fb_acc['name']} ({fb_acc['uid']})")
         print(f"✅ Instagram: {ig_acc['name']} ({ig_acc['uid']})")
         print(f"\n🔄 Changing name to: {new_name}")
+        print("⏳ Please wait, this may take up to 60 seconds...")
         
         # Change IG Name
         print("\n📝 Updating Instagram name...")
@@ -292,7 +384,9 @@ def main():
         print("✅ Instagram name updated!")
         
         # Sync with Facebook
-        print("🔄 Syncing with Facebook...")
+        print("\n🔄 Syncing with Facebook...")
+        print("⏳ Please wait...")
+        
         fb_result = Util.exec_graph(appstate_fb, {
             "fb_api_req_friendly_name": "useFXIMUpdateNameMutation",
             "fb_api_caller_class": "RelayModern",
@@ -323,10 +417,12 @@ def main():
         print("🎉 Changes applied to both Facebook and Instagram!")
         print("🎉" * 20)
         
+    except KeyboardInterrupt:
+        print("\n\n⚠️ Operation cancelled by user")
     except Exception as error:
         print(f"\n❌ Error: {str(error)}")
-        if hasattr(error, 'response') and error.response:
-            print(f"📡 Server response: {error.response.status_code} {error.response.reason}")
+        if hasattr(error, 'response') and hasattr(error.response, 'status_code'):
+            print(f"📡 Server response: {error.response.status_code}")
 
 if __name__ == "__main__":
     main()
