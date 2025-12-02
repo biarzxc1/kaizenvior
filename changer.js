@@ -232,7 +232,7 @@ util.parseAppstate = (input) => {
 
     console.log("\n✅ Instagram appstate received!\n");
 
-    const newName = "Dràc Heineman ♟️🏴"
+    const newName = "kendrick 󱢏"
     if (!newName.trim()) {
       console.log("❌ No name provided!");
       rl.close();
