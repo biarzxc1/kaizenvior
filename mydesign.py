@@ -12,26 +12,24 @@ try:
     from rich.panel import Panel
     from rich.live import Live
     from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
-    from rich import box
     from rich.align import Align
     import pyttsx3
 except ImportError:
     os.system("pip install rich pyttsx3")
-    print("\n[!] Libraries installed. Please restart the tool.")
-    sys.exit()
+    print("\n[!] Libraries installed. Restarting...")
+    # Rerun script automatically
+    os.execv(sys.executable, ['python'] + sys.argv)
 
 # --- CONFIGURATION ---
 console = Console()
-
 # Colors from the screenshot
-C_GREEN = "#00FF00"   # Neon Green
-C_YELLOW = "#FFFF00"  # Yellow
-C_RED = "#FF0000"     # Red
-C_PURPLE = "#FF00FF"  # Purple/Magenta
-C_BLUE = "#00FFFF"    # Cyan/Blue
-C_WHITE = "#FFFFFF"   # White
-
-SEPARATOR_LINE = Text("━" * 60, style=f"bold {C_GREEN}")
+# The screenshot uses standard terminal bright green, red, yellow.
+COLOR_ACCENT = "bold green"     # Main Text
+COLOR_LABEL = "bold yellow"     # Labels
+COLOR_TAG = "bold red"          # [≈] Brackets
+COLOR_VALUE = "bold green"      # Values like Name
+COLOR_VALUE_VIP = "bold blue"   # "PREMIUM" value
+COLOR_WARN = "bold white on green" # The "Airplane Mode" line background
 
 # --- SOUND MANAGER ---
 class SoundManager:
@@ -50,11 +48,13 @@ class SoundManager:
                 try:
                     self.engine.say(text)
                     self.engine.runAndWait()
-                except: pass
+                except:
+                    pass
             else:
                 try:
                     subprocess.run(["termux-tts-speak", text], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-                except: pass
+                except:
+                    pass
         t = threading.Thread(target=_run)
         t.daemon = True
         t.start()
@@ -65,83 +65,89 @@ sound = SoundManager()
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def slow_type(text, style=f"bold {C_WHITE}", speed=0.04):
+def slow_type(text, style="bold white", speed=0.04):
     for char in text:
         console.print(char, style=style, end="")
         sys.stdout.flush()
-        time.sleep(speed + random.uniform(0.01, 0.03))
+        time.sleep(speed + random.uniform(0.005, 0.01)) 
     console.print()
 
-# --- UI ELEMENTS (MATCHING PHOTO) ---
+# --- UI ELEMENTS ---
 
 def print_banner():
-    # A similar blocky/pixelated banner style
-    banner_text = """
-███████╗██████╗     █████╗ ██╗   ██╗████████╗██████╗ 
-██╔════╝██╔══██╗    ██╔══██╗██║   ██║╚══██╔══╝██╔══██╗
-█████╗  ██████╔╝    ███████║██║   ██║   ██║   ██║  ██║
-██╔══╝  ██╔══██╗    ██╔══██║██║   ██║   ██║   ██║  ██║
-██║     ██████╔╝    ██║  ██║╚██████╔╝   ██║   ██████╔╝
-╚═╝     ╚═════╝     ╚═╝  ╚═╝ ╚═════╝    ╚═╝   ╚═════╝ 
+    # Big blocky text similar to "AKASH"
+    banner = r"""
+ [bold green]
+  █████╗ ██╗   ██╗████████╗ ██████╗ 
+ ██╔══██╗██║   ██║╚══██╔══╝██╔═══██╗
+ ███████║██║   ██║   ██║   ██║   ██║
+ ██╔══██║██║   ██║   ██║   ██║   ██║
+ ██║  ██║╚██████╔╝   ██║   ╚██████╔╝
+ ╚═╝  ╚═╝ ╚═════╝    ╚═╝    ╚═════╝ 
+ [/] [bold green]V/3.9[/]
     """
-    # Add version to the right
-    banner_lines = banner_text.strip().split('\n')
-    banner_lines[-1] += f"  {C_GREEN}V/3.9[/]"
-    
-    for line in banner_lines:
-        console.print(line, style=f"bold {C_GREEN}", justify="center")
+    console.print(Align.center(banner))
 
-def print_header_1(key, value, val_color=C_YELLOW):
-    """Style: [≈] KEY : VALUE"""
-    t = Text("", style="bold")
-    t.append("[≈] ", style=C_PURPLE)
-    t.append(f"{key:<10}", style=C_YELLOW)
-    t.append(" : ", style=C_RED)
-    t.append(value, style=val_color)
-    console.print(t)
+def print_line():
+    console.print("[bold green]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/]")
 
-def print_header_2(key, value):
-    """Style: [=] KEY : VALUE"""
-    t = Text("", style="bold")
-    t.append("[=] ", style=C_GREEN)
-    t.append(f"{key:<10}", style=C_GREEN)
-    t.append(" : ", style=C_WHITE)
-    t.append(value, style=C_GREEN)
-    console.print(t)
+def info_line(symbol, label, value, value_color="bold green"):
+    """
+    Format: [≈] OWNER    : AKASH_ON_FIRE
+    """
+    # 1. The Symbol [≈]
+    # Red brackets, Red tilde
+    sym_text = Text("[", style="bold red")
+    sym_text.append(symbol, style="bold red")
+    sym_text.append("] ", style="bold red")
+    
+    # 2. Label (Yellow) padded
+    # We use a fixed width to align the colons
+    label_text = Text(f"{label:<10}", style=COLOR_LABEL)
+    
+    # 3. Colon (Red)
+    colon = Text(": ", style="bold red")
+    
+    # 4. Value
+    val_text = Text(str(value), style=value_color)
+    
+    console.print(sym_text + label_text + colon + val_text)
 
-def header_section():
-    console.print(SEPARATOR_LINE)
-    # Section 1
-    print_header_1("OWNER", "KEN_DRICK_ON_FIRE")
-    print_header_1("TOOL TYPE", "AUTO_SHARE_VIP")
-    print_header_1("VERSION", "PREMIUM", val_color=C_BLUE)
-    print_header_1("WHATSAPP", "0123456789", val_color=C_RED)
+def header_section_akash_style():
+    print_line()
     
-    console.print(SEPARATOR_LINE)
-    # Section 2
-    print_header_2("SIM CODE", "019")
-    print_header_2("TOTAL UID", "9999")
-    print_header_2("TURN", "[ON/OFF] AIRPLANE MODE EVERY 3 MIN")
+    # Section 1: User Info (using ≈)
+    info_line("≈", "OWNER", "KEN DRICK") # Your name
+    info_line("≈", "TOOL TYPE", "AUTO_SHARE")
+    info_line("≈", "VERSION", "PREMIUM", value_color="bold blue") # Blue for premium
+    info_line("≈", "WHATSAPP", "+1234567890", value_color="bold red")
     
-    console.print(SEPARATOR_LINE)
+    print_line()
+    
+    # Section 2: Sim Info (using =)
+    info_line("=", "SIM CODE", "019")
+    info_line("=", "TOTAL UID", "9999")
+    
+    # Section 3: Warning Line (Green Background)
+    console.print("[bold green][=] TURN [ON/OFF] AIRPLANE MODE EVERY 3 MIN[/]")
+    
+    print_line()
 
 def menu_option(number, letter, description, is_exit=False):
-    """Adapted menu style to match the header's green theme."""
-    t = Text("", style="bold")
-    t.append("[=] ", style=C_GREEN)
-    
-    # Key part: [01/A]
-    t.append("[", style=C_WHITE)
-    t.append(f"{number}/{letter}", style=C_GREEN)
-    t.append("] ", style=C_WHITE)
-    
-    # Description
+    """
+    Keeps your VIP buttons but fits the theme.
+    """
+    key_style = "bold white on red"
+    key_text = Text("[ ", style="bold red")
+    key_text.append(f"{number}/{letter}", style=key_style)
+    key_text.append(" ]", style="bold red")
+
     if is_exit:
-        t.append(description, style=C_RED)
+        desc_text = Text(f" {description}", style="bold red")
     else:
-        t.append(description, style=C_GREEN)
+        desc_text = Text(f" {description}", style="bold green")
     
-    console.print(t)
+    console.print(key_text + desc_text)
 
 def show_menu_animated():
     options = [
@@ -153,112 +159,101 @@ def show_menu_animated():
     ]
     for num, let, desc, is_ex in options:
         menu_option(num, let, desc, is_exit=is_ex)
-        time.sleep(0.1)
-    console.print(SEPARATOR_LINE)
+        time.sleep(0.05)
+    print_line()
 
-# --- LOADERS & ANIMATIONS ---
-def matrix_rain():
-    chars = "ABCDEF0123456789"
-    sound.speak("Initializing VIP System...")
-    with Live(console=console, refresh_per_second=15, transient=True):
-        for _ in range(30):
-            line = "".join(random.choice(chars) for _ in range(60))
-            console.print(line, style=f"dim {C_GREEN}")
-            time.sleep(0.04)
-    clear()
-
-def vip_loader(task_name, steps):
-    sound.speak(f"{task_name} started.")
+# --- LOADERS (VIP STYLE) ---
+def admin_loader(task_name, steps):
+    sound.speak(f"Starting {task_name}")
+    
     progress = Progress(
-        SpinnerColumn(style=f"bold {C_GREEN}"),
+        SpinnerColumn(style="bold yellow"),
         TextColumn("[bold green]{task.description}"),
-        BarColumn(bar_width=None, complete_style=f"{C_GREEN}", finished_style="dim green"),
+        BarColumn(bar_width=None, complete_style="green", finished_style="green"),
         TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
     )
     
-    # Using a simple box style to match the raw look of the screenshot
-    panel = Panel(
-        progress,
-        title=f"[bold {C_GREEN}]PROCESS: {task_name}[/]",
-        border_style=f"{C_GREEN}",
-        box=box.SQUARE,
-        padding=(1, 2)
-    )
-
+    panel = Panel(progress, title=f"[bold white]{task_name}[/]", border_style="green", padding=(1, 2))
+    
     with Live(panel, console=console, refresh_per_second=10):
-        task_id = progress.add_task("Waiting...", total=100)
+        task_id = progress.add_task("Running...", total=100)
         chunk = 100 / len(steps)
         curr = 0
+        
         for step, delay in steps:
-            progress.update(task_id, description=f"[bold {C_GREEN}]{step}...")
-            sound.speak(step)
+            progress.update(task_id, description=step)
+            # sound.speak(step) # Optional: uncomment if too talkative
+            
             ticks = 20
             for _ in range(ticks):
-                time.sleep(delay / ticks)
-                curr += (chunk / ticks)
+                time.sleep(delay/ticks)
+                curr += chunk/ticks
                 progress.update(task_id, completed=min(curr, 100))
     
-    console.print(f"[{C_GREEN}] [✓] {task_name} COMPLETED SUCCESSFULLY![/]")
-    sound.speak("Completed.")
+    console.print(f"[bold green on black] [OK] PROCESS COMPLETED: {task_name} [/]")
     time.sleep(1)
 
-def get_input():
-    sound.speak("Enter choice.")
-    # Style: [AKASH-] - [19... [OK/CP]-[2/0] █
-    # Adapting for input prompt
-    t = Text("\n[", style=f"bold {C_GREEN}")
-    t.append("KEN_DRICK-", style=f"bold {C_GREEN}")
-    t.append("] ➤ ", style=f"bold {C_WHITE}")
-    console.print(t, end="")
+# --- NEW INPUT STYLE ---
+def get_input_fixed():
+    """
+    Fixed input: [?] CHOICE >
+    """
+    sound.speak("Waiting for choice.")
+    
+    # 1. [?]
+    console.print("[", style="bold green", end="")
+    console.print("?", style="bold yellow", end="")
+    console.print("] ", style="bold green", end="")
+    
+    # 2. CHOICE
+    console.print("CHOICE ", style="bold white", end="")
+    
+    # 3. >
+    console.print("> ", style="bold green", end="")
+    
     return input("").upper().strip()
 
 # --- MAIN ---
 def main():
     clear()
-    matrix_rain()
-    print_banner()
-    header_section()
+    # Matrix effect (VIP feature)
+    sound.speak("Welcome Ken Drick.")
     
     while True:
         clear()
         print_banner()
-        header_section()
+        header_section_akash_style() # New UI Style
         show_menu_animated()
         
         try:
-            choice = get_input()
+            choice = get_input_fixed() # New Input Style
 
             if choice in ['1', '01', 'A']:
                 print()
-                steps = [("Injecting", 2.0), ("Bypassing", 2.0), ("Sharing", 3.0)]
-                vip_loader("AUTO SHARE", steps)
-                
-                # Simulate the log style from the photo
-                sound.speak("Showing activity logs.")
-                console.print(SEPARATOR_LINE)
-                console.print(f"[{C_GREEN}KEN_DRICK -OK{C_WHITE}] 10000...", style=f"bold {C_GREEN}")
-                console.print(f"[{C_GREEN}COOKIE{C_WHITE}] c_user=1000...xs=17:9Ngw...", style=f"bold {C_WHITE}")
-                console.print(f"[{C_GREEN}KEN_DRICK -OK{C_WHITE}] 10000...", style=f"bold {C_GREEN}")
-                console.print(f"[{C_GREEN}COOKIE{C_WHITE}] c_user=1000...xs=29:p4lr...", style=f"bold {C_WHITE}")
-                console.print(SEPARATOR_LINE)
-                input(f"\n[{C_YELLOW} PRESS ENTER TO BACK {C_WHITE}]")
+                steps = [
+                    ("Injecting Cookies...", 2.0),
+                    ("Bypassing Security...", 2.0),
+                    ("Auto Share Started...", 1.5)
+                ]
+                admin_loader("AUTO SHARE", steps)
+                input("\n Press Enter...")
 
             elif choice in ['2', '02', 'B']:
                 print()
-                steps = [("Scanning", 2.0), ("Joining", 2.5)]
-                vip_loader("GROUP JOINER", steps)
+                steps = [("Fetching Groups...", 2.0), ("Joining...", 2.0)]
+                admin_loader("GROUP JOINER", steps)
 
             elif choice in ['0', '00', 'X']:
                 print()
-                sound.speak("Exiting.")
-                slow_type("[!] Exiting...", style=f"bold {C_RED}")
+                sound.speak("Shutting down.")
                 sys.exit()
+                
             else:
-                sound.speak("Invalid error.")
-                console.print(f"\n[{C_RED}] INVALID SELECTION [/]")
+                console.print("\n[bold red][!] INVALID SELECTION[/]")
                 time.sleep(1)
 
         except KeyboardInterrupt:
+            print()
             sys.exit()
 
 if __name__ == "__main__":
