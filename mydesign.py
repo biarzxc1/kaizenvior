@@ -1,8 +1,14 @@
 import os
 import sys
 import time
+import threading
+import shutil
+import random
 from rich.console import Console
 from rich.text import Text
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+from rich.live import Live
+from rich.panel import Panel
 
 # Initialize Rich Console
 console = Console()
@@ -14,6 +20,30 @@ SEPARATOR_LINE = "━━━━━━━━━━━━━━━━━━━━�
 def clear():
     """Clears the terminal screen."""
     os.system('cls' if os.name == 'nt' else 'clear')
+
+def speak(text):
+    """
+    Uses Termux TTS to speak text.
+    Runs in a separate thread so it doesn't block the animation.
+    """
+    def _speak_thread():
+        # Check if termux-tts-speak exists (Termux environment)
+        if shutil.which("termux-tts-speak"):
+            # Execute the command in the background
+            os.system(f"termux-tts-speak '{text}'")
+        else:
+            # Fallback for PC (optional, just prints if no TTS)
+            pass 
+            
+    # Start the voice in the background
+    threading.Thread(target=_speak_thread, daemon=True).start()
+
+def type_print(text, style="bold green", delay=0.02):
+    """Types text char-by-char."""
+    for char in text:
+        console.print(char, style=style, end="")
+        sys.stdout.flush()
+        time.sleep(delay)
 
 def print_banner():
     banner = """
@@ -52,7 +82,6 @@ def header_section():
     print_line()
 
 def menu_option(number, letter, description, is_exit=False):
-    """Prints a single menu option."""
     key_text = Text("[", style="bold white")
     key_text.append(str(number), style="bold white")
     key_text.append("/", style="bold yellow")
@@ -68,9 +97,11 @@ def menu_option(number, letter, description, is_exit=False):
 
 def menu_section_animated():
     """
-    Prints menu options one by one with a small delay
-    to create a 'loading' or 'waterfall' animation.
+    Animates the menu with voice.
     """
+    # Speak while showing menu
+    speak("Please select an option from the menu.")
+    
     options = [
         ("01", "A", "START AUTO SHARE", False),
         ("02", "B", "JOIN FB GROUP", False),
@@ -81,67 +112,106 @@ def menu_section_animated():
     
     for num, let, desc, is_ex in options:
         menu_option(num, let, desc, is_exit=is_ex)
-        time.sleep(0.05) # Small delay between lines appearing
+        time.sleep(0.08) # Slightly slower for dramatic effect
     
     print_line()
 
-def type_print(text, style, delay=0.03):
-    """Helper to type out text char-by-char without newline."""
-    for char in text:
-        console.print(char, style=style, end="")
-        sys.stdout.flush()
-        time.sleep(delay)
+def animated_input(prompt_text_str, voice_msg=None):
+    """
+    1. Plays voice (if provided).
+    2. Types out the prompt design.
+    3. Waits for input.
+    """
+    if voice_msg:
+        speak(voice_msg)
 
-def animated_input():
-    """
-    Manually types out the prompt: [➤] CHOICE ➤ 
-    Then waits for input.
-    """
-    # 1. Type the first bracket part [➤]
+    # Manual construction of prompt "[➤] CHOICE ➤"
     console.print(" [", style="bold white", end="")
     time.sleep(0.05)
     console.print("➤", style="bold white", end="")
     time.sleep(0.05)
     console.print("]", style="bold white", end="")
     
-    # 2. Type " CHOICE "
-    type_print(" CHOICE ", style="bold cyan", delay=0.05)
+    # Typing the word " CHOICE " or whatever is passed
+    type_print(f" {prompt_text_str} ", style="bold cyan", delay=0.05)
     
-    # 3. Type the arrow ➤ 
     console.print("➤ ", style="bold white", end="")
     
-    # 4. Actual input capture
     return input("").upper().strip()
 
+def fake_loading_bar(task_name):
+    """
+    A cool progress bar loader using Rich.
+    """
+    speak(f"Processing {task_name}, please wait.")
+    
+    with Progress(
+        SpinnerColumn(spinner_name="dots12"),
+        TextColumn("[bold cyan]{task.description}"),
+        BarColumn(bar_width=None, complete_style="green", finished_style="green"),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        console=console
+    ) as progress:
+        
+        task = progress.add_task(f"[bold white]{task_name}...", total=100)
+        
+        while not progress.finished:
+            # Simulate work with random speed
+            sleep_time = random.uniform(0.02, 0.08)
+            time.sleep(sleep_time)
+            progress.update(task, advance=random.randint(2, 5))
+
 def main():
+    clear()
+    
+    # Intro Voice
+    speak("Welcome to F B Auto Sharer by Ken Drick.")
+    
+    # Fake startup loader
+    fake_loading_bar("Loading Assets")
+    
     while True:
         clear()
         print_banner()
         header_section()
-        
-        # Animate the menu items appearing one by one
         menu_section_animated()
         
         try:
-            # Use the custom typing input function
-            choice = animated_input()
+            # Voice + Animation for Input
+            choice = animated_input("CHOICE", voice_msg="Enter your choice now.")
 
             if choice in ['1', '01', 'A']:
-                console.print("\n [bold green][!] Starting Auto Share...[/]")
+                print()
+                speak("You selected Auto Share.")
                 
-                # Example: If you need inputs inside here, use the same logic
-                # console.print("\n [bold yellow]Enter Cookies:[/]", end=" ")
-                # cookie = input() 
+                # Ask for Cookie with voice
+                cookie = animated_input("COOKIE", voice_msg="Please paste your Facebook cookie.")
                 
+                # Ask for Link with voice
+                link = animated_input("POST LINK", voice_msg="Please enter the target post link.")
+                
+                print()
+                fake_loading_bar("Authenticating Cookie")
+                fake_loading_bar("Initializing Bot")
+                
+                console.print("\n [bold green][✓] Process Started Successfully![/]")
+                speak("Process started successfully.")
                 time.sleep(2)
+                
             elif choice in ['0', '00', 'X']:
+                print()
+                speak("Exiting program. Goodbye.")
                 console.print("\n [bold red][!] Exiting...[/]")
+                time.sleep(1)
                 sys.exit()
             else:
+                speak("Invalid selection.")
                 console.print("\n [bold red][!] Invalid Selection[/]")
                 time.sleep(0.5)
                 
         except KeyboardInterrupt:
+            print()
+            speak("Force closing.")
             console.print("\n\n [bold red][!] Force Exit[/]")
             sys.exit()
 
