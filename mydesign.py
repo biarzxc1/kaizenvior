@@ -1,269 +1,275 @@
 import os
 import sys
-import subprocess
 import time
 import threading
 import random
-import string
+import subprocess
 
-# --- AUTO-INSTALLER ---
-def install_requirements():
-    # We only need rich for the UI. Audio is handled via system commands now.
-    try:
-        import rich
-    except ImportError:
-        print("[!] Installing libraries...")
-        os.system("pip install rich")
-        os.system('cls' if os.name == 'nt' else 'clear')
+# --- AUTO-INSTALL LIBRARIES ---
+try:
+    from rich.console import Console
+    from rich.text import Text
+    from rich.panel import Panel
+    from rich.live import Live
+    from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
+    from rich.layout import Layout
+    from rich.align import Align
+    from rich import box
+    import pyttsx3
+except ImportError:
+    os.system("pip install rich pyttsx3")
+    print("\n[!] Libraries installed. Please restart the tool.")
+    sys.exit()
 
-install_requirements()
-
-# --- IMPORTS ---
-from rich.console import Console
-from rich.text import Text
-from rich.panel import Panel
-from rich.live import Live
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
-from rich import box
-from rich.align import Align
-from rich.layout import Layout
-
-# Initialize Console
+# --- CONFIGURATION ---
 console = Console()
+SEPARATOR_LINE = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+VIP_GOLD = "#FFD700"
+VIP_RED = "#FF0000"
+ADMIN_GREEN = "#00FF00"
 
-# --- AUDIO ENGINE (TERMUX FIXED) ---
-def speak(text):
-    """
-    Universal speak function.
-    1. Tries Android native TTS (Termux).
-    2. Falls back to pyttsx3 (PC).
-    3. Fails silently if neither works.
-    """
-    def _speak_thread():
-        # METHOD 1: TERMUX / ANDROID
-        if os.path.exists("/data/data/com.termux/files/usr/bin/termux-tts-speak"):
-            try:
-                subprocess.run(["termux-tts-speak", text], check=False)
-                return
-            except:
-                pass
-        
-        # METHOD 2: PC (pyttsx3)
+# --- SOUND MANAGER (TERMUX FIX) ---
+class SoundManager:
+    def __init__(self):
+        self.engine = None
         try:
-            import pyttsx3
-            engine = pyttsx3.init()
-            engine.setProperty('rate', 140) # Slow and clear
-            engine.say(text)
-            engine.runAndWait()
+            self.engine = pyttsx3.init()
+            self.engine.setProperty('rate', 140) # Very slow, clear voice
+            self.engine.setProperty('volume', 1.0)
         except:
-            # If no audio engine found, just do nothing (don't crash)
-            pass
+            self.engine = None
 
-    # Run in background so animations don't freeze
-    t = threading.Thread(target=_speak_thread)
-    t.daemon = True
-    t.start()
+    def speak(self, text):
+        """Runs speech in a non-blocking thread."""
+        def _run():
+            if self.engine:
+                try:
+                    self.engine.say(text)
+                    self.engine.runAndWait()
+                except:
+                    pass
+            else:
+                # Fallback for Termux if pyttsx3 fails (try native TTS)
+                try:
+                    subprocess.run(["termux-tts-speak", text], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+                except:
+                    pass # Silent fail if no audio capability
 
-# --- ANIMATION UTILS ---
+        t = threading.Thread(target=_run)
+        t.daemon = True
+        t.start()
+
+sound = SoundManager()
+
+# --- UTILITIES ---
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def type_print(text, style="bold white", speed=0.04):
+def slow_type(text, style="bold white", speed=0.06, sound_effect=False):
     """
-    Cinematic typing effect.
+     dramatic slow typing with optional beep simulation
     """
     for char in text:
         console.print(char, style=style, end="")
         sys.stdout.flush()
-        # Randomize delay slightly for "human" feel
-        time.sleep(speed + random.uniform(0.01, 0.03)) 
+        time.sleep(speed + random.uniform(0.01, 0.05)) # Randomize delay for human feel
     console.print()
 
-def decrypt_effect(duration=1.5):
-    """
-    Shows random matrix characters like it's decrypting data.
-    """
-    chars = string.ascii_letters + string.digits + "!@#$%^&*"
-    end_time = time.time() + duration
+def print_line():
+    console.print(SEPARATOR_LINE, style=f"bold {ADMIN_GREEN}")
+
+# --- VIP UI ELEMENTS ---
+
+def matrix_rain_effect():
+    """Simulates a 'Connecting' hex dump effect."""
+    chars = "ABCDEF0123456789"
+    sound.speak("Establishing secure connection...")
     
-    with Live(refresh_per_second=15) as live:
-        while time.time() < end_time:
-            random_str = "".join(random.choice(chars) for _ in range(40))
-            live.update(Text(f"DECRYPTING: {random_str}", style="bold green"))
+    with Live(console=console, refresh_per_second=15) as live:
+        for _ in range(25): # Duration of rain
+            line = "".join(random.choice(chars) for _ in range(50))
+            live.update(Text(line, style="dim green"))
             time.sleep(0.05)
+    clear()
 
-# --- UI COMPONENTS ---
 def print_banner():
-    # Double border banner for VIP look
-    banner_text = """
-    ╔═╗╔╗ ┌─┐┬ ┬┌┬┐┌─┐ ┌─┐┬ ┬┌─┐┌─┐┌─┐┌─┐
-    ╠╣ ╠╩╗├─┤│ │ │ │ │ └─┐├─┤├─┤├┬┘├┤ ├┬┘
-    ╚  ╚═╝┴ ┴└─┘ ┴ └─┘ └─┘┴ ┴┴ ┴┴└─└─┘┴└─
+    banner = """
+    [bold cyan]╔═╗╔╗ ┌─┐┬ ┬┌┬┐┌─┐ ┌─┐┬ ┬┌─┐┌─┐┌─┐┌─┐[/]
+    [bold cyan]╠╣ ╠╩╗├─┤│ │ │ │ │ └─┐├─┤├─┤├┬┘├┤ ├┬┘[/]
+    [bold cyan]╚  ╚═╝┴ ┴└─┘ ┴ └─┘ └─┘┴ ┴┴ ┴┴└─└─┘┴└─[/]
     """
-    panel = Panel(
-        Align.center(banner_text),
-        border_style="bold cyan",
-        box=box.DOUBLE,
-        title="[bold yellow]★ VIP EDITION ★[/]",
-        subtitle="[bold red]SYSTEM ACCESS: GRANTED[/]"
-    )
-    console.print(panel)
+    console.print(Align.center(banner))
 
-def print_info():
-    # Using a Table or nicely formatted text inside a box
-    info = """
- [bold white][•][/] [bold yellow]DEVELOPER  [/] ➤ [bold green]KEN DRICK[/]
- [bold white][•][/] [bold yellow]GITHUB     [/] ➤ [bold green]RYO GRAHHH[/]
- [bold white][•][/] [bold yellow]VERSION    [/] ➤ [bold green]1.0.0 (PREMIUM)[/]
- [bold white][•][/] [bold yellow]FACEBOOK   [/] ➤ [bold green]facebook.com/ryoevisu[/]
- [bold white][•][/] [bold yellow]TOOL'S NAME[/] ➤ [bold white on red] FB AUTO SHARER [/]
-    """
-    console.print(Panel(info.strip(), border_style="bold green", box=box.ROUNDED))
-
-def menu_option(key, desc, is_exit=False):
-    style_bracket = "bold red"
-    style_key = "bold white on red"
-    style_desc = "bold green" if not is_exit else "bold red"
+def print_info_row(label, value, is_highlighted=False):
+    # Fancy VIP layout for rows
+    bullet = Text(" [", style="bold white")
+    bullet.append("•", style=f"bold {VIP_GOLD}")
+    bullet.append("] ", style="bold white")
     
-    # Format: [ 01/A ] DESCRIPTION
-    return f"[{style_bracket}][ [{style_key}]{key}[/{style_key}] ][/{style_bracket}] [{style_desc}]{desc}[/{style_desc}]"
-
-def show_menu():
-    menu_text = "\n".join([
-        menu_option("01/A", "START AUTO SHARE"),
-        menu_option("02/B", "JOIN FB GROUP"),
-        menu_option("03/C", "JOIN FACEBOOK"),
-        menu_option("04/D", "FOLLOW GITHUB"),
-        "",
-        menu_option("00/X", "BACK TO MAIN MENU", is_exit=True)
-    ])
+    label_text = Text(f"{label:<13}", style=f"bold {VIP_GOLD}")
+    arrow = Text("➤ ", style="bold white")
     
-    # Print menu with a nice fade-in effect simulation (line by line)
-    console.print(Panel(menu_text, title="[bold white]MENU SELECTION[/]", border_style="bold yellow", box=box.HEAVY_EDGE))
+    if is_highlighted:
+        val_text = Text("[ ", style=f"bold {VIP_RED}")
+        val_text.append(value, style="bold white on red")
+        val_text.append(" ]", style=f"bold {VIP_RED}")
+    else:
+        val_text = Text(value, style=f"bold {ADMIN_GREEN}")
 
-def vip_loader(title, steps):
+    console.print(bullet + label_text + arrow + val_text)
+
+def header_section():
+    print_line()
+    print_info_row("DEVELOPER", "KEN DRICK")
+    print_info_row("GITHUB", "RYO GRAHHH")
+    print_info_row("VERSION", "1.0.0")
+    print_info_row("FACEBOOK", "facebook.com/ryoevisu")
+    print_info_row("TOOL'S NAME", "FB AUTO SHARER", is_highlighted=True)
+    print_line()
+
+def menu_option(number, letter, description, is_exit=False):
+    # Button Style
+    key_style = f"bold white on {VIP_RED}"
+    key_text = Text(" [ ", style=f"bold {VIP_RED}")
+    key_text.append(f"{number}/{letter}", style=key_style)
+    key_text.append(" ]", style=f"bold {VIP_RED}")
+
+    if is_exit:
+        desc_text = Text(f" {description}", style="bold red")
+    else:
+        desc_text = Text(f" {description}", style="bold green")
+    
+    console.print(key_text + desc_text)
+
+def show_menu_animated():
+    options = [
+        ("01", "A", "START AUTO SHARE", False),
+        ("02", "B", "JOIN FB GROUP", False),
+        ("03", "C", "JOIN FACEBOOK", False),
+        ("04", "D", "FOLLOW GITHUB", False),
+        ("00", "X", "BACK TO MAIN MENU", True),
+    ]
+    
+    for num, let, desc, is_ex in options:
+        menu_option(num, let, desc, is_exit=is_ex)
+        time.sleep(0.15) # Increased delay for dramatic effect
+    print_line()
+
+# --- SYSTEM HACKING LOADER ---
+def admin_loader(task_name, steps):
     """
-    A high-end 'Admin' style loader with double borders and slow progress.
+    A complex, multi-stage loader with a box and progress.
     """
-    speak(f"Starting {title} protocol.")
+    sound.speak(f"{task_name} initialized.")
     
     # Custom Progress Bar Columns
     progress = Progress(
-        SpinnerColumn(style="bold yellow"),
-        TextColumn("[bold cyan]{task.description}"),
-        BarColumn(bar_width=None, complete_style="bold green", finished_style="bold green"),
-        TextColumn("[bold white]{task.percentage:>3.0f}%"),
-        expand=True
+        SpinnerColumn(style=f"bold {VIP_GOLD}"),
+        TextColumn("[bold green]{task.description}"),
+        BarColumn(bar_width=None, complete_style=f"{VIP_GOLD}", finished_style="green"),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        TimeElapsedColumn()
     )
 
-    # Box layout
     panel = Panel(
         progress,
-        title=f"[bold yellow]★ {title} ★[/]",
-        border_style="bold yellow",
-        box=box.DOUBLE,
+        title=f"[bold white]SYSTEM PROCESS: {task_name}[/]",
+        border_style=f"{VIP_GOLD}",
         padding=(1, 2)
     )
 
     with Live(panel, console=console, refresh_per_second=10):
-        task_id = progress.add_task("Initializing...", total=100)
+        task_id = progress.add_task("Waiting...", total=100)
         
-        # Calculate chunks based on steps
         chunk_size = 100 / len(steps)
         current_val = 0
 
-        for description, delay in steps:
-            # Update text
-            progress.update(task_id, description=f"[bold yellow]>>[/] {description}")
-            speak(description)
+        for step_text, delay in steps:
+            progress.update(task_id, description=f"[bold white]{step_text}...")
+            sound.speak(step_text)
             
-            # Slow fill animation
-            # We slice the delay into tiny pieces to make the bar move smoothly
-            frames = int(delay * 20) # 20 updates per second
-            for _ in range(frames):
-                time.sleep(0.05)
-                current_val += (chunk_size / frames)
+            # Sub-loop for smooth bar filling
+            ticks = 30
+            for _ in range(ticks):
+                time.sleep(delay / ticks)
+                current_val += (chunk_size / ticks)
                 progress.update(task_id, completed=min(current_val, 100))
             
-            # Extra pause after a step finishes
+            # Pause between steps
             time.sleep(0.5)
-            
-        progress.update(task_id, description="[bold green]ACCESS GRANTED[/]", completed=100)
-        time.sleep(1)
 
-def input_animation(prompt_text):
-    """
-    Animated Input box with Voice.
-    """
-    speak("Please enter your choice.")
+    console.print(f"[bold green on black]   ✔ PROCESS COMPLETED: {task_name}   [/]")
+    sound.speak("Process completed.")
+    time.sleep(1)
+
+# --- INPUT HANDLING ---
+def get_input_animated():
+    sound.speak("Please enter your command.")
     
-    console.print(f"\n [bold white][[bold yellow]?[/bold yellow]] {prompt_text}", end="")
+    # Prompt construction
+    console.print(" [", style="bold white", end="")
+    time.sleep(0.1)
+    console.print("➤", style="bold white", end="")
+    time.sleep(0.1)
+    console.print("]", style="bold white", end="")
     
-    # Blinking cursor simulation before typing
-    for _ in range(3):
-        console.print(" .", style="bold green", end="")
-        sys.stdout.flush()
-        time.sleep(0.3)
+    slow_type(" CHOICE ", style="bold cyan", speed=0.1)
+    console.print("➤ ", style="bold white", end="")
     
-    console.print("\n [bold white]➤ [/]", end="")
-    return input().upper().strip()
+    return input("").upper().strip()
 
 # --- MAIN ---
 def main():
     clear()
+    sound.speak("Welcome to F B Auto Sharer. Admin Access Granted.")
     
-    # 1. Fake Login / Boot Sequence
-    speak("System Booting. Please Wait.")
-    type_print(" [ SYSTEM BOOT SEQUENCE INITIATED ]", style="bold green", speed=0.03)
-    time.sleep(0.5)
-    decrypt_effect(duration=2.0) # Matrix effect
-    
+    # Intro Sequence
+    matrix_rain_effect()
+    slow_type("[*] Authenticating User...", style="dim white", speed=0.05)
+    time.sleep(1)
+    slow_type("[*] Access Granted: VIP MEMBER", style=f"bold {VIP_GOLD}", speed=0.05)
+    time.sleep(1)
+
     while True:
         clear()
         print_banner()
-        print_info()
-        
-        # Delay before showing menu for dramatic effect
-        time.sleep(0.5)
-        show_menu()
+        header_section()
+        show_menu_animated()
         
         try:
-            choice = input_animation("WAITING FOR COMMAND")
+            choice = get_input_animated()
 
             if choice in ['1', '01', 'A']:
                 print()
-                # VIP LOADER
                 steps = [
-                    ("Connecting to Facebook API...", 3.0),
-                    ("Bypassing Security Token...", 4.0), # Longer delay
-                    ("Extracting Cookies...", 3.0),
-                    ("Injecting Auto Share Script...", 2.5),
-                    ("Finalizing Process...", 2.0)
+                    ("Injecting Payload", 3.0),
+                    ("Bypassing Security", 2.5),
+                    ("Extracting Cookies", 3.0),
+                    ("Connecting to Graph API", 2.0),
+                    ("Starting Auto Share", 1.5)
                 ]
-                vip_loader("AUTO SHARE V.1", steps)
-                
-                speak("Process Successful.")
-                console.print(Panel(Align.center("[bold green]✓ AUTO SHARE ACTIVE[/]"), style="bold green"))
-                input("\n [bold white]Press Enter to continue...[/]")
-                
+                admin_loader("AUTO SHARE V.1.0", steps)
+                input("\nPress Enter to return...")
+
             elif choice in ['2', '02', 'B']:
                 print()
                 steps = [
-                    ("Fetching Group Database...", 3.0),
-                    ("Optimizing Search...", 2.0)
+                    ("Scanning Group Lists", 2.0),
+                    ("Filtering Public Groups", 2.0),
+                    ("Joining Target IDs", 3.0)
                 ]
-                vip_loader("GROUP JOINER", steps)
-                
+                admin_loader("GROUP JOINER", steps)
+
             elif choice in ['0', '00', 'X']:
                 print()
-                speak("Shutting down system.")
-                type_print(" [!] TERMINATING SESSION...", style="bold red", speed=0.08)
-                time.sleep(1)
+                sound.speak("System shutting down.")
+                slow_type("[!] Terminating Session...", style="bold red")
+                time.sleep(2)
                 sys.exit()
                 
             else:
-                speak("Access Denied.")
-                console.print("\n [bold red on white] X INVALID COMMAND [/]", justify="center")
+                sound.speak("Access Denied. Invalid command.")
+                console.print(Panel("[bold red]INVALID SELECTION[/]", border_style="red"))
                 time.sleep(1.5)
 
         except KeyboardInterrupt:
