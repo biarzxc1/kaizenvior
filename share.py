@@ -4,12 +4,44 @@ import time
 import json
 import urllib.request
 import urllib.parse
-import aiohttp
-import asyncio
+import subprocess
 import datetime
-import requests
 import re
 import random
+
+# --- AUTO-INSTALLER SECTION ---
+def install_requirements():
+    """Auto-install missing packages"""
+    requirements = [
+        ("aiohttp", "aiohttp"),
+        ("asyncio", "asyncio"),
+        ("requests", "requests")
+    ]
+    needs_install = False
+    
+    for package, import_name in requirements:
+        try:
+            __import__(import_name)
+        except ImportError:
+            needs_install = True
+            print(f"【!】 {package} is missing. Installing...")
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+            except subprocess.CalledProcessError:
+                print(f"【✗】 Failed to install {package}")
+                sys.exit(1)
+    
+    if needs_install:
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print("【✓】 All dependencies installed successfully!")
+        time.sleep(1)
+
+install_requirements()
+
+# Now import the installed packages
+import aiohttp
+import asyncio
+import requests
 
 # --- NEON COLOR PALETTE ---
 R = '\033[1;31m'   # Red (Bold)
@@ -67,67 +99,65 @@ def banner_header():
     {RESET}""")
 
     print(LINE)
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'DEVELOPER':<13} {W}➤{RESET} {G}KEN DRICK{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'GITHUB':<13} {W}➤{RESET} {G}RYO GRAHHH{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}1.0.2{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}facebook.com/ryoevisu{RESET}")
+    print(f" {W}【{RESET}•{W}】{RESET} {Y}{'DEVELOPER':<13} {W}➤{RESET} {G}KEN DRICK{RESET}")
+    print(f" {W}【{RESET}•{W}】{RESET} {Y}{'GITHUB':<13} {W}➤{RESET} {G}RYO GRAHHH{RESET}")
+    print(f" {W}【{RESET}•{W}】{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}1.0.2{RESET}")
+    print(f" {W}【{RESET}•{W}】{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}facebook.com/ryoevisu{RESET}")
     
-    tool_name = f"{R}[ {BG_R}{W}RPWTOOLS{RESET}{R} ]{RESET}"
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'TOOL\'S NAME':<13} {W}➤{RESET} {tool_name}")
+    tool_name = f"{R}【 {BG_R}{W}RPWTOOLS{RESET}{R} 】{RESET}"
+    print(f" {W}【{RESET}•{W}】{RESET} {Y}{'TOOL\'S NAME':<13} {W}➤{RESET} {tool_name}")
     
     if user_data:
         print(LINE)
         username_display = user_data['username'].upper()
-        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'USERNAME':<13} {W}➤{RESET} {G}{username_display}{RESET}")
+        print(f" {W}【{RESET}•{W}】{RESET} {Y}{'USERNAME':<13} {W}➤{RESET} {G}{username_display}{RESET}")
         
         fb_link = user_data.get('facebook', 'N/A')
-        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}{fb_link}{RESET}")
+        print(f" {W}【{RESET}•{W}】{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}{fb_link}{RESET}")
         
         country_display = user_data.get('country', 'N/A').upper()
-        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'COUNTRY':<13} {W}➤{RESET} {G}{country_display}{RESET}")
+        print(f" {W}【{RESET}•{W}】{RESET} {Y}{'COUNTRY':<13} {W}➤{RESET} {G}{country_display}{RESET}")
         
         # Color-coded plan display
         user_plan = user_data['plan']
         if user_plan == 'max':
             if user_data.get('planExpiry'):
-                plan_display = f"{M}[ \033[45m{W}MAX{RESET}{M} ]{RESET}"
+                plan_display = f"{M}【 \033[45m{W}MAX{RESET}{M} 】{RESET}"
             else:
-                plan_display = f"{M}[ \033[45m{W}MAX LIFETIME{RESET}{M} ]{RESET}"
+                plan_display = f"{M}【 \033[45m{W}MAX LIFETIME{RESET}{M} 】{RESET}"
         else:  # free
-            plan_display = f"{W}[ \033[47m\033[30mFREE{RESET}{W} ]{RESET}"
+            plan_display = f"{W}【 \033[47m\033[30mFREE{RESET}{W} 】{RESET}"
         
-        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'PLAN':<13} {W}➤{RESET} {plan_display}")
+        print(f" {W}【{RESET}•{W}】{RESET} {Y}{'PLAN':<13} {W}➤{RESET} {plan_display}")
         
         if user_data.get('planExpiry'):
-            print(f" {W}[{RESET}•{W}]{RESET} {Y}{'PLAN EXPIRY IN':<13} {W}➤{RESET} {Y}{user_data['planExpiry']}{RESET}")
+            print(f" {W}【{RESET}•{W}】{RESET} {Y}{'PLAN EXPIRY IN':<13} {W}➤{RESET} {Y}{user_data['planExpiry']}{RESET}")
         
         # Show cookie count
         cookie_count = user_data.get('cookieCount', 0)
-        print(f" {W}[{RESET}•{W}]{RESET} {Y}{'TOTAL COOKIES':<13} {W}➤{RESET} {C}{cookie_count}{RESET}")
+        print(f" {W}【{RESET}•{W}】{RESET} {Y}{'TOTAL COOKIES':<13} {W}➤{RESET} {C}{cookie_count}{RESET}")
     
     print(LINE)
 
 def show_menu():
     """Prints the Menu Options."""
     if not user_token:
-        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}LOGIN{RESET}")
-        print(f" {W}[{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}]{RESET} {C}REGISTER{RESET}")
-        print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}EXIT{RESET}")
+        print(f" {W}【{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}】{RESET} {G}LOGIN{RESET}")
+        print(f" {W}【{RESET}{BG_C}{W}02{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}B{RESET}{W}】{RESET} {C}REGISTER{RESET}")
+        print(f" {W}【{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}】{RESET} {R}EXIT{RESET}")
     elif user_data and user_data.get('isAdmin'):
-        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — NORM ACCOUNTS{RESET}")
-        print(f" {W}[{RESET}{BG_Y}{W}02{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}B{RESET}{W}]{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
-        print(f" {W}[{RESET}{BG_C}{W}03{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}C{RESET}{W}]{RESET} {C}FB NAME CHANGER        — CHANGE NAME{RESET}")
-        print(f" {W}[{RESET}{BG_B}{W}04{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}D{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
-        print(f" {W}[{RESET}{BG_M}{W}05{RESET}{BG_M}{Y}/{RESET}{BG_M}{W}E{RESET}{W}]{RESET} {M}ADMIN PANEL             — MANAGEMENT{RESET}")
-        print(f" {W}[{RESET}{BG_G}{W}06{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}F{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
-        print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}LOGOUT{RESET}")
+        print(f" {W}【{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}】{RESET} {G}AUTO SHARE              — NORM ACCOUNTS{RESET}")
+        print(f" {W}【{RESET}{BG_Y}{W}02{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}B{RESET}{W}】{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
+        print(f" {W}【{RESET}{BG_B}{W}03{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}C{RESET}{W}】{RESET} {B}MY STATS                — STATISTICS{RESET}")
+        print(f" {W}【{RESET}{BG_M}{W}04{RESET}{BG_M}{Y}/{RESET}{BG_M}{W}D{RESET}{W}】{RESET} {M}ADMIN PANEL             — MANAGEMENT{RESET}")
+        print(f" {W}【{RESET}{BG_G}{W}05{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}E{RESET}{W}】{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
+        print(f" {W}【{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}】{RESET} {R}LOGOUT{RESET}")
     else:
-        print(f" {W}[{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}]{RESET} {G}AUTO SHARE              — NORM ACCOUNTS{RESET}")
-        print(f" {W}[{RESET}{BG_Y}{W}02{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}B{RESET}{W}]{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
-        print(f" {W}[{RESET}{BG_C}{W}03{RESET}{BG_C}{Y}/{RESET}{BG_C}{W}C{RESET}{W}]{RESET} {C}FB NAME CHANGER        — CHANGE NAME{RESET}")
-        print(f" {W}[{RESET}{BG_B}{W}04{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}D{RESET}{W}]{RESET} {B}MY STATS                — STATISTICS{RESET}")
-        print(f" {W}[{RESET}{BG_G}{W}05{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}E{RESET}{W}]{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
-        print(f" {W}[{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}]{RESET} {R}LOGOUT{RESET}")
+        print(f" {W}【{RESET}{BG_G}{W}01{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}A{RESET}{W}】{RESET} {G}AUTO SHARE              — NORM ACCOUNTS{RESET}")
+        print(f" {W}【{RESET}{BG_Y}{W}02{RESET}{BG_Y}{Y}/{RESET}{BG_Y}{W}B{RESET}{W}】{RESET} {Y}MANAGE COOKIES          — DATABASE{RESET}")
+        print(f" {W}【{RESET}{BG_B}{W}03{RESET}{BG_B}{Y}/{RESET}{BG_B}{W}C{RESET}{W}】{RESET} {B}MY STATS                — STATISTICS{RESET}")
+        print(f" {W}【{RESET}{BG_G}{W}04{RESET}{BG_G}{Y}/{RESET}{BG_G}{W}D{RESET}{W}】{RESET} {G}UPDATE TOOL             — LATEST VERSION{RESET}")
+        print(f" {W}【{RESET}{BG_R}{W}00{RESET}{BG_R}{Y}/{RESET}{BG_R}{W}X{RESET}{W}】{RESET} {R}LOGOUT{RESET}")
     
     print(LINE)
 
@@ -150,7 +180,7 @@ def nice_loader(text="PROCESSING"):
         bar = filled * i + empty * (width - i)
         color = G if i == width else C
         
-        sys.stdout.write(f"\r {W}[{RESET}•{W}]{RESET} {Y}{text:<10} {W}➤{RESET} {color}[{bar}] {percent}%{RESET}")
+        sys.stdout.write(f"\r {W}【{RESET}•{W}】{RESET} {Y}{text:<10} {W}➤{RESET} {color}【{bar}】 {percent}%{RESET}")
         sys.stdout.flush()
         time.sleep(0.04) 
     
@@ -162,30 +192,30 @@ def nice_loader(text="PROCESSING"):
 def select_progress_display():
     """Let user choose progress display mode"""
     refresh_screen()
-    print(f" {C}[SHARING PROGRESS DISPLAY]{RESET}")
+    print(f" {C}【SHARING PROGRESS DISPLAY】{RESET}")
     print(LINE)
     print(f" {Y}Choose how you want to see sharing progress:{RESET}")
     print(LINE)
-    print(f" {W}[{RESET}{BG_G}{W}1{RESET}{W}]{RESET} {G}SUCCESS COUNTER (1/100){RESET}")
+    print(f" {W}【{RESET}{BG_G}{W}1{RESET}{W}】{RESET} {G}SUCCESS COUNTER (1/100){RESET}")
     print(f"     {Y}• Best for smaller screens (mobile){RESET}")
     print(f"     {Y}• Shows only success count{RESET}")
     print(f"     {Y}• Minimal display, stays in one place{RESET}")
     print(LINE)
-    print(f" {W}[{RESET}{BG_C}{W}2{RESET}{W}]{RESET} {C}DETAILED LOGS{RESET}")
+    print(f" {W}【{RESET}{BG_C}{W}2{RESET}{W}】{RESET} {C}DETAILED LOGS{RESET}")
     print(f"     {Y}• Best for larger screens (desktop){RESET}")
     print(f"     {Y}• Shows success, time, account info{RESET}")
     print(f"     {Y}• Full process information{RESET}")
     print(LINE)
     
     while True:
-        choice = input(f" {W}[{W}➤{W}]{RESET} {C}CHOICE (1 or 2) {W}➤{RESET} ").strip()
+        choice = input(f" {W}【{W}➤{W}】{RESET} {C}CHOICE (1 or 2) {W}➤{RESET} ").strip()
         
         if choice == '1':
             return 'minimal'
         elif choice == '2':
             return 'detailed'
         else:
-            print(f" {R}[!] Invalid choice. Please enter 1 or 2{RESET}")
+            print(f" {R}【!】 Invalid choice. Please enter 1 or 2{RESET}")
             time.sleep(1)
             sys.stdout.write("\033[F\033[K")
             sys.stdout.flush()
@@ -235,14 +265,14 @@ def login_user():
     global user_token, user_data
     
     refresh_screen()
-    print(f" {G}[!] LOGIN TO RPWTOOLS{RESET}")
+    print(f" {G}【!】 LOGIN TO RPWTOOLS{RESET}")
     print(LINE)
     
-    username = input(f" {W}[{W}➤{W}]{RESET} {C}USERNAME {W}➤{RESET} ").strip()
+    username = input(f" {W}【{W}➤{W}】{RESET} {C}USERNAME {W}➤{RESET} ").strip()
     if not username:
         return
     
-    password = input(f" {W}[{W}➤{W}]{RESET} {C}PASSWORD {W}➤{RESET} ").strip()
+    password = input(f" {W}【{W}➤{W}】{RESET} {C}PASSWORD {W}➤{RESET} ").strip()
     if not password:
         return
     
@@ -258,21 +288,21 @@ def login_user():
         user_token = response.get('token')
         user_data = response.get('user')
         
-        print(f" {G}[SUCCESS] Login successful!{RESET}")
+        print(f" {G}【SUCCESS】 Login successful!{RESET}")
         print(LINE)
         print(f" {Y}Welcome back, {G}{user_data['username'].upper()}{RESET}")
         print(f" {Y}Plan: {G}{user_data['plan'].upper()}{RESET}")
         print(f" {Y}Total Cookies: {C}{user_data.get('cookieCount', 0)}{RESET}")
         
         if user_data.get('isAdmin'):
-            print(f" {M}[ADMIN ACCESS GRANTED]{RESET}")
+            print(f" {M}【ADMIN ACCESS GRANTED】{RESET}")
         
         print(LINE)
     else:
-        print(f" {R}[ERROR] {response if isinstance(response, str) else response.get('message', 'Login failed')}{RESET}")
+        print(f" {R}【ERROR】 {response if isinstance(response, str) else response.get('message', 'Login failed')}{RESET}")
         print(LINE)
     
-    input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+    input(f"\n {Y}【PRESS ENTER TO CONTINUE】{RESET}")
 
 def register_user():
     """Register new user"""
@@ -936,204 +966,241 @@ def dashboard_stats():
     
     input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
-# ============ FB NAME CHANGER FUNCTIONS ============
+# ============ AUTO SHARE V2 FUNCTIONS (ALTERNATIVE HEADERS) ============
 
-def get_uid_from_cookie(cookie):
-    """Extract UID from cookie string."""
+async def share_with_eaag_v2(session, cookie, token, post_id):
+    """Share a post using EAAG token with ALTERNATIVE headers (V2)."""
+    headers = {
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
+        'sec-ch-ua': '"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': "Windows",
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'none',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
+        'accept-encoding': 'gzip, deflate',
+        'host': 'b-graph.facebook.com',
+        'cookie': cookie
+    }
+    
     try:
-        # Try c_user first
-        c_user_match = re.search(r'c_user=(\d+)', cookie)
-        if c_user_match:
-            return c_user_match.group(1)
-        
-        # Try i_user
-        i_user_match = re.search(r'i_user=(\d+)', cookie)
-        if i_user_match:
-            return i_user_match.group(1)
-        
-        return None
-    except:
-        return None
-
-def get_from_string(text, start_token, end_token):
-    """Extract string between two tokens."""
-    try:
-        start = text.find(start_token)
-        if start == -1:
-            return None
-        start_index = start + len(start_token)
-        last_half = text[start_index:]
-        end = last_half.find(end_token)
-        if end == -1:
-            return None
-        return last_half[:end]
-    except:
-        return None
-
-def get_fb_dtsg(cookie):
-    """Get fb_dtsg token from Facebook."""
-    try:
-        headers = {
-            'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
-            'cookie': cookie,
-            'cache-control': 'max-age=0',
-            'upgrade-insecure-requests': '1',
-            'referer': 'https://www.facebook.com/',
-            'origin': 'https://www.facebook.com',
-        }
-        
-        response = requests.get('https://www.facebook.com', headers=headers, timeout=10)
-        
-        if response.status_code == 200:
-            fb_dtsg = get_from_string(response.text, '["DTSGInitData",[],{"token":"', '","')
-            lsd = get_from_string(response.text, '["LSD",[],{"token":"', '"}')
+        url = f'https://b-graph.facebook.com/me/feed?link=https://mbasic.facebook.com/{post_id}&published=0&access_token={token}'
+        async with session.post(url, headers=headers, timeout=10) as response:
+            json_data = await response.json()
             
-            # Calculate jazoest
-            jazoest = "2"
-            if fb_dtsg:
-                for char in fb_dtsg:
-                    jazoest += str(ord(char))
-            
-            user_id = get_uid_from_cookie(cookie)
-            
-            return {
-                'fb_dtsg': fb_dtsg or '',
-                'lsd': lsd or '',
-                'jazoest': jazoest,
-                'user_id': user_id
-            }
-        return None
+            if 'id' in json_data:
+                return True, json_data.get('id', 'N/A')
+            else:
+                error_msg = json_data.get('error', {}).get('message', 'Unknown error')
+                return False, error_msg
     except Exception as e:
-        print(f" {R}[ERROR] Failed to get fb_dtsg: {e}{RESET}")
-        return None
+        return False, str(e)
 
-def change_facebook_name(cookie, first_name, last_name):
-    """Change Facebook account name."""
-    try:
-        print(f" {Y}[!] Extracting Facebook tokens...{RESET}")
-        nice_loader("EXTRACTING")
+async def share_loop_v2(session, cookie, token, post_id, account_name, account_uid, cookie_id, display_mode='detailed'):
+    """
+    Continuous sharing loop for V2 mode with ALTERNATIVE HEADERS and ZERO DELAYS.
+    """
+    global success_count
+    
+    last_token_renewal = time.time()
+    current_token = token
+    failed_consecutive = 0
+    
+    while True:
+        try:
+            # Auto-renew token every 3 minutes (180 seconds)
+            if time.time() - last_token_renewal >= 180:
+                new_token = await renew_eaag_token(cookie)
+                
+                if new_token:
+                    current_token = new_token
+                    last_token_renewal = time.time()
+                    
+                    if display_mode == 'minimal':
+                        sys.stdout.write(f"\r {Y}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                              ")
+                        sys.stdout.flush()
+                        time.sleep(0.5)
+                    else:
+                        now = datetime.datetime.now()
+                        current_time = now.strftime("%H:%M:%S")
+                        print(f" {Y}[RENEWED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {C}Token renewed{RESET}")
+            
+            now = datetime.datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+            
+            is_success, result = await share_with_eaag_v2(session, cookie, current_token, post_id)
+            
+            if is_success:
+                async with lock:
+                    success_count += 1
+                    current_count = success_count
+                
+                failed_consecutive = 0
+                
+                if display_mode == 'minimal':
+                    sys.stdout.write(f"\r {G}[SUCCESS — {current_count}]{RESET} {W}|{RESET} {C}[UID: {account_uid}]{RESET}                    ")
+                    sys.stdout.flush()
+                else:
+                    print(f" {G}[SUCCESS]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {Y}Total: {current_count}{RESET}")
+                
+                # ZERO DELAY - Continue immediately
+            else:
+                failed_consecutive += 1
+                error_message = result
+                
+                # If failed 3 times consecutively, try to renew token
+                if failed_consecutive >= 3:
+                    if display_mode == 'minimal':
+                        sys.stdout.write(f"\r {Y}[RENEWING...]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                          ")
+                        sys.stdout.flush()
+                    else:
+                        print(f" {Y}[RENEWING]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {Y}Attempting token renewal...{RESET}")
+                    
+                    new_token = await renew_eaag_token(cookie)
+                    
+                    if new_token:
+                        current_token = new_token
+                        last_token_renewal = time.time()
+                        failed_consecutive = 0
+                        
+                        if display_mode == 'minimal':
+                            sys.stdout.write(f"\r {G}[TOKEN RENEWED]{RESET} {W}|{RESET} {B}[UID: {account_uid}]{RESET}                            ")
+                            sys.stdout.flush()
+                            time.sleep(0.5)
+                        else:
+                            print(f" {G}[RENEWED]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {G}Token renewed successfully{RESET}")
+                    else:
+                        if display_mode != 'minimal':
+                            print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
+                        await asyncio.sleep(5)  # Brief pause after failed renewal
+                else:
+                    if display_mode != 'minimal':
+                        print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{current_time}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_message[:40]}{RESET}")
+                    # ZERO DELAY - Continue immediately even after errors
         
-        fb_data = get_fb_dtsg(cookie)
+        except asyncio.CancelledError:
+            break
+        except KeyboardInterrupt:
+            break
+        except Exception as e:
+            error_msg = str(e)
+            if "asyncio" not in error_msg.lower() and "event" not in error_msg.lower():
+                if display_mode != 'minimal':
+                    print(f" {R}[ERROR]{RESET} {W}|{RESET} {M}{datetime.datetime.now().strftime('%H:%M:%S')}{RESET} {W}|{RESET} {C}{account_uid}{RESET} {W}|{RESET} {R}{error_msg[:40]}{RESET}")
+            # ZERO DELAY - Continue immediately after exceptions
+
+async def auto_share_main_v2(link_or_id, selected_cookies):
+    """Main auto share V2 function using alternative headers."""
+    global success_count
+    success_count = 0
+    
+    refresh_screen()
+    print(f" {C}[!] CONVERTING SELECTED COOKIES TO EAAG TOKENS...{RESET}")
+    nice_loader("CONVERTING")
+    
+    eaag_tokens = []
+    
+    # Convert selected cookies to EAAG tokens
+    for cookie_data in selected_cookies:
+        token = cookie_to_eaag(cookie_data['cookie'])
+        if token:
+            eaag_tokens.append({
+                'id': cookie_data['id'],
+                'cookie': cookie_data['cookie'],
+                'token': token,
+                'name': cookie_data['name'],
+                'uid': cookie_data['uid'],
+                'status': cookie_data.get('status', 'active')
+            })
+            status_indicator = f"{R}[RESTRICTED]{RESET}" if cookie_data.get('status') == 'restricted' else f"{G}[ACTIVE]{RESET}"
+            print(f" {G}✓{RESET} {Y}{cookie_data['name']}{RESET} {W}({C}UID: {cookie_data['uid']}{W}){RESET} {status_indicator}")
+        else:
+            print(f" {R}✗{RESET} {Y}{cookie_data['name']}{RESET} {R}Failed to extract EAAG token{RESET}")
+    
+    if not eaag_tokens:
+        print(f" {R}[ERROR] No valid EAAG tokens extracted!{RESET}")
+        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+        return
+    
+    # Extract post ID
+    async with aiohttp.ClientSession() as session:
+        post_id = extract_post_id_from_link(link_or_id)
         
-        if not fb_data or not fb_data['fb_dtsg']:
-            print(f" {R}[ERROR] Failed to extract fb_dtsg token{RESET}")
-            print(f" {Y}[TIP] Make sure your cookie is valid and active{RESET}")
-            return False
-        
-        user_id = fb_data['user_id']
-        
-        print(f" {G}[SUCCESS] Tokens extracted{RESET}")
-        print(f" {Y}User ID: {C}{user_id}{RESET}")
+        # If extraction failed or looks like a full URL, try API method
+        if not post_id.isdigit():
+            refresh_screen()
+            print(f" {G}[!] EXTRACTING POST ID FROM LINK...{RESET}")
+            nice_loader("EXTRACTING")
+            
+            post_id = await getid(session, link_or_id)
+            if not post_id:
+                print(f" {R}[ERROR] Failed to get post ID{RESET}")
+                input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+                return
+    
+    # Select display mode
+    display_mode = select_progress_display()
+    
+    refresh_screen()
+    print(f" {G}[SUCCESS] Extracted {len(eaag_tokens)} EAAG tokens{RESET}")
+    print(LINE)
+    print(f" {Y}Post ID: {G}{post_id}{RESET}")
+    print(LINE)
+    
+    async with aiohttp.ClientSession() as session:
+        print(f" {M}[AUTO SHARE V2 CONFIGURATION]{RESET}")
+        print(LINE)
+        print(f" {Y}Mode: {C}V2 - ALTERNATIVE HEADERS{RESET}")
+        print(f" {Y}Total Accounts: {G}{len(eaag_tokens)}{RESET}")
+        print(f" {Y}Share Speed: {G}MAXIMUM (ZERO DELAYS){RESET}")
+        print(f" {Y}Token Renewal: {C}Auto every 3 minutes{RESET}")
+        print(f" {Y}Headers: {C}Windows Desktop (Chrome 107){RESET}")
+        print(LINE)
+        print(f" {G}[!] STARTING AUTO SHARE V2...{RESET}")
+        print(f" {Y}[TIP] Press Ctrl+C to stop{RESET}")
         print(LINE)
         
-        print(f" {Y}[!] Changing name to: {G}{first_name} {last_name}{RESET}")
-        nice_loader("CHANGING")
+        tasks = []
+        for acc in eaag_tokens:
+            task = asyncio.create_task(share_loop_v2(
+                session,
+                acc['cookie'],
+                acc['token'],
+                post_id,
+                acc['name'],
+                acc['uid'],
+                acc['id'],
+                display_mode
+            ))
+            tasks.append(task)
         
-        # Prepare GraphQL mutation
-        variables = json.dumps({
-            "input": {
-                "first_name": first_name,
-                "last_name": last_name,
-                "actor_id": user_id,
-                "client_mutation_id": str(random.randint(1, 9999))
-            }
-        })
+        print(f" {G}[STARTED] Running {len(tasks)} parallel V2 share threads at MAXIMUM SPEED...{RESET}")
+        print(LINE)
         
-        form_data = {
-            'av': user_id,
-            '__user': user_id,
-            '__a': '1',
-            '__req': '1',
-            '__hs': '',
-            'dpr': '1',
-            '__ccg': 'EXCELLENT',
-            '__rev': '',
-            '__s': '',
-            '__hsi': '',
-            '__dyn': '',
-            '__csr': '',
-            '__comet_req': '15',
-            'fb_dtsg': fb_data['fb_dtsg'],
-            'jazoest': fb_data['jazoest'],
-            'lsd': fb_data['lsd'],
-            'fb_api_caller_class': 'RelayModern',
-            'fb_api_req_friendly_name': 'ProfileCometNameSaveMutation',
-            'variables': variables,
-            'server_timestamps': 'true',
-            'doc_id': '7259554250755162'
-        }
-        
-        headers = {
-            'authority': 'www.facebook.com',
-            'accept': '*/*',
-            'accept-language': 'en-US,en;q=0.9',
-            'content-type': 'application/x-www-form-urlencoded',
-            'cookie': cookie,
-            'origin': 'https://www.facebook.com',
-            'referer': 'https://www.facebook.com/',
-            'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-            'sec-ch-ua-mobile': '?1',
-            'sec-ch-ua-platform': '"Android"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
-            'x-asbd-id': '129477',
-            'x-fb-friendly-name': 'ProfileCometNameSaveMutation',
-            'x-fb-lsd': fb_data['lsd']
-        }
-        
-        response = requests.post(
-            'https://www.facebook.com/api/graphql/',
-            data=form_data,
-            headers=headers,
-            timeout=15
-        )
-        
-        if response.status_code == 200:
-            try:
-                result = response.json()
-                
-                # Check for errors
-                if 'errors' in result:
-                    error_msg = result['errors'][0].get('message', 'Unknown error')
-                    print(f" {R}[ERROR] {error_msg}{RESET}")
-                    return False
-                
-                # Check for successful mutation
-                if 'data' in result:
-                    print(f" {G}[SUCCESS] Name changed successfully!{RESET}")
-                    print(LINE)
-                    print(f" {Y}New Name: {G}{first_name} {last_name}{RESET}")
-                    print(f" {Y}User ID: {C}{user_id}{RESET}")
-                    print(LINE)
-                    return True
-                else:
-                    print(f" {R}[ERROR] Unexpected response format{RESET}")
-                    return False
-                    
-            except json.JSONDecodeError:
-                print(f" {R}[ERROR] Failed to parse response{RESET}")
-                return False
-        else:
-            print(f" {R}[ERROR] Request failed with status code: {response.status_code}{RESET}")
-            return False
-            
-    except Exception as e:
-        print(f" {R}[ERROR] An error occurred: {str(e)}{RESET}")
-        return False
+        try:
+            await asyncio.gather(*tasks, return_exceptions=True)
+        except Exception as e:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
 
-def fb_name_changer():
-    """Entry point for Facebook Name Changer."""
+def start_auto_share_v2():
+    """Entry point for auto share V2 feature."""
     refresh_screen()
     
-    print(f" {C}[!] FACEBOOK NAME CHANGER{RESET}")
+    # Display informational message
+    print(f" {C}[!] AUTO SHARE V2 - ALTERNATIVE HEADERS{RESET}")
     print(LINE)
     print(f" {G}[✓] INFORMATION:{RESET}")
-    print(f" {W}• This will change your Facebook account name{RESET}")
-    print(f" {W}• You can change your name back anytime{RESET}")
-    print(f" {W}• Make sure your cookie is valid and active{RESET}")
-    print(f" {W}• Use at your own risk - may trigger review{RESET}")
+    print(f" {W}• Make sure your post is set to PUBLIC{RESET}")
+    print(f" {W}• Uses ALTERNATIVE headers (Windows Desktop){RESET}")
+    print(f" {W}• Shares run at MAXIMUM SPEED (zero delays){RESET}")
+    print(f" {W}• Tokens auto-renew every 3 minutes{RESET}")
+    print(f" {W}• Enhanced cookie validation with restriction detection{RESET}")
+    print(f" {W}• Best for accounts that fail with V1{RESET}")
     print(LINE)
     
     # Brief delay to let user read
@@ -1145,78 +1212,40 @@ def fb_name_changer():
     sys.stdout.write(f"\r{' ' * 60}\r")
     sys.stdout.flush()
     
-    refresh_screen()
-    print(f" {C}[FACEBOOK NAME CHANGER]{RESET}")
-    print(LINE)
+    selected_cookies = select_cookies_for_sharing()
     
-    # Get cookie input
-    print(f" {Y}[!] Enter your Facebook cookie{RESET}")
-    cookie = input(f" {W}[{W}➤{W}]{RESET} {C}COOKIE {W}➤{RESET} ").strip()
-    
-    if not cookie:
-        print(f" {R}[ERROR] Cookie is required{RESET}")
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        return
-    
-    # Validate cookie has UID
-    uid = get_uid_from_cookie(cookie)
-    if not uid:
-        print(f" {R}[ERROR] Invalid cookie - could not find user ID{RESET}")
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+    if not selected_cookies:
         return
     
     refresh_screen()
-    print(f" {C}[FACEBOOK NAME CHANGER]{RESET}")
-    print(LINE)
-    print(f" {G}[!] Cookie validated - UID: {C}{uid}{RESET}")
+    print(f" {C}[AUTO SHARE V2]{RESET}")
     print(LINE)
     
-    # Get first name
-    print(f" {Y}[!] Enter your desired first name{RESET}")
-    first_name = input(f" {W}[{W}➤{W}]{RESET} {C}FIRST NAME {W}➤{RESET} ").strip()
+    link_or_id = input(f" {W}[{W}➤{W}]{RESET} {C}POST LINK OR ID {W}➤{RESET} ").strip()
     
-    if not first_name:
-        print(f" {R}[ERROR] First name is required{RESET}")
-        input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
+    if not link_or_id:
         return
     
-    # Get last name
-    print(f" {Y}[!] Enter your desired last name{RESET}")
-    last_name = input(f" {W}[{W}➤{W}]{RESET} {C}LAST NAME {W}➤{RESET} ").strip()
-    
-    if not last_name:
-        print(f" {R}[ERROR] Last name is required{RESET}")
+    try:
+        asyncio.run(auto_share_main_v2(link_or_id, selected_cookies))
+    except KeyboardInterrupt:
+        refresh_screen()
+        print(f" {Y}[!] AUTO SHARE V2 STOPPED BY USER{RESET}")
+        stop_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f" {Y}[!] Stop Time: {stop_time}{RESET}")
+        print(f" {G}[!] Total Successful Shares: {success_count}{RESET}")
+        print(LINE)
+        
+        if success_count > 0:
+            api_request("POST", "/share/complete", {"totalShares": success_count})
+            print(f" {G}[!] Shares recorded to your account{RESET}")
+        
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        return
-    
-    # Confirmation
-    refresh_screen()
-    print(f" {Y}[CONFIRM NAME CHANGE]{RESET}")
-    print(LINE)
-    print(f" {Y}User ID: {C}{uid}{RESET}")
-    print(f" {Y}New Name: {G}{first_name} {last_name}{RESET}")
-    print(LINE)
-    
-    confirm = input(f" {W}[{W}➤{W}]{RESET} {Y}Proceed with name change? (Y/N) {W}➤{RESET} ").strip().upper()
-    
-    if confirm != 'Y':
-        print(f" {Y}[!] Name change cancelled{RESET}")
+    except Exception as e:
+        refresh_screen()
+        print(f" {R}[ERROR] An unexpected error occurred:{RESET}")
+        print(f" {R}{str(e)}{RESET}")
         input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
-        return
-    
-    # Execute name change
-    refresh_screen()
-    print(f" {C}[CHANGING FACEBOOK NAME]{RESET}")
-    print(LINE)
-    
-    success = change_facebook_name(cookie, first_name, last_name)
-    
-    if not success:
-        print(f" {R}[!] Name change failed{RESET}")
-        print(f" {Y}[TIP] Try again with a fresh cookie or different name{RESET}")
-    
-    print(LINE)
-    input(f"\n {Y}[PRESS ENTER TO CONTINUE]{RESET}")
 
 # ============ POST ID EXTRACTION ============
 
@@ -1695,10 +1724,10 @@ def main():
                 start_auto_share()
                 
             elif choice in ['2', '02', 'B']:
-                manage_cookies()
+                start_auto_share_v2()
             
             elif choice in ['3', '03', 'C']:
-                fb_name_changer()
+                manage_cookies()
             
             elif choice in ['4', '04', 'D']:
                 show_user_stats()
