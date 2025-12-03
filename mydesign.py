@@ -1,50 +1,94 @@
 import os
 import sys
+import subprocess
 import time
 import threading
-import shutil
-import random
+
+# --- AUTO-INSTALLER SECTION ---
+def install_requirements():
+    """
+    Checks if required libraries are installed.
+    If not, installs them automatically.
+    """
+    requirements = [
+        ("rich", "rich"),       # (package_name, import_name)
+        ("pyttsx3", "pyttsx3")
+    ]
+    
+    needs_install = False
+    
+    for package, import_name in requirements:
+        try:
+            __import__(import_name)
+        except ImportError:
+            needs_install = True
+            print(f"[!] {package} is not installed. Installing now...")
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+                print(f"[✓] {package} installed successfully.")
+            except subprocess.CalledProcessError:
+                print(f"[X] Failed to install {package}. Please install manually.")
+                sys.exit(1)
+    
+    if needs_install:
+        print("[!] All requirements installed. Starting tool...\n")
+        time.sleep(1)
+        # Clear screen to make it clean before importing rich
+        os.system('cls' if os.name == 'nt' else 'clear')
+
+# Run the installer BEFORE importing specific libraries
+install_requirements()
+
+# --- IMPORTS (After Auto-Install) ---
+import pyttsx3
 from rich.console import Console
 from rich.text import Text
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.live import Live
-from rich.panel import Panel
+from rich.spinner import Spinner
 
 # Initialize Rich Console
 console = Console()
 
-# --- CONSTANTS ---
+# --- CONFIGURATION ---
 LABEL_WIDTH = 12 
 SEPARATOR_LINE = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
+# --- VOICE / AUDIO ENGINE ---
+def speak_async(text):
+    """
+    Speaks text in a separate thread so it doesn't block the animation.
+    """
+    def run_voice():
+        try:
+            # Initialize engine inside the thread to avoid loop issues
+            engine = pyttsx3.init()
+            engine.setProperty('rate', 160) 
+            engine.setProperty('volume', 1.0)
+            engine.say(text)
+            engine.runAndWait()
+        except Exception:
+            # This prevents crashes on Termux if 'espeak' isn't installed in the OS
+            pass
+            
+    thread = threading.Thread(target=run_voice)
+    thread.daemon = True # Kills thread if program exits
+    thread.start()
+
+# --- UTILS ---
 def clear():
-    """Clears the terminal screen."""
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def speak(text):
-    """
-    Uses Termux TTS to speak text.
-    Runs in a separate thread so it doesn't block the animation.
-    """
-    def _speak_thread():
-        # Check if termux-tts-speak exists (Termux environment)
-        if shutil.which("termux-tts-speak"):
-            # Execute the command in the background
-            os.system(f"termux-tts-speak '{text}'")
-        else:
-            # Fallback for PC (optional, just prints if no TTS)
-            pass 
-            
-    # Start the voice in the background
-    threading.Thread(target=_speak_thread, daemon=True).start()
-
-def type_print(text, style="bold green", delay=0.02):
-    """Types text char-by-char."""
+def type_print(text, style="bold white", delay=0.02):
+    """Types out text character by character."""
     for char in text:
         console.print(char, style=style, end="")
         sys.stdout.flush()
         time.sleep(delay)
 
+def print_line():
+    console.print(SEPARATOR_LINE, style="bold green")
+
+# --- UI COMPONENTS ---
 def print_banner():
     banner = """
     ╔═╗╔╗ ┌─┐┬ ┬┌┬┐┌─┐ ┌─┐┬ ┬┌─┐┌─┐┌─┐┌─┐
@@ -53,17 +97,16 @@ def print_banner():
     """
     console.print(banner, style="bold cyan")
 
-def print_line():
-    console.print(SEPARATOR_LINE, style="bold green")
-
 def print_info_row(label, value, is_highlighted=False):
     bullet = Text("[", style="bold white")
     bullet.append("•", style="bold white")
     bullet.append("] ", style="bold white")
+    
     label_text = Text(f"{label:<{LABEL_WIDTH}}", style="bold yellow")
     arrow = Text("➤ ", style="bold white")
     
     if is_highlighted:
+        # The Red Highlight Style
         val_text = Text("[ ", style="bold red")
         val_text.append(value, style="bold white on red")
         val_text.append(" ]", style="bold red")
@@ -82,11 +125,13 @@ def header_section():
     print_line()
 
 def menu_option(number, letter, description, is_exit=False):
-    key_text = Text("[", style="bold white")
-    key_text.append(str(number), style="bold white")
-    key_text.append("/", style="bold yellow")
-    key_text.append(letter, style="bold white")
-    key_text.append("]", style="bold white")
+    """
+    Prints menu option with HIGHLIGHTED keys (White on Red).
+    """
+    # Create the block: [ 01/A ] with Red Background
+    key_text = Text("[ ", style="bold red")
+    key_text.append(f"{number}/{letter}", style="bold white on red")
+    key_text.append(" ]", style="bold red")
 
     if is_exit:
         desc_text = Text(f" {description}", style="bold red")
@@ -97,11 +142,8 @@ def menu_option(number, letter, description, is_exit=False):
 
 def menu_section_animated():
     """
-    Animates the menu with voice.
+    Shows menu items one by one with a cascade effect.
     """
-    # Speak while showing menu
-    speak("Please select an option from the menu.")
-    
     options = [
         ("01", "A", "START AUTO SHARE", False),
         ("02", "B", "JOIN FB GROUP", False),
@@ -112,64 +154,51 @@ def menu_section_animated():
     
     for num, let, desc, is_ex in options:
         menu_option(num, let, desc, is_exit=is_ex)
-        time.sleep(0.08) # Slightly slower for dramatic effect
+        time.sleep(0.03)
     
     print_line()
 
-def animated_input(prompt_text_str, voice_msg=None):
+def animated_input_with_voice(prompt_text_display, voice_message):
     """
-    1. Plays voice (if provided).
-    2. Types out the prompt design.
-    3. Waits for input.
+    1. Speaks the voice message.
+    2. Animates the prompt text simultaneously.
+    3. Returns the user input.
     """
-    if voice_msg:
-        speak(voice_msg)
-
-    # Manual construction of prompt "[➤] CHOICE ➤"
+    speak_async(voice_message)
+    
+    # Visual Prompt Construction: [➤] CHOICE ➤ 
     console.print(" [", style="bold white", end="")
     time.sleep(0.05)
     console.print("➤", style="bold white", end="")
     time.sleep(0.05)
     console.print("]", style="bold white", end="")
     
-    # Typing the word " CHOICE " or whatever is passed
-    type_print(f" {prompt_text_str} ", style="bold cyan", delay=0.05)
+    # Type " CHOICE " nicely
+    type_print(" CHOICE ", style="bold cyan", delay=0.04)
     
     console.print("➤ ", style="bold white", end="")
     
+    # Capture input
     return input("").upper().strip()
 
-def fake_loading_bar(task_name):
+def process_loader(message):
     """
-    A cool progress bar loader using Rich.
+    A fancy loader that spins while speaking.
     """
-    speak(f"Processing {task_name}, please wait.")
+    speak_async(message)
+    spinner = Spinner("dots12", text=f" [bold green]{message}...", style="bold green")
     
-    with Progress(
-        SpinnerColumn(spinner_name="dots12"),
-        TextColumn("[bold cyan]{task.description}"),
-        BarColumn(bar_width=None, complete_style="green", finished_style="green"),
-        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-        console=console
-    ) as progress:
-        
-        task = progress.add_task(f"[bold white]{task_name}...", total=100)
-        
-        while not progress.finished:
-            # Simulate work with random speed
-            sleep_time = random.uniform(0.02, 0.08)
-            time.sleep(sleep_time)
-            progress.update(task, advance=random.randint(2, 5))
+    # Run the spinner for 3 seconds to simulate work
+    with Live(spinner, refresh_per_second=20, transient=True):
+        time.sleep(3)
 
+# --- MAIN LOGIC ---
 def main():
     clear()
-    
-    # Intro Voice
-    speak("Welcome to F B Auto Sharer by Ken Drick.")
-    
-    # Fake startup loader
-    fake_loading_bar("Loading Assets")
-    
+    speak_async("Welcome to F B Auto Sharer. Created by Ken Drick.")
+    type_print("[*] Loading System...", delay=0.03)
+    time.sleep(0.5)
+
     while True:
         clear()
         print_banner()
@@ -177,41 +206,51 @@ def main():
         menu_section_animated()
         
         try:
-            # Voice + Animation for Input
-            choice = animated_input("CHOICE", voice_msg="Enter your choice now.")
+            choice = animated_input_with_voice(
+                prompt_text_display="CHOICE", 
+                voice_message="Please enter your choice."
+            )
 
             if choice in ['1', '01', 'A']:
                 print()
-                speak("You selected Auto Share.")
+                speak_async("Starting Auto Share Process.")
+                type_print("[!] Initializing...", style="bold yellow")
                 
-                # Ask for Cookie with voice
-                cookie = animated_input("COOKIE", voice_msg="Please paste your Facebook cookie.")
+                # --- INPUT EXAMPLE WITH VOICE ---
+                # Example of asking for a cookie or token with voice
+                # speak_async("Please paste your cookies.")
+                # cookie = input(" [?] Paste Cookie: ")
                 
-                # Ask for Link with voice
-                link = animated_input("POST LINK", voice_msg="Please enter the target post link.")
+                # Fancy Loaders
+                process_loader("Extracting Cookies from Browser")
+                process_loader("Validating Access Token")
+                process_loader("Targeting Facebook Groups")
                 
-                print()
-                fake_loading_bar("Authenticating Cookie")
-                fake_loading_bar("Initializing Bot")
-                
-                console.print("\n [bold green][✓] Process Started Successfully![/]")
-                speak("Process started successfully.")
+                speak_async("Process Completed Successfully.")
+                console.print("\n [bold green on white] ✓ SUCCESS [/] [bold green]Share completed successfully![/]")
                 time.sleep(2)
                 
+            elif choice in ['2', '02', 'B']:
+                print()
+                speak_async("Opening Facebook Groups.")
+                process_loader("Redirecting to Groups")
+                time.sleep(1)
+
             elif choice in ['0', '00', 'X']:
                 print()
-                speak("Exiting program. Goodbye.")
+                speak_async("Exiting the program. Goodbye.")
                 console.print("\n [bold red][!] Exiting...[/]")
                 time.sleep(1)
                 sys.exit()
             else:
-                speak("Invalid selection.")
+                print()
+                speak_async("Invalid selection. Please try again.")
                 console.print("\n [bold red][!] Invalid Selection[/]")
-                time.sleep(0.5)
+                time.sleep(1)
                 
         except KeyboardInterrupt:
             print()
-            speak("Force closing.")
+            speak_async("Force exit detected.")
             console.print("\n\n [bold red][!] Force Exit[/]")
             sys.exit()
 
