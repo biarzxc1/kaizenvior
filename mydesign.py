@@ -1,260 +1,116 @@
-import os
-import sys
 import time
-import threading
 import random
-import subprocess
+import sys
+from rich.console import Console
+from rich.text import Text
+from rich.style import Style
+from rich.panel import Panel
 
-# --- AUTO-INSTALL LIBRARIES ---
-try:
-    from rich.console import Console
-    from rich.text import Text
-    from rich.panel import Panel
-    from rich.live import Live
-    from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
-    from rich.align import Align
-    import pyttsx3
-except ImportError:
-    os.system("pip install rich pyttsx3")
-    print("\n[!] Libraries installed. Restarting...")
-    # Rerun script automatically
-    os.execv(sys.executable, ['python'] + sys.argv)
-
-# --- CONFIGURATION ---
+# Initialize Rich Console
 console = Console()
-# Colors from the screenshot
-# The screenshot uses standard terminal bright green, red, yellow.
-COLOR_ACCENT = "bold green"     # Main Text
-COLOR_LABEL = "bold yellow"     # Labels
-COLOR_TAG = "bold red"          # [≈] Brackets
-COLOR_VALUE = "bold green"      # Values like Name
-COLOR_VALUE_VIP = "bold blue"   # "PREMIUM" value
-COLOR_WARN = "bold white on green" # The "Airplane Mode" line background
 
-# --- SOUND MANAGER ---
-class SoundManager:
-    def __init__(self):
-        self.engine = None
-        try:
-            self.engine = pyttsx3.init()
-            self.engine.setProperty('rate', 140)
-            self.engine.setProperty('volume', 1.0)
-        except:
-            self.engine = None
+# --- Configuration ---
+TOOL_NAME = "RPW"
+VERSION = "V/1.0"
+OWNER = "YOUR_NAME_HERE"
+WHATSAPP = "+1234567890"
 
-    def speak(self, text):
-        def _run():
-            if self.engine:
-                try:
-                    self.engine.say(text)
-                    self.engine.runAndWait()
-                except:
-                    pass
-            else:
-                try:
-                    subprocess.run(["termux-tts-speak", text], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-                except:
-                    pass
-        t = threading.Thread(target=_run)
-        t.daemon = True
-        t.start()
-
-sound = SoundManager()
-
-# --- UTILITIES ---
-def clear():
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-def slow_type(text, style="bold white", speed=0.04):
-    for char in text:
-        console.print(char, style=style, end="")
-        sys.stdout.flush()
-        time.sleep(speed + random.uniform(0.005, 0.01)) 
-    console.print()
-
-# --- UI ELEMENTS ---
+def clear_screen():
+    # Clears the terminal screen
+    console.clear()
 
 def print_banner():
-    # Big blocky text similar to "AKASH"
-    banner = r"""
- [bold green]
-  █████╗ ██╗   ██╗████████╗ ██████╗ 
- ██╔══██╗██║   ██║╚══██╔══╝██╔═══██╗
- ███████║██║   ██║   ██║   ██║   ██║
- ██╔══██║██║   ██║   ██║   ██║   ██║
- ██║  ██║╚██████╔╝   ██║   ╚██████╔╝
- ╚═╝  ╚═╝ ╚═════╝    ╚═╝    ╚═════╝ 
- [/] [bold green]V/3.9[/]
+    # Manually created blocky ASCII art for "RPW" to ensure it works without pyfiglet
+    # You can change the color style here (e.g., "bold green", "bold cyan")
+    ascii_art = """
+[bold green]
+██████╗ ██████╗ ██╗    ██╗
+██╔══██╗██╔══██╗██║    ██║
+██████╔╝██████╔╝██║ █╗ ██║
+██╔══██╗██╔═══╝ ██║███╗██║
+██║  ██║██║     ╚███╔███╔╝
+╚═╝  ╚═╝╚═╝      ╚══╝╚══╝
+[/bold green]"""
+    
+    # Print the Banner
+    console.print(ascii_art, highlight=False)
+    
+    # Print the Version number floating to the right (simulated)
+    console.print(f"[bold green]{' '*30}{VERSION}[/]")
+    
+    # Print the Green Divider Line
+    console.print("[bold green]" + "_" * 50 + "[/]")
+
+def print_info():
+    # The Info Section (simulating the [≈] style)
+    # Using simple f-strings with Rich markup for the exact terminal look
+    
+    # Define styles for the brackets and text
+    bracket_style = "[bold red]"
+    key_style = "[bold yellow]" 
+    val_style = "[bold green]"
+    
+    # Layout matches the screenshot structure
+    console.print(f"{bracket_style}[≈] OWNER      : {key_style}{OWNER}")
+    console.print(f"{bracket_style}[≈] TOOL TYPE  : {val_style}RANDOM_FILE")
+    console.print(f"{bracket_style}[≈] VERSION    : {style_text('PREMIUM', 'bold blue')}")
+    console.print(f"{bracket_style}[≈] WHATSAPP   : {style_text(WHATSAPP, 'bold red')}")
+    
+    # Second Divider
+    console.print("[bold green]" + "_" * 50 + "[/]")
+    console.print() # Spacer
+
+    # Status Section
+    console.print(f"[bold green][=] SIM CODE   : 019")
+    console.print(f"[bold green][=] TOTAL UID  : 9999")
+    console.print(f"[bold green][=] TURN [ON/OFF] AIRPLANE MODE EVERY 3 MIN")
+    console.print("[bold green]" + "_" * 50 + "[/]")
+    console.print()
+
+def style_text(text, style_name):
+    return f"[{style_name}]{text}[/{style_name}]"
+
+def simulate_process():
     """
-    console.print(Align.center(banner))
-
-def print_line():
-    console.print("[bold green]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/]")
-
-def info_line(symbol, label, value, value_color="bold green"):
+    Simulates the scrolling log output seen in the screenshot.
     """
-    Format: [≈] OWNER    : AKASH_ON_FIRE
-    """
-    # 1. The Symbol [≈]
-    # Red brackets, Red tilde
-    sym_text = Text("[", style="bold red")
-    sym_text.append(symbol, style="bold red")
-    sym_text.append("] ", style="bold red")
+    ids = ["100076", "100082", "100093", "100012", "100045"]
     
-    # 2. Label (Yellow) padded
-    # We use a fixed width to align the colons
-    label_text = Text(f"{label:<10}", style=COLOR_LABEL)
-    
-    # 3. Colon (Red)
-    colon = Text(": ", style="bold red")
-    
-    # 4. Value
-    val_text = Text(str(value), style=value_color)
-    
-    console.print(sym_text + label_text + colon + val_text)
-
-def header_section_akash_style():
-    print_line()
-    
-    # Section 1: User Info (using ≈)
-    info_line("≈", "OWNER", "KEN DRICK") # Your name
-    info_line("≈", "TOOL TYPE", "AUTO_SHARE")
-    info_line("≈", "VERSION", "PREMIUM", value_color="bold blue") # Blue for premium
-    info_line("≈", "WHATSAPP", "+1234567890", value_color="bold red")
-    
-    print_line()
-    
-    # Section 2: Sim Info (using =)
-    info_line("=", "SIM CODE", "019")
-    info_line("=", "TOTAL UID", "9999")
-    
-    # Section 3: Warning Line (Green Background)
-    console.print("[bold green][=] TURN [ON/OFF] AIRPLANE MODE EVERY 3 MIN[/]")
-    
-    print_line()
-
-def menu_option(number, letter, description, is_exit=False):
-    """
-    Keeps your VIP buttons but fits the theme.
-    """
-    key_style = "bold white on red"
-    key_text = Text("[ ", style="bold red")
-    key_text.append(f"{number}/{letter}", style=key_style)
-    key_text.append(" ]", style="bold red")
-
-    if is_exit:
-        desc_text = Text(f" {description}", style="bold red")
-    else:
-        desc_text = Text(f" {description}", style="bold green")
-    
-    console.print(key_text + desc_text)
-
-def show_menu_animated():
-    options = [
-        ("01", "A", "START AUTO SHARE", False),
-        ("02", "B", "JOIN FB GROUP", False),
-        ("03", "C", "JOIN FACEBOOK", False),
-        ("04", "D", "FOLLOW GITHUB", False),
-        ("00", "X", "BACK TO MAIN MENU", True),
-    ]
-    for num, let, desc, is_ex in options:
-        menu_option(num, let, desc, is_exit=is_ex)
-        time.sleep(0.05)
-    print_line()
-
-# --- LOADERS (VIP STYLE) ---
-def admin_loader(task_name, steps):
-    sound.speak(f"Starting {task_name}")
-    
-    progress = Progress(
-        SpinnerColumn(style="bold yellow"),
-        TextColumn("[bold green]{task.description}"),
-        BarColumn(bar_width=None, complete_style="green", finished_style="green"),
-        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-    )
-    
-    panel = Panel(progress, title=f"[bold white]{task_name}[/]", border_style="green", padding=(1, 2))
-    
-    with Live(panel, console=console, refresh_per_second=10):
-        task_id = progress.add_task("Running...", total=100)
-        chunk = 100 / len(steps)
-        curr = 0
-        
-        for step, delay in steps:
-            progress.update(task_id, description=step)
-            # sound.speak(step) # Optional: uncomment if too talkative
+    try:
+        while True:
+            # Generate random fake data to mimic the screenshot
+            uid_prefix = random.choice(ids)
+            uid = f"{uid_prefix}{random.randint(10000000, 99999999)}"
             
-            ticks = 20
-            for _ in range(ticks):
-                time.sleep(delay/ticks)
-                curr += chunk/ticks
-                progress.update(task_id, completed=min(curr, 100))
-    
-    console.print(f"[bold green on black] [OK] PROCESS COMPLETED: {task_name} [/]")
-    time.sleep(1)
+            # 20% chance of a "Hit/Success" (Green)
+            # 80% chance of standard processing or waiting
+            status = random.random()
+            
+            if status < 0.3:
+                # SUCCESS / OK FORMAT
+                console.print(f"[bold green][{TOOL_NAME}-OK] {uid} | M | ...[/]")
+                console.print(f"[bold green][COOKIE] c_user={uid};xs=17:9Ngw2VXT2n...[/]")
+                console.print(f"[bold white]UA: Mozilla/5.0 (Linux; Android 10)...[/]")
+                console.print("[bold green]" + "-" * 50 + "[/]")
+            
+            elif status < 0.4:
+                # CHECKPOINT / CP FORMAT (Yellow/Red)
+                console.print(f"[bold yellow][{TOOL_NAME}-CP] {uid} | [bold red]CHECKPOINT[/]")
+                console.print(f"[bold red][✘] Password Incorrect or Locked[/]")
+            
+            # Simple spacing or speed control
+            time.sleep(0.1) 
 
-# --- NEW INPUT STYLE ---
-def get_input_fixed():
-    """
-    Fixed input: [?] CHOICE >
-    """
-    sound.speak("Waiting for choice.")
-    
-    # 1. [?]
-    console.print("[", style="bold green", end="")
-    console.print("?", style="bold yellow", end="")
-    console.print("] ", style="bold green", end="")
-    
-    # 2. CHOICE
-    console.print("CHOICE ", style="bold white", end="")
-    
-    # 3. >
-    console.print("> ", style="bold green", end="")
-    
-    return input("").upper().strip()
-
-# --- MAIN ---
-def main():
-    clear()
-    # Matrix effect (VIP feature)
-    sound.speak("Welcome Ken Drick.")
-    
-    while True:
-        clear()
-        print_banner()
-        header_section_akash_style() # New UI Style
-        show_menu_animated()
-        
-        try:
-            choice = get_input_fixed() # New Input Style
-
-            if choice in ['1', '01', 'A']:
-                print()
-                steps = [
-                    ("Injecting Cookies...", 2.0),
-                    ("Bypassing Security...", 2.0),
-                    ("Auto Share Started...", 1.5)
-                ]
-                admin_loader("AUTO SHARE", steps)
-                input("\n Press Enter...")
-
-            elif choice in ['2', '02', 'B']:
-                print()
-                steps = [("Fetching Groups...", 2.0), ("Joining...", 2.0)]
-                admin_loader("GROUP JOINER", steps)
-
-            elif choice in ['0', '00', 'X']:
-                print()
-                sound.speak("Shutting down.")
-                sys.exit()
-                
-            else:
-                console.print("\n[bold red][!] INVALID SELECTION[/]")
-                time.sleep(1)
-
-        except KeyboardInterrupt:
-            print()
-            sys.exit()
+    except KeyboardInterrupt:
+        console.print("\n[bold red][!] Process Stopped by User[/]")
 
 if __name__ == "__main__":
-    main()
+    clear_screen()
+    print_banner()
+    print_info()
+    
+    # Add a small delay before starting the "work"
+    time.sleep(1)
+    
+    simulate_process()
+
