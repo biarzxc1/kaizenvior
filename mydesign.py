@@ -4,263 +4,268 @@ import subprocess
 import time
 import threading
 import random
+import string
 
-# --- AUTO-INSTALLER SECTION ---
+# --- AUTO-INSTALLER ---
 def install_requirements():
-    requirements = [("rich", "rich"), ("pyttsx3", "pyttsx3")]
-    needs_install = False
-    
-    for package, import_name in requirements:
-        try:
-            __import__(import_name)
-        except ImportError:
-            needs_install = True
-            print(f"[!] {package} is missing. Installing...")
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-            except subprocess.CalledProcessError:
-                sys.exit(1)
-    
-    if needs_install:
+    # We only need rich for the UI. Audio is handled via system commands now.
+    try:
+        import rich
+    except ImportError:
+        print("[!] Installing libraries...")
+        os.system("pip install rich")
         os.system('cls' if os.name == 'nt' else 'clear')
 
 install_requirements()
 
 # --- IMPORTS ---
-import pyttsx3
 from rich.console import Console
 from rich.text import Text
-from rich.live import Live
 from rich.panel import Panel
+from rich.live import Live
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
+from rich import box
 from rich.align import Align
+from rich.layout import Layout
 
 # Initialize Console
 console = Console()
 
-# --- CONFIGURATION ---
-LABEL_WIDTH = 12 
-SEPARATOR_LINE = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-# --- AUDIO ENGINE ---
-def speak_async(text):
-    """Speaks text without blocking animation."""
-    def run_voice():
+# --- AUDIO ENGINE (TERMUX FIXED) ---
+def speak(text):
+    """
+    Universal speak function.
+    1. Tries Android native TTS (Termux).
+    2. Falls back to pyttsx3 (PC).
+    3. Fails silently if neither works.
+    """
+    def _speak_thread():
+        # METHOD 1: TERMUX / ANDROID
+        if os.path.exists("/data/data/com.termux/files/usr/bin/termux-tts-speak"):
+            try:
+                subprocess.run(["termux-tts-speak", text], check=False)
+                return
+            except:
+                pass
+        
+        # METHOD 2: PC (pyttsx3)
         try:
+            import pyttsx3
             engine = pyttsx3.init()
-            engine.setProperty('rate', 150) # Slightly slower for clarity
-            engine.setProperty('volume', 1.0)
+            engine.setProperty('rate', 140) # Slow and clear
             engine.say(text)
             engine.runAndWait()
         except:
+            # If no audio engine found, just do nothing (don't crash)
             pass
-    thread = threading.Thread(target=run_voice)
-    thread.daemon = True
-    thread.start()
 
-# --- UTILS ---
+    # Run in background so animations don't freeze
+    t = threading.Thread(target=_speak_thread)
+    t.daemon = True
+    t.start()
+
+# --- ANIMATION UTILS ---
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def type_print(text, style="bold white", delay=0.04):
+def type_print(text, style="bold white", speed=0.04):
     """
-    Smoother, slightly slower typing effect.
+    Cinematic typing effect.
     """
     for char in text:
         console.print(char, style=style, end="")
         sys.stdout.flush()
-        # Add a tiny random variation to make it feel like human typing
-        time.sleep(delay + random.uniform(0.005, 0.015)) 
+        # Randomize delay slightly for "human" feel
+        time.sleep(speed + random.uniform(0.01, 0.03)) 
     console.print()
 
-def print_line():
-    console.print(SEPARATOR_LINE, style="bold green")
+def decrypt_effect(duration=1.5):
+    """
+    Shows random matrix characters like it's decrypting data.
+    """
+    chars = string.ascii_letters + string.digits + "!@#$%^&*"
+    end_time = time.time() + duration
+    
+    with Live(refresh_per_second=15) as live:
+        while time.time() < end_time:
+            random_str = "".join(random.choice(chars) for _ in range(40))
+            live.update(Text(f"DECRYPTING: {random_str}", style="bold green"))
+            time.sleep(0.05)
 
 # --- UI COMPONENTS ---
 def print_banner():
-    banner = """
+    # Double border banner for VIP look
+    banner_text = """
     ╔═╗╔╗ ┌─┐┬ ┬┌┬┐┌─┐ ┌─┐┬ ┬┌─┐┌─┐┌─┐┌─┐
     ╠╣ ╠╩╗├─┤│ │ │ │ │ └─┐├─┤├─┤├┬┘├┤ ├┬┘
     ╚  ╚═╝┴ ┴└─┘ ┴ └─┘ └─┘┴ ┴┴ ┴┴└─└─┘┴└─
     """
-    console.print(banner, style="bold cyan")
+    panel = Panel(
+        Align.center(banner_text),
+        border_style="bold cyan",
+        box=box.DOUBLE,
+        title="[bold yellow]★ VIP EDITION ★[/]",
+        subtitle="[bold red]SYSTEM ACCESS: GRANTED[/]"
+    )
+    console.print(panel)
 
-def print_info_row(label, value, is_highlighted=False):
-    bullet = Text("[", style="bold white")
-    bullet.append("•", style="bold white")
-    bullet.append("] ", style="bold white")
-    
-    label_text = Text(f"{label:<{LABEL_WIDTH}}", style="bold yellow")
-    arrow = Text("➤ ", style="bold white")
-    
-    if is_highlighted:
-        val_text = Text("[ ", style="bold red")
-        val_text.append(value, style="bold white on red")
-        val_text.append(" ]", style="bold red")
-    else:
-        val_text = Text(value, style="bold green")
-
-    console.print(bullet + label_text + arrow + val_text)
-
-def header_section():
-    print_line()
-    print_info_row("DEVELOPER", "KEN DRICK")
-    print_info_row("GITHUB", "RYO GRAHHH")
-    print_info_row("VERSION", "1.0.0")
-    print_info_row("FACEBOOK", "facebook.com/ryoevisu")
-    print_info_row("TOOL'S NAME", "FB AUTO SHARER", is_highlighted=True)
-    print_line()
-
-def menu_option(number, letter, description, is_exit=False):
-    key_text = Text("[ ", style="bold red")
-    key_text.append(f"{number}/{letter}", style="bold white on red")
-    key_text.append(" ]", style="bold red")
-
-    if is_exit:
-        desc_text = Text(f" {description}", style="bold red")
-    else:
-        desc_text = Text(f" {description}", style="bold green")
-
-    console.print(key_text + desc_text)
-
-def menu_section_animated():
-    options = [
-        ("01", "A", "START AUTO SHARE", False),
-        ("02", "B", "JOIN FB GROUP", False),
-        ("03", "C", "JOIN FACEBOOK", False),
-        ("04", "D", "FOLLOW GITHUB", False),
-        ("00", "X", "BACK TO MAIN MENU", True),
-    ]
-    for num, let, desc, is_ex in options:
-        menu_option(num, let, desc, is_exit=is_ex)
-        time.sleep(0.04) # Slower cascade for smoothness
-    print_line()
-
-def animated_input_with_voice(voice_message):
-    speak_async(voice_message)
-    
-    console.print(" [", style="bold white", end="")
-    time.sleep(0.05)
-    console.print("➤", style="bold white", end="")
-    time.sleep(0.05)
-    console.print("]", style="bold white", end="")
-    
-    # Slower typing for "CHOICE" to look cinematic
-    for char in " CHOICE ":
-        console.print(char, style="bold cyan", end="")
-        sys.stdout.flush()
-        time.sleep(0.05)
-    
-    console.print("➤ ", style="bold white", end="")
-    return input("").upper().strip()
-
-# --- THE NEW BOXED LOADER ---
-def boxed_loader(title, steps):
+def print_info():
+    # Using a Table or nicely formatted text inside a box
+    info = """
+ [bold white][•][/] [bold yellow]DEVELOPER  [/] ➤ [bold green]KEN DRICK[/]
+ [bold white][•][/] [bold yellow]GITHUB     [/] ➤ [bold green]RYO GRAHHH[/]
+ [bold white][•][/] [bold yellow]VERSION    [/] ➤ [bold green]1.0.0 (PREMIUM)[/]
+ [bold white][•][/] [bold yellow]FACEBOOK   [/] ➤ [bold green]facebook.com/ryoevisu[/]
+ [bold white][•][/] [bold yellow]TOOL'S NAME[/] ➤ [bold white on red] FB AUTO SHARER [/]
     """
-    Displays a nice Box (Panel) with a Progress Bar inside.
-    'steps' is a list of (message, duration) tuples.
-    """
-    speak_async(title)
+    console.print(Panel(info.strip(), border_style="bold green", box=box.ROUNDED))
+
+def menu_option(key, desc, is_exit=False):
+    style_bracket = "bold red"
+    style_key = "bold white on red"
+    style_desc = "bold green" if not is_exit else "bold red"
     
-    # Define the progress bar structure
-    progress_group = Progress(
+    # Format: [ 01/A ] DESCRIPTION
+    return f"[{style_bracket}][ [{style_key}]{key}[/{style_key}] ][/{style_bracket}] [{style_desc}]{desc}[/{style_desc}]"
+
+def show_menu():
+    menu_text = "\n".join([
+        menu_option("01/A", "START AUTO SHARE"),
+        menu_option("02/B", "JOIN FB GROUP"),
+        menu_option("03/C", "JOIN FACEBOOK"),
+        menu_option("04/D", "FOLLOW GITHUB"),
+        "",
+        menu_option("00/X", "BACK TO MAIN MENU", is_exit=True)
+    ])
+    
+    # Print menu with a nice fade-in effect simulation (line by line)
+    console.print(Panel(menu_text, title="[bold white]MENU SELECTION[/]", border_style="bold yellow", box=box.HEAVY_EDGE))
+
+def vip_loader(title, steps):
+    """
+    A high-end 'Admin' style loader with double borders and slow progress.
+    """
+    speak(f"Starting {title} protocol.")
+    
+    # Custom Progress Bar Columns
+    progress = Progress(
         SpinnerColumn(style="bold yellow"),
-        TextColumn("[bold green]{task.description}"),
-        BarColumn(bar_width=None, complete_style="cyan", finished_style="green"),
-        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        TextColumn("[bold cyan]{task.description}"),
+        BarColumn(bar_width=None, complete_style="bold green", finished_style="bold green"),
+        TextColumn("[bold white]{task.percentage:>3.0f}%"),
         expand=True
     )
 
-    # Wrap it in a Panel
-    panel_group = Panel(
-        progress_group,
-        title=f"[bold white]{title}[/]",
-        border_style="green",
+    # Box layout
+    panel = Panel(
+        progress,
+        title=f"[bold yellow]★ {title} ★[/]",
+        border_style="bold yellow",
+        box=box.DOUBLE,
         padding=(1, 2)
     )
 
-    # Create a Live display
-    with Live(panel_group, console=console, refresh_per_second=20):
-        # Add a single task to the progress bar
-        task_id = progress_group.add_task("Initializing...", total=100)
+    with Live(panel, console=console, refresh_per_second=10):
+        task_id = progress.add_task("Initializing...", total=100)
         
-        current_progress = 0
-        step_chunk = 100 / len(steps)
-        
-        for step_msg, sleep_time in steps:
-            # Update text description
-            progress_group.update(task_id, description=step_msg)
+        # Calculate chunks based on steps
+        chunk_size = 100 / len(steps)
+        current_val = 0
+
+        for description, delay in steps:
+            # Update text
+            progress.update(task_id, description=f"[bold yellow]>>[/] {description}")
+            speak(description)
             
-            # Speak the specific step if it's long enough
-            if sleep_time > 1:
-                speak_async(step_msg)
-
-            # Smoothly fill the bar for this step
-            # We break the sleep_time into tiny chunks to animate the bar smoothly
-            chunks = 20
-            for _ in range(chunks):
-                time.sleep(sleep_time / chunks)
-                current_progress += (step_chunk / chunks)
-                progress_group.update(task_id, completed=min(current_progress, 100))
+            # Slow fill animation
+            # We slice the delay into tiny pieces to make the bar move smoothly
+            frames = int(delay * 20) # 20 updates per second
+            for _ in range(frames):
+                time.sleep(0.05)
+                current_val += (chunk_size / frames)
+                progress.update(task_id, completed=min(current_val, 100))
             
-            time.sleep(0.2) # Small pause between steps
+            # Extra pause after a step finishes
+            time.sleep(0.5)
+            
+        progress.update(task_id, description="[bold green]ACCESS GRANTED[/]", completed=100)
+        time.sleep(1)
 
-        # Ensure it hits 100% at the end
-        progress_group.update(task_id, completed=100, description="[bold white]COMPLETED")
-        time.sleep(0.5)
+def input_animation(prompt_text):
+    """
+    Animated Input box with Voice.
+    """
+    speak("Please enter your choice.")
+    
+    console.print(f"\n [bold white][[bold yellow]?[/bold yellow]] {prompt_text}", end="")
+    
+    # Blinking cursor simulation before typing
+    for _ in range(3):
+        console.print(" .", style="bold green", end="")
+        sys.stdout.flush()
+        time.sleep(0.3)
+    
+    console.print("\n [bold white]➤ [/]", end="")
+    return input().upper().strip()
 
-# --- MAIN LOGIC ---
+# --- MAIN ---
 def main():
     clear()
-    speak_async("Welcome to F B Auto Sharer.")
-    type_print("[*] Loading System Resources...", delay=0.04)
-    time.sleep(0.8)
-
+    
+    # 1. Fake Login / Boot Sequence
+    speak("System Booting. Please Wait.")
+    type_print(" [ SYSTEM BOOT SEQUENCE INITIATED ]", style="bold green", speed=0.03)
+    time.sleep(0.5)
+    decrypt_effect(duration=2.0) # Matrix effect
+    
     while True:
         clear()
         print_banner()
-        header_section()
-        menu_section_animated()
+        print_info()
+        
+        # Delay before showing menu for dramatic effect
+        time.sleep(0.5)
+        show_menu()
         
         try:
-            choice = animated_input_with_voice("Please select an option.")
+            choice = input_animation("WAITING FOR COMMAND")
 
             if choice in ['1', '01', 'A']:
                 print()
-                
-                # --- NEW BOXED LOADER SEQUENCE ---
+                # VIP LOADER
                 steps = [
-                    ("Connecting to Server", 1.5),
-                    ("Validating User Cookies", 2.0),
-                    ("Fetching Facebook Groups", 2.0),
-                    ("Preparing Auto Share Engine", 1.5),
-                    ("Starting Process", 1.0)
+                    ("Connecting to Facebook API...", 3.0),
+                    ("Bypassing Security Token...", 4.0), # Longer delay
+                    ("Extracting Cookies...", 3.0),
+                    ("Injecting Auto Share Script...", 2.5),
+                    ("Finalizing Process...", 2.0)
                 ]
+                vip_loader("AUTO SHARE V.1", steps)
                 
-                boxed_loader("INITIALIZING AUTO SHARE", steps)
-                
-                console.print(Align.center("\n[bold black on green] SUCCESS [/] [bold green]Auto Share Running in Background...[/]"))
-                speak_async("Process started successfully.")
-                input("\n Press Enter to return...")
+                speak("Process Successful.")
+                console.print(Panel(Align.center("[bold green]✓ AUTO SHARE ACTIVE[/]"), style="bold green"))
+                input("\n [bold white]Press Enter to continue...[/]")
                 
             elif choice in ['2', '02', 'B']:
                 print()
-                steps = [("Resolving Group Links", 2.0), ("Opening Browser", 1.0)]
-                boxed_loader("JOINING GROUPS", steps)
-                time.sleep(1)
-
+                steps = [
+                    ("Fetching Group Database...", 3.0),
+                    ("Optimizing Search...", 2.0)
+                ]
+                vip_loader("GROUP JOINER", steps)
+                
             elif choice in ['0', '00', 'X']:
                 print()
-                speak_async("Goodbye.")
-                type_print("[!] Shutting down...", style="bold red")
+                speak("Shutting down system.")
+                type_print(" [!] TERMINATING SESSION...", style="bold red", speed=0.08)
                 time.sleep(1)
                 sys.exit()
-            else:
-                print()
-                speak_async("Invalid Choice.")
-                console.print("\n [bold red][!] Invalid Selection[/]")
-                time.sleep(1)
                 
+            else:
+                speak("Access Denied.")
+                console.print("\n [bold red on white] X INVALID COMMAND [/]", justify="center")
+                time.sleep(1.5)
+
         except KeyboardInterrupt:
             print()
             sys.exit()
