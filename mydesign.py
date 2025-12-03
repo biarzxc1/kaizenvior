@@ -8,7 +8,6 @@ import json
 
 # --- AUTO-INSTALLER SECTION ---
 def install_requirements():
-    # Added 'requests' for the API functionality
     requirements = [("rich", "rich"), ("pyttsx3", "pyttsx3"), ("requests", "requests")]
     needs_install = False
     
@@ -17,7 +16,7 @@ def install_requirements():
             __import__(import_name)
         except ImportError:
             needs_install = True
-            print(f"[!] {package} is missing. Installing...")
+            print(f"【!】 {package} is missing. Installing...")
             try:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", package])
             except subprocess.CalledProcessError:
@@ -50,7 +49,7 @@ def speak_async(text):
     """Speaks text without blocking animation."""
     def run_voice():
         try:
-            # On Termux, you might need to install 'espeak' via: pkg install espeak
+            # On Termux, ensure 'espeak' is installed via: pkg install espeak
             engine = pyttsx3.init()
             engine.setProperty('rate', 140) 
             engine.setProperty('volume', 1.0)
@@ -86,17 +85,18 @@ def print_banner():
     console.print(Align.center(banner), style="bold cyan")
 
 def print_info_row(label, value, is_highlighted=False):
-    bullet = Text("[", style="bold white")
+    # UPDATED: Using 【 】 instead of [ ]
+    bullet = Text("【", style="bold white")
     bullet.append("•", style="bold white")
-    bullet.append("] ", style="bold white")
+    bullet.append("】 ", style="bold white")
     
     label_text = Text(f"{label:<{LABEL_WIDTH}}", style="bold yellow")
     arrow = Text("➤ ", style="bold white")
     
     if is_highlighted:
-        val_text = Text("[ ", style="bold red")
+        val_text = Text("【 ", style="bold red")
         val_text.append(value, style="bold white on red")
-        val_text.append(" ]", style="bold red")
+        val_text.append(" 】", style="bold red")
     else:
         val_text = Text(value, style="bold green")
 
@@ -112,9 +112,10 @@ def header_section():
     print_line()
 
 def menu_option(number, letter, description, is_exit=False):
-    key_text = Text("[ ", style="bold red")
+    # UPDATED: Using 【 】 instead of [ ]
+    key_text = Text("【 ", style="bold red")
     key_text.append(f"{number}/{letter}", style="bold white on red")
-    key_text.append(" ]", style="bold red")
+    key_text.append(" 】", style="bold red")
 
     if is_exit:
         desc_text = Text(f" {description}", style="bold red")
@@ -138,11 +139,12 @@ def menu_section_animated():
 def animated_input_with_voice(voice_message, prompt_text="CHOICE"):
     speak_async(voice_message)
     
-    console.print(" [", style="bold white", end="")
+    # UPDATED: Using 【 】 instead of [ ]
+    console.print(" 【", style="bold white", end="")
     time.sleep(0.05)
     console.print("➤", style="bold white", end="")
     time.sleep(0.05)
-    console.print("]", style="bold white", end="")
+    console.print("】", style="bold white", end="")
     
     for char in f" {prompt_text} ":
         console.print(char, style="bold cyan", end="")
@@ -192,7 +194,7 @@ def boxed_loader(title, steps):
 def main():
     clear()
     speak_async("System initializing.")
-    type_print("[*] Loading Modules...", delay=0.04)
+    type_print("【*】 Loading Modules...", delay=0.04)
     time.sleep(0.5)
 
     while True:
@@ -210,7 +212,7 @@ def main():
                 cookie = animated_input_with_voice("Enter your Facebook Cookie", "COOKIE")
                 
                 if not cookie:
-                    console.print("\n [bold red][!] Cookie cannot be empty![/]")
+                    console.print("\n [bold red]【!】 Cookie cannot be empty![/]")
                     time.sleep(2)
                     continue
 
@@ -254,15 +256,15 @@ def main():
                         
                     else:
                         err_msg = result.get('error', 'Unknown Error')
-                        console.print(f"\n [bold red][!] Failed: {err_msg}[/]")
+                        console.print(f"\n [bold red]【!】 Failed: {err_msg}[/]")
                         speak_async("Failed to generate token.")
 
                 except Exception as e:
-                    console.print(f"\n [bold red][!] API Error: {e}[/]")
+                    console.print(f"\n [bold red]【!】 API Error: {e}[/]")
 
                 input("\n Press Enter to return...")
 
-            # --- OPTION 2: AUTO SHARE (Placeholder for future logic) ---
+            # --- OPTION 2: AUTO SHARE (Placeholder) ---
             elif choice in ['2', '02', 'B']:
                 print()
                 steps = [
@@ -278,12 +280,12 @@ def main():
             elif choice in ['0', '00', 'X']:
                 print()
                 speak_async("Shutting down system.")
-                type_print("[!] Exiting...", style="bold red")
+                type_print("【!】 Exiting...", style="bold red")
                 time.sleep(1)
                 sys.exit()
             else:
                 print()
-                console.print("\n [bold red][!] Invalid Selection[/]")
+                console.print("\n [bold red]【!】 Invalid Selection[/]")
                 time.sleep(1)
                 
         except KeyboardInterrupt:
