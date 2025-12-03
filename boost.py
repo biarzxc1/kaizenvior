@@ -2,9 +2,6 @@ import os
 import sys
 import requests
 import time
-import random
-import uuid
-import hashlib
 from datetime import datetime
 from pystyle import Colors, Colorate, Center
 from rich.console import Console
@@ -12,15 +9,9 @@ from rich.panel import Panel
 from rich.text import Text
 
 # ==========================================
-# âš™ï¸ ADMIN CONFIG (áž€áŸ†ážŽážáŸ‹ážšáž”ážŸáŸ‹áž¢áŸ’áž“áž€)
+# ⚙️ CONFIG
 # ==========================================
-# 1. ážŠáž¶áž€áŸ‹ Link áž¯áž€ážŸáž¶ážš whitelist.txt áž–áž¸ GitHub ážšáž”ážŸáŸ‹áž¢áŸ’áž“áž€ (RAW LINK)
-DATABASE_URL = "https://github.com/CyraxmodDOne/my-license/blob/main/whitelist.txt"
-
-# 2. ážŠáž¶áž€áŸ‹ Telegram ážšáž”ážŸáŸ‹áž¢áŸ’áž“áž€
-ADMIN_TELEGRAM = "https://t.me/CyraxmodTool016"
-
-TOOL_NAME = "TDS TIKTOK VIP (LOCKED)"
+TOOL_NAME = "TDS TIKTOK VIP"
 # ==========================================
 
 # Colors
@@ -35,71 +26,7 @@ N = '\x1b[0m'    # Reset
 console = Console()
 os_type = 'mb' if sys.platform.startswith('linux') else 'pc'
 
-# --- ðŸ” LICENSE SYSTEM (áž”áŸ’ážšáž–áŸáž“áŸ’áž’ážŸáŸ„) ---
-def get_hwid():
-    """áž”áž„áŸ’áž€áž¾áž Key áž–áž¸áž›áŸážážŸáž˜áŸ’áž‚áž¶áž›áŸ‹áž˜áŸ‰áž¶ážŸáŸŠáž¸áž“ (ážáŸážš)"""
-    try:
-        id_file = "tiktok_device.lic"
-        if os.path.exists(id_file):
-            with open(id_file, 'r') as f:
-                device_id = f.read().strip()
-        else:
-            device_id = str(uuid.uuid4())
-            with open(id_file, 'w') as f:
-                f.write(device_id)
-        
-        params = f"{device_id}-TIKTOK-VIP"
-        hashed = hashlib.md5(params.encode()).hexdigest().upper()
-        key = f"CYRAX-TIK-{hashed[:10]}"
-        return key
-    except:
-        return "CYRAX-UNKNOWN"
-
-def check_license():
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print(f"{K}Checking License... Please wait...{N}")
-    
-    current_key = get_hwid()
-    
-    try:
-        response = requests.get(DATABASE_URL, timeout=15).text
-        
-        if current_key in response:
-            print(f"\n{H} [SUCCESS] KEY APPROVED! WELCOME VIP MEMBER.{N}")
-            time.sleep(2)
-            return True
-        else:
-            os.system('cls' if os.name == 'nt' else 'clear')
-            print(f"""{M}
-  _  _________  __   ____  __  ______  ________ 
- / |/ / __ \  |/  / / __ \/  |/  / _ \/ ___/ _ \\
-/    / /_/ / /|_/ / / /_/ / /|_/ / ___/ /__/ // /
-/_/ |_|\____/_/  /_/  \____/_/  /_/_/   \___/____/ 
-                                                  
-{K}==================================================
-{M} [!] ACCESS DENIED! YOUR KEY IS NOT REGISTERED.
-{M} [!] THIS IS A PAID TOOL.
-{K}==================================================
-{P} [ðŸ‘‰] YOUR KEY : {H}{current_key}
-{K}==================================================
-{P} [1] Copy Key ážáž¶áž„áž›áž¾
-{P} [2] áž•áŸ’áž‰áž¾áž‘áŸ…áž€áž¶áž“áŸ‹ Admin ážŠáž¾áž˜áŸ’áž”áž¸áž…áž»áŸ‡ážˆáŸ’áž˜áŸ„áŸ‡
-{P} [3] Telegram: {O}{ADMIN_TELEGRAM}
-{K}=================================================={N}""")
-            
-            try:
-                os.system(f"xdg-open {ADMIN_TELEGRAM}")
-            except: pass
-            sys.exit()
-            
-    except requests.exceptions.ConnectionError:
-        print(f"\n{M} [!] NO INTERNET CONNECTION.{N}")
-        sys.exit()
-    except Exception as e:
-        print(f"\n{M} [!] SERVER ERROR: {e}{N}")
-        sys.exit()
-
-# --- ðŸ› ï¸ TIKTOK TDS LOGIC ---
+# --- 🛠️ TIKTOK TDS LOGIC ---
 
 def clear():
     os.system("cls" if os.name == "nt" else "clear")
@@ -117,8 +44,8 @@ def banner():
     
     info = Panel(
         Text(f"OWNER: CYRAX MOD | LOGIC: CAMBODIA RECODE | VER: 2.0", justify="center", style="bold white"),
-        title=f"[bold red]â”[ {TOOL_NAME} ]â”",
-        subtitle=f"[bold yellow]Tele: {ADMIN_TELEGRAM}",
+        title=f"[bold red]┌[ {TOOL_NAME} ]┐",
+        subtitle=f"[bold yellow]Free Version",
         style="bold green",
         border_style="bright_blue"
     )
@@ -184,9 +111,6 @@ class TDS_API:
         except: return False
 
 def main():
-    # 1. áž áŸ… Check License áž˜áž»áž“áž‚áŸ
-    check_license()
-    
     banner()
     
     if os.path.exists('config_tds.txt'):
@@ -203,8 +127,8 @@ def main():
         sys.exit()
     
     banner()
-    print(f"{H} [âœ“] USER: {O}{info['user']}")
-    print(f"{H} [âœ“] COIN: {K}{info['xu']}")
+    print(f"{H} [✓] USER: {O}{info['user']}")
+    print(f"{H} [✓] COIN: {K}{info['xu']}")
     linex()
     
     print(f"{H} [1] {P}Auto Like")
@@ -218,7 +142,7 @@ def main():
     
     tiktok_user = input(f"{H} [?] Enter TikTok ID to run: {P}")
     if api.config_run(tiktok_user):
-        print(f"{H} [âœ“] Configured successfully!{N}")
+        print(f"{H} [✓] Configured successfully!{N}")
     else:
         print(f"{M} [!] Config failed! Check ID.{N}")
         sys.exit()
@@ -295,11 +219,11 @@ def main():
                     xu_them = res['data'].get('xu_them', 0)
                     total_xu = res['data'].get('xu', 0)
                     
-                    print(f"{H}â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€{N}")
-                    print(f"{H} [âœ“] SUCCESS: {P}+{xu_them} Xu")
-                    print(f"{H} [âœ“] TOTAL  : {K}{total_xu} Xu")
-                    print(f"{H} [âœ“] MSG    : {O}{msg}")
-                    print(f"{H}â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€{N}")
+                    print(f"{H}──────────────────────────────────────────────────{N}")
+                    print(f"{H} [✓] SUCCESS: {P}+{xu_them} Xu")
+                    print(f"{H} [✓] TOTAL  : {K}{total_xu} Xu")
+                    print(f"{H} [✓] MSG    : {O}{msg}")
+                    print(f"{H}──────────────────────────────────────────────────{N}")
                     delay(5)
                 else:
                     print(f"{M}[!] Claim failed. Will try again later.{N}")
