@@ -237,11 +237,56 @@ setup(
         if verbose:
             status_msg("Output saved")
         
+        # Always create runner script
+        runner_code = f'''#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+═══════════════════════════════════════════════════════════
+    COMPILED BY CYTHON COMPILER
+    DEVELOPER: KEN DRICK
+    FACEBOOK: facebook.com/ryoevisu
+═══════════════════════════════════════════════════════════
+"""
+import sys, os, importlib.util
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+so_file = os.path.join(script_dir, "{out_name}")
+
+if not os.path.exists(so_file):
+    # Try to find any matching .so file
+    for f in os.listdir(script_dir):
+        if f.startswith("{name}") and f.endswith((".so", ".pyd")):
+            so_file = os.path.join(script_dir, f)
+            break
+
+if not os.path.exists(so_file):
+    print("Error: Compiled module not found!")
+    sys.exit(1)
+
+try:
+    spec = importlib.util.spec_from_file_location("{name}", so_file)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["{name}"] = mod
+    spec.loader.exec_module(mod)
+except Exception as e:
+    print(f"Error: {{e}}")
+    sys.exit(1)
+'''
+        
+        runner_path = os.path.join(output_dir, f"{name}-output.py")
+        with open(runner_path, 'w') as f:
+            f.write(runner_code)
+        os.chmod(runner_path, 0o755)
+        
+        if verbose:
+            status_msg("Runner script created")
+        
         # Cleanup
         shutil.rmtree(build_dir, ignore_errors=True)
         
         return {
             'output_path': out_path,
+            'runner_path': runner_path,
             'original_size': original_size,
             'compiled_size': compiled_size,
             'original_file': filepath,
@@ -363,13 +408,14 @@ def option_compile_so():
     status_msg("COMPILATION SUCCESSFUL!", "success")
     print(LINE)
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'INPUT':<12} {W}➤{RESET} {C}{result['original_file']}{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'OUTPUT':<12} {W}➤{RESET} {G}{result['output_path']}{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'SO FILE':<12} {W}➤{RESET} {G}{result['output_path']}{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'RUNNER':<12} {W}➤{RESET} {G}{result['runner_path']}{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'ORIGINAL':<12} {W}➤{RESET} {C}{result['original_size']} bytes{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'COMPILED':<12} {W}➤{RESET} {M}{result['compiled_size']} bytes{RESET}")
     print(LINE)
-    print(f" {W}[{RESET}•{W}]{RESET} {C}USAGE:{RESET}")
-    print(f"     {G}cd {os.path.dirname(result['output_path'])}{RESET}")
-    print(f"     {G}python3 -c \"import {result['module_name']}\"{RESET}")
+    print(f" {R}[{RESET}!{R}]{RESET} {R}IMPORTANT: You CANNOT run .so directly!{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {C}HOW TO RUN:{RESET}")
+    print(f"     {G}python3 {result['runner_path']}{RESET}")
     print(LINE)
     
     input(f"\n {W}[{RESET}•{W}]{RESET} {Y}Press ENTER...{RESET}")
