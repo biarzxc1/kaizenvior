@@ -113,8 +113,8 @@ def banner_header():
     type_print(f" 【•】 {'VERSION':<13} ➤ {G}1.0.2{RESET}", W, 0.01)
     type_print(f" 【•】 {'FACEBOOK':<13} ➤ {G}facebook.com/ryoevisu{RESET}", W, 0.01)
     
-    tool_name = f"{R}【 {BG_R}{W}RPWTOOLS{RESET}{R} 】{RESET}"
-    type_print(f" 【•】 {'TOOL\\'S NAME':<13} ➤ {tool_name}", W, 0.01)
+    tool_label = "TOOL'S NAME"
+type_print(f" 【•】 {tool_label:<13} ➤ {tool_name}", W, 0.01)
     
     if user_data:
         print(LINE)
