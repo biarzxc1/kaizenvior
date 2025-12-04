@@ -2,9 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 ╔═══════════════════════════════════════════════════════════╗
-║          CYTHON COMPILER - BY KEN DRICK                   ║
+║          CYTHON COMPILER v3.0 - BY KEN DRICK              ║
 ║          FACEBOOK: facebook.com/ryoevisu                  ║
 ╚═══════════════════════════════════════════════════════════╝
+
+IMPORTANT: This tool must be run ON THE SAME DEVICE where you 
+want to use the compiled .so file. Compiled binaries are 
+architecture-specific (ARM for Termux, x86 for PC).
 """
 
 import os
@@ -13,543 +17,372 @@ import time
 import shutil
 import subprocess
 
-# --- NEON COLOR PALETTE ---
+# --- COLORS ---
 R = '\033[1;31m'
 G = '\033[1;32m'
 C = '\033[1;36m'
 Y = '\033[1;33m'
 M = '\033[1;35m'
-B = '\033[1;34m'
 W = '\033[1;37m'
 BG_R = '\033[41m'
-BG_G = '\033[42m'
-BG_C = '\033[46m'
 RESET = '\033[0m'
 
-# --- UI CONSTANTS ---
 LINE = f"{G}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}"
 
-# --- GLOBAL CONFIG ---
-HOME_DIR = os.path.expanduser("~")
-DOWNLOAD_DIR = "/storage/emulated/0/Download"
+HOME = os.path.expanduser("~")
+DOWNLOAD = "/storage/emulated/0/Download"
 
 def clear():
     os.system('clear' if os.name == 'posix' else 'cls')
 
-def banner_header():
+def banner():
     print(f"""{C}
    ╔═╗╦ ╦╔╦╗╦ ╦╔═╗╔╗╔  ╔═╗╔═╗╔╦╗╔═╗╦╦  ╔═╗╦═╗
    ║  ╚╦╝ ║ ╠═╣║ ║║║║  ║  ║ ║║║║╠═╝║║  ║╣ ╠╦╝
    ╚═╝ ╩  ╩ ╩ ╩╚═╝╝╚╝  ╚═╝╚═╝╩ ╩╩  ╩╩═╝╚═╝╩╚═
     {RESET}""")
-    
     print(LINE)
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'DEVELOPER':<13} {W}➤{RESET} {G}KEN DRICK{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'GITHUB':<13} {W}➤{RESET} {G}RYO GRAHHH{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}2.0.0{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'VERSION':<13} {W}➤{RESET} {G}3.0.0{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}{'FACEBOOK':<13} {W}➤{RESET} {G}facebook.com/ryoevisu{RESET}")
-    
-    tool_name = f"{R}[ {BG_R}{W}CYTHON COMPILER{RESET}{R} ]{RESET}"
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'TOOL NAME':<13} {W}➤{RESET} {tool_name}")
+    tool = f"{R}[ {BG_R}{W}CYTHON COMPILER{RESET}{R} ]{RESET}"
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'TOOL NAME':<13} {W}➤{RESET} {tool}")
     print(LINE)
 
-def show_menu():
-    def key(n, c): return f"{W}[{C}{n}{Y}/{C}{c}{W}]{RESET}"
-    
-    print(f" {key('01', 'A')} {G}COMPILE TO .SO FILE{RESET}")
-    print(f" {key('02', 'B')} {G}COMPILE WITH WRAPPER{RESET}")
-    print(f" {key('03', 'C')} {G}CHECK DEPENDENCIES{RESET}")
-    print(f" {key('04', 'D')} {G}INSTALL DEPENDENCIES{RESET}")
-    print(f" {key('05', 'E')} {G}ABOUT TOOL{RESET}")
-    print(f" {key('00', 'X')} {R}EXIT TOOL{RESET}")
+def menu():
+    def k(n, c): return f"{W}[{C}{n}{Y}/{C}{c}{W}]{RESET}"
+    print(f" {k('01', 'A')} {G}COMPILE PYTHON TO BINARY{RESET}")
+    print(f" {k('02', 'B')} {G}CHECK DEPENDENCIES{RESET}")
+    print(f" {k('03', 'C')} {G}INSTALL DEPENDENCIES{RESET}")
+    print(f" {k('04', 'D')} {G}ABOUT{RESET}")
+    print(f" {k('00', 'X')} {R}EXIT{RESET}")
     print(LINE)
 
-def nice_loader(text="PROCESSING", duration=1.5):
-    bar_length = 30
-    for i in range(bar_length + 1):
-        progress = i / bar_length
-        filled = int(bar_length * progress)
-        bar = f"{G}{'█' * filled}{W}{'░' * (bar_length - filled)}{RESET}"
-        percent = int(progress * 100)
-        sys.stdout.write(f"\r {Y}[{RESET} {bar} {Y}]{RESET} {W}{percent}%{RESET} {C}{text}{RESET}")
+def loader(text, duration=1.0):
+    for i in range(31):
+        bar = f"{G}{'█' * i}{W}{'░' * (30 - i)}{RESET}"
+        sys.stdout.write(f"\r {Y}[{RESET} {bar} {Y}]{RESET} {W}{int(i*100/30)}%{RESET} {C}{text}{RESET}")
         sys.stdout.flush()
-        time.sleep(duration / bar_length)
+        time.sleep(duration / 30)
     print()
 
-def status_msg(msg, status="info"):
-    if status == "success":
-        print(f" {G}[{RESET}✓{G}]{RESET} {G}{msg}{RESET}")
-    elif status == "error":
-        print(f" {R}[{RESET}✗{R}]{RESET} {R}{msg}{RESET}")
-    elif status == "warning":
-        print(f" {Y}[{RESET}!{Y}]{RESET} {Y}{msg}{RESET}")
-    else:
-        print(f" {W}[{RESET}•{W}]{RESET} {C}{msg}{RESET}")
+def msg(text, t="info"):
+    icons = {"success": (G, "✓"), "error": (R, "✗"), "warn": (Y, "!"), "info": (W, "•")}
+    c, i = icons.get(t, (W, "•"))
+    print(f" {c}[{RESET}{i}{c}]{RESET} {c if t != 'info' else C}{text}{RESET}")
 
-def check_command(cmd):
+def has_cmd(cmd):
     return shutil.which(cmd) is not None
 
-def check_python_module(module):
+def has_mod(mod):
     try:
-        __import__(module)
+        __import__(mod)
         return True
-    except ImportError:
+    except:
         return False
 
-def check_all_dependencies():
-    deps = {
-        'python3': check_command('python3') or check_command('python'),
-        'gcc/clang': check_command('gcc') or check_command('clang'),
-        'cython': check_python_module('Cython'),
-        'setuptools': check_python_module('setuptools'),
+def check_deps():
+    return {
+        'python': has_cmd('python3') or has_cmd('python'),
+        'compiler': has_cmd('clang') or has_cmd('gcc'),
+        'cython': has_mod('Cython'),
+        'setuptools': has_mod('setuptools'),
     }
-    return deps
 
-def get_writable_temp_dir():
-    candidates = [
-        os.path.join(HOME_DIR, ".cython_build"),
-        os.path.join(HOME_DIR, "cython_temp"),
-        os.path.join(DOWNLOAD_DIR, ".cython_build"),
-    ]
-    
-    for path in candidates:
+def get_temp():
+    for p in [f"{HOME}/.cython_build", f"{HOME}/cython_tmp", f"{DOWNLOAD}/.cython"]:
         try:
-            os.makedirs(path, exist_ok=True)
-            test_file = os.path.join(path, ".test")
-            with open(test_file, 'w') as f:
-                f.write("t")
-            os.remove(test_file)
-            return path
+            os.makedirs(p, exist_ok=True)
+            test = os.path.join(p, ".t")
+            open(test, 'w').close()
+            os.remove(test)
+            return p
         except:
-            continue
-    return HOME_DIR
+            pass
+    return HOME
 
-def get_output_dir():
-    if os.path.exists(DOWNLOAD_DIR):
-        return DOWNLOAD_DIR
-    output = os.path.join(HOME_DIR, "cython_output")
-    os.makedirs(output, exist_ok=True)
-    return output
+def get_output():
+    if os.path.exists(DOWNLOAD):
+        return DOWNLOAD
+    p = f"{HOME}/cython_out"
+    os.makedirs(p, exist_ok=True)
+    return p
 
-def compile_to_so(filepath, verbose=True):
-    """Compile Python to .so using Cython"""
+def compile_python(filepath):
+    """Compile .py to .so with runner script"""
     
+    # Validate
     if not os.path.exists(filepath):
         return None, "File not found"
-    
     if not filepath.endswith('.py'):
         return None, "Only .py files supported"
     
-    # Validate syntax
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, 'r') as f:
             code = f.read()
         compile(code, filepath, 'exec')
     except SyntaxError as e:
         return None, f"Syntax error: {e}"
     except Exception as e:
-        return None, f"Cannot read file: {e}"
+        return None, f"Cannot read: {e}"
     
-    filename = os.path.basename(filepath)
-    name = os.path.splitext(filename)[0]
-    original_size = os.path.getsize(filepath)
+    name = os.path.splitext(os.path.basename(filepath))[0]
+    orig_size = os.path.getsize(filepath)
     
-    temp_dir = get_writable_temp_dir()
-    output_dir = get_output_dir()
-    build_dir = os.path.join(temp_dir, f"build_{name}_{int(time.time())}")
-    
-    try:
-        os.makedirs(build_dir, exist_ok=True)
-        if verbose:
-            status_msg(f"Build dir: {build_dir}")
-    except Exception as e:
-        return None, f"Cannot create build dir: {e}"
+    temp = get_temp()
+    out_dir = get_output()
+    build = os.path.join(temp, f"b_{name}_{int(time.time())}")
     
     try:
+        os.makedirs(build, exist_ok=True)
+        msg(f"Build: {build}")
+        
         # Copy source
-        src_copy = os.path.join(build_dir, filename)
-        shutil.copy(filepath, src_copy)
-        if verbose:
-            status_msg("Source copied")
+        src = os.path.join(build, f"{name}.py")
+        shutil.copy(filepath, src)
+        msg("Source copied")
         
         # Create setup.py
-        setup_content = f'''from setuptools import setup, Extension
+        setup = f'''from setuptools import setup, Extension
 from Cython.Build import cythonize
-
-setup(
-    ext_modules=cythonize(
-        Extension("{name}", ["{filename}"], extra_compile_args=["-O2"]),
-        compiler_directives={{"language_level": "3"}}
-    )
-)
+setup(ext_modules=cythonize(Extension("{name}", ["{name}.py"]), compiler_directives={{"language_level": "3"}}))
 '''
-        with open(os.path.join(build_dir, "setup.py"), 'w') as f:
-            f.write(setup_content)
-        
-        if verbose:
-            status_msg("Setup.py created")
-            status_msg("Compiling... (this may take a moment)")
+        with open(os.path.join(build, "setup.py"), 'w') as f:
+            f.write(setup)
+        msg("Setup created")
         
         # Compile
-        env = os.environ.copy()
-        env['HOME'] = HOME_DIR
+        msg("Compiling (please wait)...")
         
-        proc = subprocess.Popen(
+        env = os.environ.copy()
+        env['HOME'] = HOME
+        
+        proc = subprocess.run(
             [sys.executable, "setup.py", "build_ext", "--inplace"],
-            cwd=build_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=env
+            cwd=build, capture_output=True, text=True, timeout=600, env=env
         )
         
-        stdout, stderr = proc.communicate(timeout=300)
-        
         if proc.returncode != 0:
-            err = stderr.decode('utf-8', errors='ignore') or stdout.decode('utf-8', errors='ignore')
-            shutil.rmtree(build_dir, ignore_errors=True)
-            return None, f"Compilation failed:\n{err[:800]}"
+            err = proc.stderr or proc.stdout
+            return None, f"Compile failed:\n{err[:500]}"
         
-        if verbose:
-            status_msg("Compilation done")
+        msg("Compiled successfully")
         
-        # Find .so
+        # Find .so file
         so_file = None
-        for f in os.listdir(build_dir):
+        for f in os.listdir(build):
             if f.endswith('.so') or f.endswith('.pyd'):
-                so_file = os.path.join(build_dir, f)
+                so_file = os.path.join(build, f)
                 break
         
         if not so_file:
-            shutil.rmtree(build_dir, ignore_errors=True)
-            return None, ".so file not found after compilation"
+            return None, ".so not found"
         
-        if verbose:
-            status_msg(f"Found: {os.path.basename(so_file)}")
+        so_name = os.path.basename(so_file)
+        msg(f"Found: {so_name}")
         
-        # Copy output
-        out_name = f"{name}-output.so"
-        out_path = os.path.join(output_dir, out_name)
-        shutil.copy(so_file, out_path)
-        os.chmod(out_path, 0o755)
+        # Copy .so to output with ORIGINAL name preserved in extension
+        final_so = os.path.join(out_dir, f"{name}_compiled.so")
+        shutil.copy(so_file, final_so)
+        os.chmod(final_so, 0o755)
         
-        compiled_size = os.path.getsize(out_path)
+        so_size = os.path.getsize(final_so)
+        msg("Binary saved")
         
-        if verbose:
-            status_msg("Output saved")
+        # Create runner script (DIFFERENT NAME - adds _run suffix)
+        runner_name = f"{name}_run.py"
+        runner_path = os.path.join(out_dir, runner_name)
         
-        # Always create runner script
         runner_code = f'''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 ═══════════════════════════════════════════════════════════
-    COMPILED BY CYTHON COMPILER
+    COMPILED BY CYTHON COMPILER v3.0
     DEVELOPER: KEN DRICK
     FACEBOOK: facebook.com/ryoevisu
+    
+    RUN THIS FILE TO EXECUTE YOUR COMPILED CODE
 ═══════════════════════════════════════════════════════════
 """
-import sys, os, importlib.util
+import sys
+import os
+import importlib.util
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-so_file = os.path.join(script_dir, "{out_name}")
-
-if not os.path.exists(so_file):
-    # Try to find any matching .so file
+def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Look for the compiled .so file
+    so_file = None
     for f in os.listdir(script_dir):
-        if f.startswith("{name}") and f.endswith((".so", ".pyd")):
+        if f.startswith("{name}") and (f.endswith(".so") or f.endswith(".pyd")):
             so_file = os.path.join(script_dir, f)
             break
+    
+    if not so_file:
+        print("ERROR: Compiled module (.so) not found!")
+        print(f"Make sure {name}_compiled.so is in the same folder as this script.")
+        sys.exit(1)
+    
+    try:
+        spec = importlib.util.spec_from_file_location("{name}", so_file)
+        if spec is None:
+            print("ERROR: Cannot load module spec")
+            sys.exit(1)
+        
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["{name}"] = module
+        spec.loader.exec_module(module)
+        
+    except Exception as e:
+        print(f"ERROR: {{e}}")
+        sys.exit(1)
 
-if not os.path.exists(so_file):
-    print("Error: Compiled module not found!")
-    sys.exit(1)
-
-try:
-    spec = importlib.util.spec_from_file_location("{name}", so_file)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules["{name}"] = mod
-    spec.loader.exec_module(mod)
-except Exception as e:
-    print(f"Error: {{e}}")
-    sys.exit(1)
+if __name__ == "__main__":
+    main()
 '''
         
-        runner_path = os.path.join(output_dir, f"{name}-output.py")
         with open(runner_path, 'w') as f:
             f.write(runner_code)
         os.chmod(runner_path, 0o755)
-        
-        if verbose:
-            status_msg("Runner script created")
+        msg("Runner created")
         
         # Cleanup
-        shutil.rmtree(build_dir, ignore_errors=True)
+        shutil.rmtree(build, ignore_errors=True)
         
         return {
-            'output_path': out_path,
+            'so_path': final_so,
             'runner_path': runner_path,
-            'original_size': original_size,
-            'compiled_size': compiled_size,
-            'original_file': filepath,
-            'module_name': name,
+            'orig_size': orig_size,
+            'so_size': so_size,
+            'name': name,
         }, None
         
     except subprocess.TimeoutExpired:
-        shutil.rmtree(build_dir, ignore_errors=True)
-        return None, "Compilation timed out"
+        shutil.rmtree(build, ignore_errors=True)
+        return None, "Timeout"
     except Exception as e:
-        shutil.rmtree(build_dir, ignore_errors=True)
-        return None, f"Error: {str(e)}"
+        shutil.rmtree(build, ignore_errors=True)
+        return None, str(e)
 
-def compile_with_wrapper(filepath):
-    result, error = compile_to_so(filepath, verbose=True)
-    if error:
-        return None, error
-    
-    name = result['module_name']
-    output_dir = os.path.dirname(result['output_path'])
-    so_file = os.path.basename(result['output_path'])
-    
-    wrapper = f'''#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-COMPILED BY CYTHON COMPILER
-DEVELOPER: KEN DRICK
-REQUIRES: {so_file}
-"""
-import sys, os, importlib.util
-
-script_dir = os.path.dirname(os.path.abspath(__file__))
-so = None
-for f in os.listdir(script_dir):
-    if f.startswith("{name}") and f.endswith((".so", ".pyd")):
-        so = os.path.join(script_dir, f)
-        break
-
-if not so:
-    print("Error: .so file not found!")
-    sys.exit(1)
-
-spec = importlib.util.spec_from_file_location("{name}", so)
-mod = importlib.util.module_from_spec(spec)
-sys.modules["{name}"] = mod
-spec.loader.exec_module(mod)
-'''
-    
-    wrapper_path = os.path.join(output_dir, f"{name}-wrapper.py")
-    with open(wrapper_path, 'w') as f:
-        f.write(wrapper)
-    os.chmod(wrapper_path, 0o755)
-    
-    result['wrapper_path'] = wrapper_path
-    return result, None
-
-def option_compile_so():
+def opt_compile():
     clear()
-    banner_header()
+    banner()
     print(f" {C}╔═══════════════════════════════════════════════╗{RESET}")
-    print(f" {C}║{RESET}         {Y}COMPILE TO .SO FILE{RESET}                  {C}║{RESET}")
+    print(f" {C}║{RESET}       {Y}COMPILE PYTHON TO BINARY{RESET}               {C}║{RESET}")
     print(f" {C}╚═══════════════════════════════════════════════╝{RESET}")
     print(LINE)
     
-    deps = check_all_dependencies()
+    deps = check_deps()
     missing = [k for k, v in deps.items() if not v]
     
     if missing:
-        status_msg(f"Missing: {', '.join(missing)}", "error")
-        print(f" {Y}Run option [04/D] to install{RESET}")
+        msg(f"Missing: {', '.join(missing)}", "error")
+        print(f" {Y}Run option [03/C] to install{RESET}")
         print(LINE)
         input(f"\n {W}[{RESET}•{W}]{RESET} {Y}Press ENTER...{RESET}")
         return
     
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}Enter path to Python file{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {G}Example: /storage/emulated/0/Download/test.py{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}Enter path to your Python file:{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {G}Example: /storage/emulated/0/Download/myfile.py{RESET}")
     print(LINE)
     
-    filepath = input(f" {W}[{RESET}?{W}]{RESET} {C}FILE PATH{RESET} {Y}➤{RESET} ").strip()
+    path = input(f" {W}[{RESET}?{W}]{RESET} {C}PATH{RESET} {Y}➤{RESET} ").strip()
     
-    if not filepath:
-        status_msg("No path provided!", "error")
-        time.sleep(2)
+    if not path:
+        msg("No path!", "error")
+        time.sleep(1)
         return
     
-    filepath = os.path.expanduser(filepath)
+    path = os.path.expanduser(path)
     
-    if not os.path.exists(filepath):
-        status_msg(f"Not found: {filepath}", "error")
-        time.sleep(2)
-        return
-    
-    if not filepath.endswith('.py'):
-        status_msg("Only .py files!", "error")
+    if not os.path.exists(path):
+        msg(f"Not found: {path}", "error")
         time.sleep(2)
         return
     
     print()
     print(LINE)
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}COMPILING...{RESET}")
-    print(LINE)
+    loader("STEP 01/A - PREPARING", 0.3)
     
-    nice_loader("STEP 01/A - PREPARING", 0.3)
+    result, err = compile_python(path)
     
-    result, error = compile_to_so(filepath, verbose=True)
-    
-    if error:
+    if err:
         print(LINE)
-        status_msg("FAILED", "error")
-        print(f" {R}{error}{RESET}")
+        msg("COMPILATION FAILED!", "error")
+        print(f" {R}{err}{RESET}")
         print(LINE)
         input(f"\n {W}[{RESET}•{W}]{RESET} {Y}Press ENTER...{RESET}")
         return
     
-    nice_loader("STEP 02/B - FINALIZING", 0.3)
+    loader("STEP 02/B - FINALIZING", 0.2)
     
     print()
     print(LINE)
-    status_msg("COMPILATION SUCCESSFUL!", "success")
+    msg("COMPILATION SUCCESSFUL!", "success")
     print(LINE)
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'INPUT':<12} {W}➤{RESET} {C}{result['original_file']}{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'SO FILE':<12} {W}➤{RESET} {G}{result['output_path']}{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'RUNNER':<12} {W}➤{RESET} {G}{result['runner_path']}{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'ORIGINAL':<12} {W}➤{RESET} {C}{result['original_size']} bytes{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'COMPILED':<12} {W}➤{RESET} {M}{result['compiled_size']} bytes{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'BINARY (.so)':<14} {W}➤{RESET} {G}{result['so_path']}{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'RUNNER (.py)':<14} {W}➤{RESET} {G}{result['runner_path']}{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'ORIGINAL':<14} {W}➤{RESET} {C}{result['orig_size']} bytes{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'COMPILED':<14} {W}➤{RESET} {M}{result['so_size']} bytes{RESET}")
     print(LINE)
-    print(f" {R}[{RESET}!{R}]{RESET} {R}IMPORTANT: You CANNOT run .so directly!{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {C}HOW TO RUN:{RESET}")
-    print(f"     {G}python3 {result['runner_path']}{RESET}")
+    print(f" {R}╔═══════════════════════════════════════════════╗{RESET}")
+    print(f" {R}║{RESET} {Y}⚠️  HOW TO RUN YOUR COMPILED CODE:{RESET}            {R}║{RESET}")
+    print(f" {R}╚═══════════════════════════════════════════════╝{RESET}")
+    print(f" {G}   python3 {result['runner_path']}{RESET}")
+    print()
+    print(f" {R}   ❌ DO NOT run: python3 {result['so_path']}{RESET}")
+    print(f" {R}   ❌ .so files cannot be run directly!{RESET}")
     print(LINE)
     
     input(f"\n {W}[{RESET}•{W}]{RESET} {Y}Press ENTER...{RESET}")
 
-def option_compile_wrapper():
+def opt_check():
     clear()
-    banner_header()
+    banner()
     print(f" {C}╔═══════════════════════════════════════════════╗{RESET}")
-    print(f" {C}║{RESET}        {Y}COMPILE WITH WRAPPER{RESET}                  {C}║{RESET}")
+    print(f" {C}║{RESET}          {Y}CHECK DEPENDENCIES{RESET}                  {C}║{RESET}")
     print(f" {C}╚═══════════════════════════════════════════════╝{RESET}")
     print(LINE)
     
-    deps = check_all_dependencies()
-    missing = [k for k, v in deps.items() if not v]
+    loader("CHECKING", 0.5)
     
-    if missing:
-        status_msg(f"Missing: {', '.join(missing)}", "error")
-        print(f" {Y}Run option [04/D] to install{RESET}")
-        print(LINE)
-        input(f"\n {W}[{RESET}•{W}]{RESET} {Y}Press ENTER...{RESET}")
-        return
-    
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}Enter path to Python file{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {G}Example: /storage/emulated/0/Download/test.py{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {C}Creates: .so + wrapper .py{RESET}")
-    print(LINE)
-    
-    filepath = input(f" {W}[{RESET}?{W}]{RESET} {C}FILE PATH{RESET} {Y}➤{RESET} ").strip()
-    
-    if not filepath:
-        status_msg("No path provided!", "error")
-        time.sleep(2)
-        return
-    
-    filepath = os.path.expanduser(filepath)
-    
-    if not os.path.exists(filepath):
-        status_msg(f"Not found: {filepath}", "error")
-        time.sleep(2)
-        return
-    
-    if not filepath.endswith('.py'):
-        status_msg("Only .py files!", "error")
-        time.sleep(2)
-        return
+    deps = check_deps()
     
     print()
-    print(LINE)
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}COMPILING WITH WRAPPER...{RESET}")
-    print(LINE)
-    
-    nice_loader("STEP 01/A - PREPARING", 0.3)
-    
-    result, error = compile_with_wrapper(filepath)
-    
-    if error:
-        print(LINE)
-        status_msg("FAILED", "error")
-        print(f" {R}{error}{RESET}")
-        print(LINE)
-        input(f"\n {W}[{RESET}•{W}]{RESET} {Y}Press ENTER...{RESET}")
-        return
-    
-    nice_loader("STEP 02/B - WRAPPER", 0.2)
-    nice_loader("STEP 03/C - FINALIZING", 0.2)
-    
-    print()
-    print(LINE)
-    status_msg("COMPILATION SUCCESSFUL!", "success")
-    print(LINE)
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'INPUT':<12} {W}➤{RESET} {C}{result['original_file']}{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'SO FILE':<12} {W}➤{RESET} {G}{result['output_path']}{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'WRAPPER':<12} {W}➤{RESET} {G}{result['wrapper_path']}{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'ORIGINAL':<12} {W}➤{RESET} {C}{result['original_size']} bytes{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}{'COMPILED':<12} {W}➤{RESET} {M}{result['compiled_size']} bytes{RESET}")
-    print(LINE)
-    print(f" {W}[{RESET}•{W}]{RESET} {C}USAGE:{RESET}")
-    print(f"     {G}python3 {result['wrapper_path']}{RESET}")
-    print(LINE)
-    
-    input(f"\n {W}[{RESET}•{W}]{RESET} {Y}Press ENTER...{RESET}")
-
-def option_check_deps():
-    clear()
-    banner_header()
-    print(f" {C}╔═══════════════════════════════════════════════╗{RESET}")
-    print(f" {C}║{RESET}        {Y}CHECK DEPENDENCIES{RESET}                    {C}║{RESET}")
-    print(f" {C}╚═══════════════════════════════════════════════╝{RESET}")
-    print(LINE)
-    
-    nice_loader("CHECKING", 0.5)
-    
-    deps = check_all_dependencies()
-    
-    print()
-    print(LINE)
-    
-    for dep, ok in deps.items():
-        if ok:
-            print(f" {W}[{RESET}•{W}]{RESET} {C}{dep:<15}{RESET} {W}➤{RESET} {G}OK ✓{RESET}")
-        else:
-            print(f" {W}[{RESET}•{W}]{RESET} {C}{dep:<15}{RESET} {W}➤{RESET} {R}MISSING ✗{RESET}")
+    for k, v in deps.items():
+        s = f"{G}OK ✓{RESET}" if v else f"{R}MISSING ✗{RESET}"
+        print(f" {W}[{RESET}•{W}]{RESET} {C}{k:<12}{RESET} {W}➤{RESET} {s}")
     
     print(LINE)
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}PYTHON{RESET}    {W}➤{RESET} {G}{sys.version.split()[0]}{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}PLATFORM{RESET}  {W}➤{RESET} {G}{sys.platform}{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}HOME{RESET}      {W}➤{RESET} {G}{HOME_DIR}{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}OUTPUT{RESET}    {W}➤{RESET} {G}{get_output_dir()}{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}TEMP{RESET}      {W}➤{RESET} {G}{get_writable_temp_dir()}{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}PYTHON{RESET}  {W}➤{RESET} {G}{sys.version.split()[0]}{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}ARCH{RESET}    {W}➤{RESET} {G}{os.uname().machine}{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}TEMP{RESET}    {W}➤{RESET} {G}{get_temp()}{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}OUTPUT{RESET}  {W}➤{RESET} {G}{get_output()}{RESET}")
     print(LINE)
     
     missing = [k for k, v in deps.items() if not v]
     if missing:
-        status_msg(f"Missing: {', '.join(missing)}", "error")
+        msg(f"Missing: {', '.join(missing)}", "error")
     else:
-        status_msg("All OK!", "success")
+        msg("All dependencies OK!", "success")
     
     print(LINE)
     input(f"\n {W}[{RESET}•{W}]{RESET} {Y}Press ENTER...{RESET}")
 
-def option_install_deps():
+def opt_install():
     clear()
-    banner_header()
+    banner()
     print(f" {C}╔═══════════════════════════════════════════════╗{RESET}")
-    print(f" {C}║{RESET}       {Y}INSTALL DEPENDENCIES{RESET}                   {C}║{RESET}")
+    print(f" {C}║{RESET}        {Y}INSTALL DEPENDENCIES{RESET}                  {C}║{RESET}")
     print(f" {C}╚═══════════════════════════════════════════════╝{RESET}")
     print(LINE)
     
-    print(f" {W}[{RESET}•{W}]{RESET} {C}TERMUX:{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {C}FOR TERMUX:{RESET}")
     print(f"     {G}pkg update && pkg upgrade{RESET}")
     print(f"     {G}pkg install python clang{RESET}")
     print(f"     {G}pip install cython setuptools{RESET}")
     print(LINE)
-    print(f" {W}[{RESET}•{W}]{RESET} {C}LINUX:{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {C}FOR LINUX:{RESET}")
     print(f"     {G}sudo apt install python3-dev gcc{RESET}")
     print(f"     {G}pip3 install cython setuptools{RESET}")
     print(LINE)
@@ -559,51 +392,53 @@ def option_install_deps():
     if ans in ['y', 'yes']:
         print()
         for pkg in ['cython', 'setuptools']:
-            status_msg(f"Installing {pkg}...")
+            msg(f"Installing {pkg}...")
             try:
                 r = subprocess.run(
                     [sys.executable, '-m', 'pip', 'install', '--user', pkg],
                     capture_output=True, timeout=120
                 )
                 if r.returncode == 0:
-                    status_msg(f"{pkg} OK", "success")
+                    msg(f"{pkg} OK", "success")
                 else:
-                    status_msg(f"{pkg} failed", "error")
+                    msg(f"{pkg} failed", "error")
             except Exception as e:
-                status_msg(str(e), "error")
+                msg(str(e), "error")
         
         print(LINE)
-        status_msg("Done! Install clang/gcc manually", "warning")
+        msg("Done! Install clang manually: pkg install clang", "warn")
     
     print(LINE)
     input(f"\n {W}[{RESET}•{W}]{RESET} {Y}Press ENTER...{RESET}")
 
-def option_about():
+def opt_about():
     clear()
-    banner_header()
+    banner()
     print(f" {C}╔═══════════════════════════════════════════════╗{RESET}")
-    print(f" {C}║{RESET}             {Y}ABOUT THIS TOOL{RESET}                   {C}║{RESET}")
+    print(f" {C}║{RESET}               {Y}ABOUT{RESET}                           {C}║{RESET}")
     print(f" {C}╚═══════════════════════════════════════════════╝{RESET}")
     print(LINE)
     print(f" {W}[{RESET}•{W}]{RESET} {Y}TOOL{RESET}      {W}➤{RESET} {G}CYTHON COMPILER{RESET}")
-    print(f" {W}[{RESET}•{W}]{RESET} {Y}VERSION{RESET}   {W}➤{RESET} {G}2.0.0{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {Y}VERSION{RESET}   {W}➤{RESET} {G}3.0.0{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}DEVELOPER{RESET} {W}➤{RESET} {G}KEN DRICK{RESET}")
     print(f" {W}[{RESET}•{W}]{RESET} {Y}FACEBOOK{RESET}  {W}➤{RESET} {G}facebook.com/ryoevisu{RESET}")
     print(LINE)
-    print(f" {W}[{RESET}•{W}]{RESET} {C}DESCRIPTION:{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {C}WHAT IT DOES:{RESET}")
     print(f"     {G}Compiles Python (.py) to binary (.so){RESET}")
-    print(f"     {G}using Cython. Protects your source code.{RESET}")
+    print(f"     {G}using Cython. Your source code becomes{RESET}")
+    print(f"     {G}machine code that cannot be easily read.{RESET}")
     print(LINE)
-    print(f" {W}[{RESET}•{W}]{RESET} {C}FEATURES:{RESET}")
-    print(f"     {W}[{C}01/A{W}]{RESET} {G}Compile to .so{RESET}")
-    print(f"     {W}[{C}02/B{W}]{RESET} {G}Compile + wrapper{RESET}")
-    print(f"     {W}[{C}03/C{W}]{RESET} {G}Check dependencies{RESET}")
-    print(f"     {W}[{C}04/D{W}]{RESET} {G}Install dependencies{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {C}OUTPUT FILES:{RESET}")
+    print(f"     {G}• yourfile_compiled.so  (the binary){RESET}")
+    print(f"     {G}• yourfile_run.py       (runner script){RESET}")
     print(LINE)
-    print(f" {W}[{RESET}•{W}]{RESET} {C}BENEFITS:{RESET}")
-    print(f"     {G}• Code protection{RESET}")
-    print(f"     {G}• Faster execution{RESET}")
-    print(f"     {G}• Cannot decompile{RESET}")
+    print(f" {W}[{RESET}•{W}]{RESET} {C}HOW TO USE:{RESET}")
+    print(f"     {G}python3 yourfile_run.py{RESET}")
+    print(LINE)
+    print(f" {R}[{RESET}!{R}]{RESET} {R}IMPORTANT:{RESET}")
+    print(f"     {Y}• You CANNOT run .so files directly{RESET}")
+    print(f"     {Y}• Always use the _run.py script{RESET}")
+    print(f"     {Y}• Compile ON Termux for Termux use{RESET}")
     print(LINE)
     
     input(f"\n {W}[{RESET}•{W}]{RESET} {Y}Press ENTER...{RESET}")
@@ -611,29 +446,27 @@ def option_about():
 def main():
     while True:
         clear()
-        banner_header()
-        show_menu()
+        banner()
+        menu()
         
         ch = input(f" {W}[{RESET}?{W}]{RESET} {C}SELECT{RESET} {Y}➤{RESET} ").strip().upper()
         
         if ch in ['01', '1', 'A']:
-            option_compile_so()
+            opt_compile()
         elif ch in ['02', '2', 'B']:
-            option_compile_wrapper()
+            opt_check()
         elif ch in ['03', '3', 'C']:
-            option_check_deps()
+            opt_install()
         elif ch in ['04', '4', 'D']:
-            option_install_deps()
-        elif ch in ['05', '5', 'E']:
-            option_about()
+            opt_about()
         elif ch in ['00', '0', 'X']:
             clear()
-            banner_header()
-            status_msg("Thank you!", "success")
+            banner()
+            msg("Goodbye!", "success")
             print(LINE)
             sys.exit(0)
         else:
-            status_msg("Invalid!", "error")
+            msg("Invalid!", "error")
             time.sleep(1)
 
 if __name__ == "__main__":
