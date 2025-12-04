@@ -98,6 +98,32 @@ def check_all_dependencies():
     }
     return deps
 
+def get_temp_dir():
+    """Get a writable temp directory (Termux compatible)"""
+    # Try multiple locations in order of preference
+    possible_dirs = [
+        os.path.expanduser("~/.cache/cython_build"),
+        "/data/data/com.termux/files/usr/tmp",
+        os.path.expanduser("~/cython_temp"),
+        "/storage/emulated/0/Download/.cython_temp",
+        "/tmp",
+    ]
+    
+    for temp_dir in possible_dirs:
+        try:
+            os.makedirs(temp_dir, exist_ok=True)
+            # Test if writable
+            test_file = os.path.join(temp_dir, ".write_test")
+            with open(test_file, 'w') as f:
+                f.write("test")
+            os.remove(test_file)
+            return temp_dir
+        except:
+            continue
+    
+    # Fallback to current directory
+    return os.getcwd()
+
 def compile_to_so(filepath):
     """Compile a Python file to .so using Cython"""
     try:
@@ -118,8 +144,9 @@ def compile_to_so(filepath):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
         
-        # Create temp build directory
-        build_dir = f"/tmp/cython_build_{name}_{int(time.time())}"
+        # Create temp build directory in writable location
+        temp_base = get_temp_dir()
+        build_dir = os.path.join(temp_base, f"build_{name}_{int(time.time())}")
         os.makedirs(build_dir, exist_ok=True)
         
         # Copy source file to build dir
