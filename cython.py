@@ -21,7 +21,7 @@ import colorama
 
 colorama.init()
 
-print(colorama.Fore.MAGENTA+"""
+print(colorama.Fore.MAGENTA+r"""
 
 ___  ___                                _____ _      __                     _             
 |  \/  |                               |  _  | |    / _|                   | |            
