@@ -477,7 +477,8 @@ def view_cookies():
             for i, cookie_data in enumerate(cookies, 1):
                 status_display = G('[ACTIVE]') if cookie_data['status'] == 'active' else R('[RESTRICTED]')
                 
-                print(f" {W}[{i:02d}]{RESET} {M(cookie_data['name'])} {W}({C(f'UID: {cookie_data[\"uid\"]}')}){RESET}")
+                uid_text = f"UID: {cookie_data['uid']}"
+                print(f" {W}[{i:02d}]{RESET} {M(cookie_data['name'])} {W}({C(uid_text)}){RESET}")
                 cookie_preview = cookie_data['cookie'][:50] + "..." if len(cookie_data['cookie']) > 50 else cookie_data['cookie']
                 print(f"      Cookie: {C(cookie_preview)}")
                 print(f"      Added: {G(cookie_data['addedAt'])}")
@@ -580,7 +581,8 @@ def delete_cookie():
     
     for i, cookie_data in enumerate(cookies, 1):
         status_indicator = R('[RESTRICTED]') if cookie_data['status'] == 'restricted' else G('[ACTIVE]')
-        print(f" {W}[{i}]{RESET} {M(cookie_data['name'])} {W}({C(f'UID: {cookie_data[\"uid\"]}')}){RESET} {status_indicator}")
+        uid_text = f"UID: {cookie_data['uid']}"
+        print(f" {W}[{i}]{RESET} {M(cookie_data['name'])} {W}({C(uid_text)}){RESET} {status_indicator}")
     
     print(LINE)
     
@@ -1419,7 +1421,8 @@ async def auto_share_main(link_or_id, selected_cookies):
                 'status': cookie_data.get('status', 'active')
             })
             status_indicator = R('[RESTRICTED]') if cookie_data.get('status') == 'restricted' else G('[ACTIVE]')
-            print(f" {G('✓')} {C(cookie_data['name'])} {W}({C(f'UID: {cookie_data[\"uid\"]}')}){RESET} {status_indicator}")
+            uid_text = f"UID: {cookie_data['uid']}"
+            print(f" {G('✓')} {C(cookie_data['name'])} {W}({C(uid_text)}){RESET} {status_indicator}")
         else:
             print(f" {R('✗')} {C(cookie_data['name'])} {R('Failed to extract EAAG token')}")
     
@@ -1516,7 +1519,8 @@ def select_cookies_for_sharing():
     for i, cookie_data in enumerate(cookies, 1):
         letter = chr(64 + i) if i <= 26 else str(i)
         status_indicator = R('[RESTRICTED]') if cookie_data.get('status') == 'restricted' else G('[ACTIVE]')
-        print(f" {W}[{RESET}{BG_C}{W}{i:02d}{RESET}{W}/{RESET}{BG_C}{W}{letter}{RESET}{W}]{RESET} {C(cookie_data['name'])} {W}({C(f'UID: {cookie_data[\"uid\"]}')}){RESET} {status_indicator}")
+        uid_text = f"UID: {cookie_data['uid']}"
+        print(f" {W}[{RESET}{BG_C}{W}{i:02d}{RESET}{W}/{RESET}{BG_C}{W}{letter}{RESET}{W}]{RESET} {C(cookie_data['name'])} {W}({C(uid_text)}){RESET} {status_indicator}")
     
     print(LINE)
     print(f" {C('[TIP] Enter numbers separated by commas (e.g., 1,2,3) or type ALL')}")
@@ -1559,7 +1563,8 @@ def select_cookies_for_sharing():
     print(f" {C(f'Selected {G(str(len(selected_cookies)))} cookie(s):')}")
     for cookie_data in selected_cookies:
         status_indicator = R('[RESTRICTED]') if cookie_data.get('status') == 'restricted' else G('[ACTIVE]')
-        print(f"   • {C(cookie_data['name'])} {W}({C(f'UID: {cookie_data[\"uid\"]}')}){RESET} {status_indicator}")
+        uid_text = f"UID: {cookie_data['uid']}"
+        print(f"   • {C(cookie_data['name'])} {W}({C(uid_text)}){RESET} {status_indicator}")
     print(LINE)
     
     restricted_count = sum(1 for c in selected_cookies if c.get('status') == 'restricted')
