@@ -504,7 +504,8 @@ def add_cookie():
         print(f" {R('[LIMIT REACHED]')}")
         print(LINE)
         print(f" {C('FREE plan users can only store up to 10 cookies.')}")
-        print(f" {C(f\"You currently have: {R(f\"{user_data.get('cookieCount', 0)}/10\")}\")}")
+        cookie_count = user_data.get('cookieCount', 0)
+        print(f" {C('You currently have:')} {R(f'{cookie_count}/10')}")
         print(LINE)
         print(f" {G('[UPGRADE TO MAX]')}")
         print(f" {C('• Unlimited cookies')}")
@@ -760,7 +761,8 @@ def change_user_plan():
         return
     
     refresh_screen()
-    print(f" {C(f'[CHANGE PLAN FOR: {selected_user[\"username\"].upper()}]')}")
+    username_display = selected_user['username'].upper()
+    print(f" {C(f'[CHANGE PLAN FOR: {username_display}]')}")
     print(LINE)
     print(f" {W}[1]{RESET} {G('FREE')} - 10 cookies max")
     print(f" {W}[2]{RESET} {M('MAX')} - Unlimited cookies (RENTAL)")
@@ -897,7 +899,7 @@ def delete_user():
     status, response = api_request("DELETE", f"/admin/users/{selected_user['username']}")
     
     if status == 200 and response.get('success'):
-        print(f" {G(f\"[SUCCESS] User '{selected_user['username']}' deleted successfully!\")}")
+        print(f" {G('[SUCCESS] User deleted successfully!')}")
     else:
         print(f" {R('[ERROR]')} {R(response.get('message', 'Failed to delete user'))}")
     
@@ -1195,7 +1197,7 @@ def file_encryptor():
             print(f" {G('[SUCCESS] Encrypted package created!')}")
             print(f" {C(f'[INFO] Location: {os.path.join(file_dir, output_dir)}')}")
             print(f" {C(f'[INFO] Run with: python {run_script} (from output directory)')}")
-            print(f" {C(f\"[NOTE] Distribute the entire '{output_dir}' folder\")}")
+            print(f" {C(f'[NOTE] Distribute the entire {output_dir} folder')}")
             print(LINE)
             
         else:
@@ -1560,7 +1562,7 @@ def select_cookies_for_sharing():
     refresh_screen()
     print(f" {C('[CONFIRM SELECTION]')}")
     print(LINE)
-    print(f" {C(f'Selected {G(str(len(selected_cookies)))} cookie(s):')}")
+    print(f" {C(f'Selected {len(selected_cookies)} cookie(s):')}")
     for cookie_data in selected_cookies:
         status_indicator = R('[RESTRICTED]') if cookie_data.get('status') == 'restricted' else G('[ACTIVE]')
         uid_text = f"UID: {cookie_data['uid']}"
