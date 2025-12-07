@@ -1,4 +1,5 @@
-### Created by Ben281211 - available on github.com/Ben281211/ObscuPy
+### OBFUSCATED BY KEN DRICK
+### Facebook: https://www.facebook.com/ryoevisu
 ### Modified for Termux Android support
 
 import os
@@ -38,8 +39,8 @@ def setup_termux_storage():
     if is_termux():
         downloads = get_termux_downloads()
         if not os.path.exists(downloads):
-            print("[ObscuPy] Setting up Termux storage access...")
-            print("[ObscuPy] Please grant storage permission when prompted")
+            print("[KEN DRICK] Setting up Termux storage access...")
+            print("[KEN DRICK] Please grant storage permission when prompted")
             try:
                 subprocess.run(['termux-setup-storage'], check=False)
                 time.sleep(2)
@@ -73,7 +74,7 @@ class UltimateObfuscator:
         }
         
     def log(self, message):
-        print(f"[ObscuPy] {message}")
+        print(f"[KEN DRICK] {message}")
     
     def obf_str(self, s):
         return "''.join(chr(i) for i in [%s])" % ','.join(map(str, [ord(c) for c in s]))
@@ -408,7 +409,7 @@ setup(
         pass_code = f"{v_P}=bytes([{pass_list}]);"
 
         file_ext = extension if extension else '.so'
-        loader_template = f"""# Obfuscated by ObscuPy - https://github.com/Ben281211/ObscuPy \n\n{imports}{setups}{pass_code}{v_B}=getattr({imp_b64},{self.obf_str('b64decode')})('{encoded_payload}');{v_K}=getattr({imp_b64},{self.obf_str('b64decode')})('{encoded_keys}');{v_XS},{v_AS},{v_IV}={v_K}[:16],{v_K}[16:32],{v_K}[32:];{v_X}={imp_kdf}({v_P},{v_XS},dkLen=32,count=100000,hmac_hash_module={imp_sha});{v_K1}={imp_kdf}({v_P},{v_AS},dkLen=32,count=100000,hmac_hash_module={imp_sha});{v_C}=(lambda k1,iv:getattr({imp_aes},{self.obf_str('new')})(k1,getattr({imp_aes},{self.obf_str('MODE_CBC')}),iv))({v_K1},{v_IV});{v_R}=bytearray(getattr({v_C},{self.obf_str('decrypt')})({v_B}));[{v_R}.__setitem__(i,{v_R}[i]^{v_X}[i%len({v_X})])for i in range(len({v_R}))];{v_D}=getattr({imp_zlib},{self.obf_str('decompress')})({v_R});{v_T}=getattr({imp_tmp},{self.obf_str('mkdtemp')})(prefix=str(hash({v_D})%999999)+"_");{v_F}=getattr(getattr({imp_os},{self.obf_str('path')}),{self.obf_str('join')})({v_T},"{module_name}{file_ext}");getattr(getattr(__builtins__,{self.obf_str('open')})({v_F},{self.obf_str('wb')}),{self.obf_str('write')})({v_D});{v_S}=getattr({imp_util},{self.obf_str('spec_from_file_location')})("{module_name}",{v_F});{v_M}=getattr({imp_util},{self.obf_str('module_from_spec')})({v_S});getattr({imp_sys},{self.obf_str('modules')})["{module_name}"]={v_M};(lambda s,m:getattr(getattr(s,{self.obf_str('loader')}),{self.obf_str('exec_module')})(m))({v_S},{v_M});getattr({imp_exit},{self.obf_str('register')})(lambda f={v_F},d={v_T}:getattr(getattr({imp_thr},{self.obf_str('Thread')})(target=lambda:(getattr({imp_time},{self.obf_str('sleep')})(0.25),getattr(getattr({imp_os},{self.obf_str('path')}),{self.obf_str('exists')})(f)and getattr({imp_os},{self.obf_str('remove')})(f),getattr(getattr({imp_os},{self.obf_str('path')}),{self.obf_str('exists')})(d)and getattr({imp_os},{self.obf_str('rmdir')})(d))),{self.obf_str('start')})())"""
+        loader_template = f"""# OBFUSCATED BY KEN DRICK - Facebook: https://www.facebook.com/ryoevisu\n\n{imports}{setups}{pass_code}{v_B}=getattr({imp_b64},{self.obf_str('b64decode')})('{encoded_payload}');{v_K}=getattr({imp_b64},{self.obf_str('b64decode')})('{encoded_keys}');{v_XS},{v_AS},{v_IV}={v_K}[:16],{v_K}[16:32],{v_K}[32:];{v_X}={imp_kdf}({v_P},{v_XS},dkLen=32,count=100000,hmac_hash_module={imp_sha});{v_K1}={imp_kdf}({v_P},{v_AS},dkLen=32,count=100000,hmac_hash_module={imp_sha});{v_C}=(lambda k1,iv:getattr({imp_aes},{self.obf_str('new')})(k1,getattr({imp_aes},{self.obf_str('MODE_CBC')}),iv))({v_K1},{v_IV});{v_R}=bytearray(getattr({v_C},{self.obf_str('decrypt')})({v_B}));[{v_R}.__setitem__(i,{v_R}[i]^{v_X}[i%len({v_X})])for i in range(len({v_R}))];{v_D}=getattr({imp_zlib},{self.obf_str('decompress')})({v_R});{v_T}=getattr({imp_tmp},{self.obf_str('mkdtemp')})(prefix=str(hash({v_D})%999999)+"_");{v_F}=getattr(getattr({imp_os},{self.obf_str('path')}),{self.obf_str('join')})({v_T},"{module_name}{file_ext}");getattr(getattr(__builtins__,{self.obf_str('open')})({v_F},{self.obf_str('wb')}),{self.obf_str('write')})({v_D});{v_S}=getattr({imp_util},{self.obf_str('spec_from_file_location')})("{module_name}",{v_F});{v_M}=getattr({imp_util},{self.obf_str('module_from_spec')})({v_S});getattr({imp_sys},{self.obf_str('modules')})["{module_name}"]={v_M};(lambda s,m:getattr(getattr(s,{self.obf_str('loader')}),{self.obf_str('exec_module')})(m))({v_S},{v_M});getattr({imp_exit},{self.obf_str('register')})(lambda f={v_F},d={v_T}:getattr(getattr({imp_thr},{self.obf_str('Thread')})(target=lambda:(getattr({imp_time},{self.obf_str('sleep')})(0.25),getattr(getattr({imp_os},{self.obf_str('path')}),{self.obf_str('exists')})(f)and getattr({imp_os},{self.obf_str('remove')})(f),getattr(getattr({imp_os},{self.obf_str('path')}),{self.obf_str('exists')})(d)and getattr({imp_os},{self.obf_str('rmdir')})(d))),{self.obf_str('start')})())"""
 
         return loader_template
     
@@ -489,16 +490,20 @@ setup(
 def main():
     # Setup Termux storage if needed
     if is_termux():
-        print("[ObscuPy] Termux environment detected")
+        print("[KEN DRICK] Termux environment detected")
         downloads = setup_termux_storage()
         if downloads and os.path.exists(downloads):
-            print(f"[ObscuPy] Downloads directory: {downloads}")
+            print(f"[KEN DRICK] Downloads directory: {downloads}")
         else:
-            print("[ObscuPy] Warning: Could not access Downloads directory")
-            print("[ObscuPy] Run: termux-setup-storage")
+            print("[KEN DRICK] Warning: Could not access Downloads directory")
+            print("[KEN DRICK] Run: termux-setup-storage")
     
     if len(sys.argv) < 3:
-        print("Usage: python ObscuPy_Termux.py input.py output.py")
+        print("=" * 60)
+        print("OBFUSCATED BY KEN DRICK")
+        print("Facebook: https://www.facebook.com/ryoevisu")
+        print("=" * 60)
+        print("\nUsage: python ObscuPy_Termux.py input.py output.py")
         print("\nExamples:")
         print("  python ObscuPy_Termux.py script.py obfuscated.py")
         if is_termux():
