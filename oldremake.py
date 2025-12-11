@@ -13,6 +13,7 @@ import requests
 import pytz
 import hashlib
 import uuid
+import getpass
 
 console = Console()
 os.system('clear')
@@ -172,6 +173,15 @@ def update_share_count(username: str, shares: int) -> Dict:
     except Exception as e:
         return {'success': False, 'message': str(e)}
 
+def secure_input(prompt: str, is_password: bool = False) -> str:
+    """Secure input function that shows asterisks for password"""
+    if is_password:
+        print(f"[bright_white]{prompt}", end='', flush=True)
+        password = getpass.getpass('')
+        return password
+    else:
+        return console.input(f"[bright_white]{prompt}")
+
 def verify_key() -> bool:
     """Verify if user is approved"""
     while True:
@@ -199,11 +209,13 @@ def verify_key() -> bool:
             print(Panel("[white]Enter your credentials (づ｡◕‿‿◕｡)づ", 
                 title="[bright_white]>> [Login] <<",
                 width=65,
-                style="bold bright_white"
+                style="bold bright_white",
+                subtitle="╭─────",
+                subtitle_align="left"
             ))
             
-            username = console.input("[bright_white]Username: ").strip()
-            password = console.input("[bright_white]Password: ", password=True).strip()
+            username = console.input("[bright_white]   ╰─> Username: ").strip()
+            password = secure_input("   ╰─> Password: ", is_password=True).strip()
             
             if not username or not password:
                 print(Panel("[red]Username and password cannot be empty! (｡•́︿•̀｡)", 
@@ -255,12 +267,14 @@ def verify_key() -> bool:
 [white]Create your account (づ｡◕‿‿◕｡)づ""", 
                 title="[bright_white]>> [Registration] <<",
                 width=65,
-                style="bold bright_white"
+                style="bold bright_white",
+                subtitle="╭─────",
+                subtitle_align="left"
             ))
             
-            username = console.input("[bright_white]Username: ").strip()
-            password = console.input("[bright_white]Password: ", password=True).strip()
-            confirm_password = console.input("[bright_white]Confirm Password: ", password=True).strip()
+            username = console.input("[bright_white]   ╰─> Username: ").strip()
+            password = secure_input("   ╰─> Password: ", is_password=True).strip()
+            confirm_password = secure_input("   ╰─> Confirm Password: ", is_password=True).strip()
             
             if not username or not password:
                 print(Panel("[red]Username and password cannot be empty! (｡•́︿•̀｡)", 
@@ -463,7 +477,8 @@ class ShareManager:
                 self.error_count += 1
                 continue
 
-async def get_user_input(prompt: str, validator_func, error_message: str) -> Optional[str]:
+def get_user_input_sync(prompt: str, validator_func, error_message: str) -> Optional[str]:
+    """Synchronous user input function"""
     while True:
         os.system('clear')
         banner()
@@ -472,7 +487,7 @@ async def get_user_input(prompt: str, validator_func, error_message: str) -> Opt
             f"""[white]USERNAME: [cyan]{config['user_data']['username']}[/]
 [white]KEY: [cyan]{config['user_data']['deviceId']}[/]
 [white]TOTAL SHARES: [cyan]{config['user_data']['totalShares']}[/]
-[white]OVERALL SHARES USERS DONE: [cyan]{config['user_data']['overallShares']}[/]""",
+[white]OVERALL SHARES USERS DONE: [cyan]{config['user_data'].get('overallShares', 0)}[/]""",
             title="[bright_white]>> [Profile Info] <<",
             width=65,
             style="bold bright_white"
@@ -491,7 +506,7 @@ async def get_user_input(prompt: str, validator_func, error_message: str) -> Opt
             subtitle="╭─────",
             subtitle_align="left"
         ))
-        user_input = console.input("[bright_white]   ╰─> ")
+        user_input = console.input("[bright_white]   ╰─> ").strip()
         
         if user_input.lower() == 'exit':
             return None
@@ -504,9 +519,10 @@ async def get_user_input(prompt: str, validator_func, error_message: str) -> Opt
                 width=65,
                 style="bold bright_white"
             ))
-            await asyncio.sleep(2)
+            console.input("\n[bright_white]Press Enter to continue...")
 
-async def boost_again() -> bool:
+def boost_again() -> bool:
+    """Ask if user wants to boost again"""
     print(Panel("[white]Do you want to boost again? (y/n) (◕‿◕✿)", 
         title="[bright_white]>> [Input] <<",
         width=65,
@@ -534,7 +550,7 @@ async def main():
                 f"""[white]USERNAME: [cyan]{config['user_data']['username']}[/]
 [white]KEY: [cyan]{config['user_data']['deviceId']}[/]
 [white]TOTAL SHARES: [cyan]{config['user_data']['totalShares']}[/]
-[white]OVERALL SHARES USERS DONE: [cyan]{config['user_data']['overallShares']}[/]""",
+[white]OVERALL SHARES USERS DONE: [cyan]{config['user_data'].get('overallShares', 0)}[/]""",
                 title="[bright_white]>> [Profile Info] <<",
                 width=65,
                 style="bold bright_white"
@@ -546,7 +562,7 @@ async def main():
                 style="bold bright_white"
             ))
             
-            config['post_id'] = await get_user_input(
+            config['post_id'] = get_user_input_sync(
                 "[white]Enter Post ID (づ｡◕‿‿◕｡)づ",
                 validate_post_id,
                 "Invalid Post ID format. Please enter a valid numeric Post ID."
@@ -555,7 +571,7 @@ async def main():
             if not config['post_id']:
                 return
                 
-            share_count_input = await get_user_input(
+            share_count_input = get_user_input_sync(
                 "[white]Enter total shares (no limit) (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧",
                 validate_share_count,
                 "Invalid share count. Please enter a positive number."
@@ -565,6 +581,9 @@ async def main():
                 return
                 
             target_shares = int(share_count_input)
+            
+            os.system('clear')
+            banner()
             
             print(Panel(
                 f"""[white]Starting share process... (ง •̀ω•́)ง✧
@@ -604,7 +623,7 @@ Target: [green]{target_shares}[white] shares""",
                 style="bold bright_white"
             ))
             
-            if not await boost_again():
+            if not boost_again():
                 break
 
     except KeyboardInterrupt:
