@@ -1,5 +1,4 @@
 const axios = require('axios');
-const { v4: uuidv4 } = require('uuid');
 const readline = require('readline');
 
 const rl = readline.createInterface({
@@ -9,255 +8,295 @@ const rl = readline.createInterface({
 
 rl.question('Nhập Cookie: ', async (cookie) => {
     try {
-        const id = cookie.split('c_user=')[1].split(';')[0];
+        const id = cookie.split('c_user=')[1]?.split(';')[0];
+        if (!id) {
+            throw new Error('Cookie không hợp lệ - không tìm thấy c_user');
+        }
         
-        const headers1 = {
+        console.log('User ID:', id);
+        console.log('\n🔄 Đang lấy token...\n');
+
+        const headers = {
             'authority': 'www.facebook.com',
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/jxl,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-            'accept-language': 'vi,en-US;q=0.9,en;q=0.8',
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'accept-language': 'en-US,en;q=0.9',
             'cache-control': 'max-age=0',
-            'dnt': '1',
-            'dpr': '1.25',
-            'sec-ch-ua': '"Chromium";v="117", "Not;A=Brand";v="8"',
-            'sec-ch-ua-full-version-list': '"Chromium";v="117.0.5938.157", "Not;A=Brand";v="8.0.0.0"',
+            'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
             'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-model': '""',
             'sec-ch-ua-platform': '"Windows"',
-            'sec-ch-ua-platform-version': '"15.0.0"',
             'sec-fetch-dest': 'document',
             'sec-fetch-mode': 'navigate',
             'sec-fetch-site': 'same-origin',
             'sec-fetch-user': '?1',
             'upgrade-insecure-requests': '1',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
-            'viewport-width': '1038',
-            'Cookie': cookie
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'cookie': cookie
         };
 
-        const params = {
-            'redirect_uri': 'fbconnect://success',
-            'scope': 'email,public_profile',
-            'response_type': 'token,code',
-            'client_id': '350685531728',
-        };
-
-        const response1 = await axios.get('https://www.facebook.com/v2.3/dialog/oauth', {
-            headers: headers1,
-            params: params
-        });
-
-        const responseText = response1.data.replace(/\[\]/g, '');
-        const fb_dtsg_match = responseText.match(/DTSGInitData",,{"token":"(.+?)"/);
-        
-        if (!fb_dtsg_match) {
-            throw new Error('Không tìm thấy fb_dtsg - Cookie có thể đã hết hạn');
-        }
-        
-        const fb_dtsg = fb_dtsg_match[1];
-
-        const headers2 = {
-            'authority': 'www.facebook.com',
-            'accept': '*/*',
-            'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
-            'content-type': 'application/x-www-form-urlencoded',
-            'dnt': '1',
-            'origin': 'https://www.facebook.com',
-            'sec-ch-prefers-color-scheme': 'dark',
-            'sec-ch-ua': '"Chromium";v="117", "Not;A=Brand";v="8"',
-            'sec-ch-ua-full-version-list': '"Chromium";v="117.0.5938.157", "Not;A=Brand";v="8.0.0.0"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-model': '""',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-ch-ua-platform-version': '"15.0.0"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
-            'x-fb-friendly-name': 'useCometConsentPromptEndOfFlowBatchedMutation',
-            'Cookie': cookie
-        };
-
-        const postData = new URLSearchParams({
-            'fb_dtsg': fb_dtsg,
-            'fb_api_caller_class': 'RelayModern',
-            'fb_api_req_friendly_name': 'useCometConsentPromptEndOfFlowBatchedMutation',
-            'variables': JSON.stringify({
-                "input": {
-                    "client_mutation_id": "4",
-                    "actor_id": id,
-                    "config_enum": "GDP_READ",
-                    "device_id": null,
-                    "experience_id": uuidv4(),
-                    "extra_params_json": JSON.stringify({
-                        "app_id": "350685531728",
-                        "display": "\"popup\"",
-                        "kid_directed_site": "false",
-                        "logger_id": `"${uuidv4()}"`,
-                        "next": "\"read\"",
-                        "redirect_uri": "\"https:\\/\\/www.facebook.com\\/connect\\/login_success.html\"",
-                        "response_type": "\"token\"",
-                        "return_scopes": "false",
-                        "scope": "[\"email\",\"public_profile\"]",
-                        "sso_key": "\"com\"",
-                        "steps": "{\"read\":[\"email\",\"public_profile\"]}",
-                        "tp": "\"unspecified\"",
-                        "cui_gk": "\"[PASS]:\"",
-                        "is_limited_login_shim": "false"
-                    }),
-                    "flow_name": "GDP",
-                    "flow_step_type": "STANDALONE",
-                    "outcome": "APPROVED",
-                    "source": "gdp_delegated",
-                    "surface": "FACEBOOK_COMET"
-                }
-            }),
-            'server_timestamps': 'true',
-            'doc_id': '6494107973937368'
-        });
-
-        const response2 = await axios.post('https://www.facebook.com/api/graphql/', postData, {
-            headers: headers2
-        });
-
-        console.log('GraphQL Response:', JSON.stringify(response2.data, null, 2));
-
-        const uri = response2.data.data.run_post_flow_action.uri;
-        
-        // Follow the consent complete URL to get the actual redirect with token
-        const response3 = await axios.get(uri, {
-            headers: {
-                'authority': 'www.facebook.com',
-                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                'accept-language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
-                'Cookie': cookie
-            },
-            maxRedirects: 0,
-            validateStatus: (status) => status >= 200 && status < 400
-        });
-
-        let access_token = null;
-
-        // Check if response has redirect location
-        if (response3.headers.location) {
-            const redirectUrl = response3.headers.location;
-            console.log('Redirect URL:', redirectUrl);
-            
-            // Try to extract token from redirect URL
-            if (redirectUrl.includes('access_token=')) {
-                const tokenMatch = redirectUrl.match(/access_token=([^&]+)/);
-                if (tokenMatch) {
-                    access_token = tokenMatch[1];
-                }
-            } else if (redirectUrl.includes('#')) {
-                const fragment = redirectUrl.split('#')[1];
-                const fragmentParams = new URLSearchParams(fragment);
-                access_token = fragmentParams.get('access_token');
-            }
-        }
-
-        // If not found in redirect, check response body
-        if (!access_token && response3.data) {
-            const bodyStr = typeof response3.data === 'string' ? response3.data : JSON.stringify(response3.data);
-            
-            // Try to find access_token in response body
-            const tokenMatch = bodyStr.match(/access_token[=:][\s"]*([^"&\s]+)/);
-            if (tokenMatch) {
-                access_token = tokenMatch[1];
-            }
-            
-            // Try to find close_uri in response
-            const closeUriMatch = bodyStr.match(/close_uri[=:][\s"]*([^"&\s]+)/);
-            if (closeUriMatch) {
-                try {
-                    const decodedCloseUri = decodeURIComponent(closeUriMatch[1]);
-                    if (decodedCloseUri.includes('access_token')) {
-                        const fragment = decodedCloseUri.split('#')[1];
-                        if (fragment) {
-                            const fragmentParams = new URLSearchParams(fragment);
-                            access_token = fragmentParams.get('access_token');
-                        }
-                    }
-                } catch (e) {}
-            }
-        }
-
-        if (!access_token) {
-            // Alternative method: Try direct OAuth approach
-            console.log('\nTrying alternative method...');
-            
-            const oauthResponse = await axios.get('https://www.facebook.com/v2.3/dialog/oauth', {
-                headers: headers1,
-                params: {
-                    'redirect_uri': 'https://www.facebook.com/connect/login_success.html',
-                    'scope': 'email,public_profile',
-                    'response_type': 'token',
-                    'client_id': '350685531728',
-                },
-                maxRedirects: 5
+        // Method 1: Direct OAuth with login_success redirect
+        console.log('📌 Method 1: Direct OAuth...');
+        try {
+            const oauthUrl = 'https://www.facebook.com/dialog/oauth';
+            const oauthParams = new URLSearchParams({
+                client_id: '124024574287414',
+                redirect_uri: 'https://www.facebook.com/connect/login_success.html',
+                scope: 'public_profile,email',
+                response_type: 'token'
             });
-            
-            // Check final URL for token
-            if (oauthResponse.request && oauthResponse.request.res && oauthResponse.request.res.responseUrl) {
-                const finalUrl = oauthResponse.request.res.responseUrl;
-                if (finalUrl.includes('access_token=')) {
-                    const fragment = finalUrl.split('#')[1] || finalUrl.split('?')[1];
-                    if (fragment) {
-                        const params = new URLSearchParams(fragment);
-                        access_token = params.get('access_token');
+
+            const response = await axios.get(`${oauthUrl}?${oauthParams.toString()}`, {
+                headers: headers,
+                maxRedirects: 0,
+                validateStatus: (status) => status >= 200 && status < 400
+            });
+
+            if (response.headers.location) {
+                const location = response.headers.location;
+                if (location.includes('access_token=')) {
+                    const token = location.match(/access_token=([^&]+)/)?.[1];
+                    if (token) {
+                        console.log('\n✅ Access Token (Method 1):', token);
+                        await convertToEAAG(token);
+                        rl.close();
+                        return;
                     }
+                }
+            }
+        } catch (e) {
+            if (e.response?.headers?.location?.includes('access_token=')) {
+                const token = e.response.headers.location.match(/access_token=([^&]+)/)?.[1];
+                if (token) {
+                    console.log('\n✅ Access Token (Method 1):', token);
+                    await convertToEAAG(token);
+                    rl.close();
+                    return;
                 }
             }
         }
 
-        if (access_token) {
-            console.log('\n✅ Access Token:', access_token);
-            
-            // Convert to EAAG token
-            try {
-                const sessionResponse = await axios.post('https://api.facebook.com/method/auth.getSessionforApp', new URLSearchParams({
-                    'access_token': access_token,
-                    'format': 'json',
-                    'new_app_id': '275254692598279',
-                    'generate_session_cookies': '1'
-                }));
-                
-                if (sessionResponse.data.access_token) {
-                    console.log('\n✅ EAAG Token:', sessionResponse.data.access_token);
-                } else {
-                    console.log('\n⚠️ Session Response:', sessionResponse.data);
+        // Method 2: Instagram app OAuth
+        console.log('📌 Method 2: Instagram OAuth...');
+        try {
+            const igOauthParams = new URLSearchParams({
+                client_id: '124024574287414',
+                redirect_uri: 'https://www.instagram.com/accounts/signup/',
+                scope: 'email',
+                response_type: 'token'
+            });
+
+            const response = await axios.get(`https://www.facebook.com/dialog/oauth?${igOauthParams.toString()}`, {
+                headers: headers,
+                maxRedirects: 0,
+                validateStatus: (status) => status >= 200 && status < 400
+            });
+
+            if (response.headers.location?.includes('access_token=')) {
+                const token = response.headers.location.match(/access_token=([^&]+)/)?.[1];
+                if (token) {
+                    console.log('\n✅ Access Token (Method 2):', token);
+                    await convertToEAAG(token);
+                    rl.close();
+                    return;
                 }
-            } catch (sessionError) {
-                console.log('\n⚠️ Could not convert to EAAG token:', sessionError.message);
             }
-        } else {
-            console.log('\n❌ Không thể lấy access token. Thử phương pháp khác...');
-            
-            // Last resort: Business Suite token method
-            console.log('\nTrying Business Suite method...');
-            
+        } catch (e) {
+            if (e.response?.headers?.location?.includes('access_token=')) {
+                const token = e.response.headers.location.match(/access_token=([^&]+)/)?.[1];
+                if (token) {
+                    console.log('\n✅ Access Token (Method 2):', token);
+                    await convertToEAAG(token);
+                    rl.close();
+                    return;
+                }
+            }
+        }
+
+        // Method 3: Business Suite EAAG extraction
+        console.log('📌 Method 3: Business Suite...');
+        try {
             const bsResponse = await axios.get('https://business.facebook.com/content_management', {
-                headers: {
-                    ...headers1,
-                    'Cookie': cookie
-                }
+                headers: headers
             });
-            
-            const eaagMatch = bsResponse.data.match(/EAAG[a-zA-Z0-9]+/);
+
+            const eaagMatch = bsResponse.data.match(/"accessToken":"(EAAG[^"]+)"/);
             if (eaagMatch) {
-                console.log('\n✅ EAAG Token (Business Suite):', eaagMatch[0]);
-            } else {
-                console.log('\n❌ Không thể lấy token từ Business Suite');
+                console.log('\n✅ EAAG Token (Business Suite):', eaagMatch[1]);
+                rl.close();
+                return;
+            }
+
+            const eaagMatch2 = bsResponse.data.match(/EAAG[a-zA-Z0-9]{50,}/);
+            if (eaagMatch2) {
+                console.log('\n✅ EAAG Token (Business Suite):', eaagMatch2[0]);
+                rl.close();
+                return;
+            }
+        } catch (e) {}
+
+        // Method 4: Ads Manager
+        console.log('📌 Method 4: Ads Manager...');
+        try {
+            const adsResponse = await axios.get('https://www.facebook.com/adsmanager/manage/campaigns', {
+                headers: headers
+            });
+
+            const eaagMatch = adsResponse.data.match(/"accessToken":"(EAAG[^"]+)"/);
+            if (eaagMatch) {
+                console.log('\n✅ EAAG Token (Ads Manager):', eaagMatch[1]);
+                rl.close();
+                return;
+            }
+        } catch (e) {}
+
+        // Method 5: Graph API Explorer App
+        console.log('📌 Method 5: Graph API Explorer...');
+        try {
+            const explorerParams = new URLSearchParams({
+                client_id: '145634995501895',
+                redirect_uri: 'https://developers.facebook.com/tools/explorer/callback',
+                scope: 'public_profile,email',
+                response_type: 'token'
+            });
+
+            const response = await axios.get(`https://www.facebook.com/dialog/oauth?${explorerParams.toString()}`, {
+                headers: headers,
+                maxRedirects: 0,
+                validateStatus: (status) => status >= 200 && status < 400
+            });
+
+            if (response.headers.location?.includes('access_token=')) {
+                const token = response.headers.location.match(/access_token=([^&]+)/)?.[1];
+                if (token) {
+                    console.log('\n✅ Access Token (Method 5):', token);
+                    await convertToEAAG(token);
+                    rl.close();
+                    return;
+                }
+            }
+        } catch (e) {
+            if (e.response?.headers?.location?.includes('access_token=')) {
+                const token = e.response.headers.location.match(/access_token=([^&]+)/)?.[1];
+                if (token) {
+                    console.log('\n✅ Access Token (Method 5):', token);
+                    await convertToEAAG(token);
+                    rl.close();
+                    return;
+                }
             }
         }
+
+        // Method 6: Mobile app token
+        console.log('📌 Method 6: Mobile App OAuth...');
+        try {
+            const mobileParams = new URLSearchParams({
+                client_id: '6628568379',
+                redirect_uri: 'fbconnect://success',
+                scope: 'email,publish_actions',
+                response_type: 'token'
+            });
+
+            const response = await axios.get(`https://www.facebook.com/dialog/oauth?${mobileParams.toString()}`, {
+                headers: {
+                    ...headers,
+                    'user-agent': 'Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36'
+                },
+                maxRedirects: 0,
+                validateStatus: (status) => status >= 200 && status < 400
+            });
+
+            if (response.headers.location?.includes('access_token=')) {
+                const token = response.headers.location.match(/access_token=([^&]+)/)?.[1];
+                if (token) {
+                    console.log('\n✅ Access Token (Method 6):', token);
+                    await convertToEAAG(token);
+                    rl.close();
+                    return;
+                }
+            }
+        } catch (e) {
+            if (e.response?.headers?.location?.includes('access_token=')) {
+                const token = e.response.headers.location.match(/access_token=([^&]+)/)?.[1];
+                if (token) {
+                    console.log('\n✅ Access Token (Method 6):', token);
+                    await convertToEAAG(token);
+                    rl.close();
+                    return;
+                }
+            }
+        }
+
+        // Method 7: Page token from www
+        console.log('📌 Method 7: WWW Token Extraction...');
+        try {
+            const wwwResponse = await axios.get('https://www.facebook.com/', {
+                headers: headers
+            });
+
+            // Try to find any token in the page
+            const dtsgMatch = wwwResponse.data.match(/\["DTSGInitData",\[\],\{"token":"([^"]+)"/);
+            const lsdMatch = wwwResponse.data.match(/"LSD",\[\],\{"token":"([^"]+)"/);
+            
+            if (dtsgMatch) {
+                console.log('fb_dtsg:', dtsgMatch[1]);
+            }
+            if (lsdMatch) {
+                console.log('lsd:', lsdMatch[1]);
+            }
+
+            const tokenMatch = wwwResponse.data.match(/accessToken['":\s]+['"]([^'"]+)['"]/);
+            if (tokenMatch) {
+                console.log('\n✅ Access Token (WWW):', tokenMatch[1]);
+                await convertToEAAG(tokenMatch[1]);
+                rl.close();
+                return;
+            }
+        } catch (e) {}
+
+        // Method 8: Creator Studio
+        console.log('📌 Method 8: Creator Studio...');
+        try {
+            const creatorResponse = await axios.get('https://business.facebook.com/creatorstudio/home', {
+                headers: headers
+            });
+
+            const eaagMatch = creatorResponse.data.match(/EAAG[a-zA-Z0-9]{50,}/);
+            if (eaagMatch) {
+                console.log('\n✅ EAAG Token (Creator Studio):', eaagMatch[0]);
+                rl.close();
+                return;
+            }
+        } catch (e) {}
+
+        console.log('\n❌ Không thể lấy được token. Cookie có thể đã hết hạn hoặc bị checkpoint.');
+        console.log('💡 Hãy thử đăng nhập lại Facebook và lấy cookie mới.');
 
     } catch (error) {
-        if (error.response) {
-            console.error('Error Response:', error.response.status, error.response.data);
-        } else {
-            console.error('Error:', error.message);
-        }
+        console.error('Error:', error.message);
     } finally {
         rl.close();
     }
 });
+
+async function convertToEAAG(accessToken) {
+    try {
+        console.log('\n🔄 Converting to EAAG token...');
+        
+        const sessionResponse = await axios.post('https://api.facebook.com/method/auth.getSessionforApp', 
+            new URLSearchParams({
+                'access_token': accessToken,
+                'format': 'json',
+                'new_app_id': '275254692598279',
+                'generate_session_cookies': '1'
+            })
+        );
+
+        if (sessionResponse.data.access_token) {
+            console.log('✅ EAAG Token:', sessionResponse.data.access_token);
+        } else if (sessionResponse.data.error_msg) {
+            console.log('⚠️ Conversion error:', sessionResponse.data.error_msg);
+            console.log('ℹ️ Using original token instead');
+        }
+    } catch (error) {
+        console.log('⚠️ Could not convert to EAAG:', error.message);
+    }
+}
