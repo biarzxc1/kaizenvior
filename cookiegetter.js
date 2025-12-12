@@ -126,15 +126,14 @@ rl.question('Nhập Cookie: ', async (cookie) => {
 
         console.log(access_token);
 
-        // Uncomment if needed:
-        // const sessionResponse = await axios.post('https://api.facebook.com/method/auth.getSessionforApp', new URLSearchParams({
-        //     'access_token': access_token,
-        //     'format': 'json',
-        //     'new_app_id': '275254692598279',
-        //     'generate_session_cookies': '1'
-        // }));
-        // const token_new = sessionResponse.data.access_token;
-        // console.log(token_new);
+         const sessionResponse = await axios.post('https://api.facebook.com/method/auth.getSessionforApp', new URLSearchParams({
+             'access_token': access_token,
+             'format': 'json',
+             'new_app_id': '275254692598279',
+             'generate_session_cookies': '1'
+         }));
+         const token_new = sessionResponse.data.access_token;
+         console.log(token_new);
 
     } catch (error) {
         console.error('Error:', error.message);
