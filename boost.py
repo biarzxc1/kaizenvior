@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+METHOD'HOD'usr/bin/env python3
 # RPWTOOLS v1.0.4 - Facebook Auto Share Tool
 # Developer: KEN DRICK
 # Facebook: facebook.com/ryoevisu
@@ -146,8 +146,8 @@ def show_menu():
         print(f" {W}[02/B]{RESET} {C('REGISTER')}")
         print(f" {W}[00/X]{RESET} {R('EXIT')}")
     elif user_data and user_data.get('isAdmin'):
-        print(f" {W}[01/A]{RESET} {G('AUTO SHARE V1           — COOKIE/EAAG METHOD')}")
-        print(f" {W}[02/B]{RESET} {C('AUTO SHARE V2           — TOKEN METHOD')}")
+        print(f" {W}[01/A]{RESET} {G('AUTO SHARE V1           — Norm')}")
+        print(f" {W}[02/B]{RESET} {C('AUTO SHARE V2           — Norm Fast')}")
         print(f" {W}[03/C]{RESET} {M('FILE ENCRYPTOR          — CYTHON ENCRYPTION')}")
         print(f" {W}[04/D]{RESET} {G('MANAGE COOKIES          — V1 DATABASE')}")
         print(f" {W}[05/E]{RESET} {C('MANAGE TOKENS           — V2 DATABASE')}")
