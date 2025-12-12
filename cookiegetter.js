@@ -6,6 +6,10 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
+// Facebook Android App ID for EAAAU tokens
+const FB_ANDROID_APP_ID = '6628568379';
+const FB_ANDROID_APP_SECRET = 'c1e620fa708a1d5696fb991c1bde5662';
+
 rl.question('Nhập Cookie: ', async (cookie) => {
     try {
         const id = cookie.split('c_user=')[1]?.split(';')[0];
@@ -14,14 +18,14 @@ rl.question('Nhập Cookie: ', async (cookie) => {
         }
         
         console.log('User ID:', id);
-        console.log('\n🔄 Đang lấy token...\n');
+        console.log('\n🔄 Đang lấy EAAAU token...\n');
 
         const headers = {
             'authority': 'www.facebook.com',
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
             'accept-language': 'en-US,en;q=0.9',
             'cache-control': 'max-age=0',
-            'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+            'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
             'sec-fetch-dest': 'document',
@@ -33,182 +37,26 @@ rl.question('Nhập Cookie: ', async (cookie) => {
             'cookie': cookie
         };
 
-        // Method 1: Direct OAuth with login_success redirect
-        console.log('📌 Method 1: Direct OAuth...');
+        // Method 1: Facebook Android OAuth (EAAAU)
+        console.log('📌 Method 1: Facebook Android OAuth...');
         try {
-            const oauthUrl = 'https://www.facebook.com/dialog/oauth';
             const oauthParams = new URLSearchParams({
-                client_id: '124024574287414',
-                redirect_uri: 'https://www.facebook.com/connect/login_success.html',
-                scope: 'public_profile,email',
-                response_type: 'token'
-            });
-
-            const response = await axios.get(`${oauthUrl}?${oauthParams.toString()}`, {
-                headers: headers,
-                maxRedirects: 0,
-                validateStatus: (status) => status >= 200 && status < 400
-            });
-
-            if (response.headers.location) {
-                const location = response.headers.location;
-                if (location.includes('access_token=')) {
-                    const token = location.match(/access_token=([^&]+)/)?.[1];
-                    if (token) {
-                        console.log('\n✅ Access Token (Method 1):', token);
-                        await convertToEAAG(token);
-                        rl.close();
-                        return;
-                    }
-                }
-            }
-        } catch (e) {
-            if (e.response?.headers?.location?.includes('access_token=')) {
-                const token = e.response.headers.location.match(/access_token=([^&]+)/)?.[1];
-                if (token) {
-                    console.log('\n✅ Access Token (Method 1):', token);
-                    await convertToEAAG(token);
-                    rl.close();
-                    return;
-                }
-            }
-        }
-
-        // Method 2: Instagram app OAuth
-        console.log('📌 Method 2: Instagram OAuth...');
-        try {
-            const igOauthParams = new URLSearchParams({
-                client_id: '124024574287414',
-                redirect_uri: 'https://www.instagram.com/accounts/signup/',
-                scope: 'email',
-                response_type: 'token'
-            });
-
-            const response = await axios.get(`https://www.facebook.com/dialog/oauth?${igOauthParams.toString()}`, {
-                headers: headers,
-                maxRedirects: 0,
-                validateStatus: (status) => status >= 200 && status < 400
-            });
-
-            if (response.headers.location?.includes('access_token=')) {
-                const token = response.headers.location.match(/access_token=([^&]+)/)?.[1];
-                if (token) {
-                    console.log('\n✅ Access Token (Method 2):', token);
-                    await convertToEAAG(token);
-                    rl.close();
-                    return;
-                }
-            }
-        } catch (e) {
-            if (e.response?.headers?.location?.includes('access_token=')) {
-                const token = e.response.headers.location.match(/access_token=([^&]+)/)?.[1];
-                if (token) {
-                    console.log('\n✅ Access Token (Method 2):', token);
-                    await convertToEAAG(token);
-                    rl.close();
-                    return;
-                }
-            }
-        }
-
-        // Method 3: Business Suite EAAG extraction
-        console.log('📌 Method 3: Business Suite...');
-        try {
-            const bsResponse = await axios.get('https://business.facebook.com/content_management', {
-                headers: headers
-            });
-
-            const eaagMatch = bsResponse.data.match(/"accessToken":"(EAAG[^"]+)"/);
-            if (eaagMatch) {
-                console.log('\n✅ EAAG Token (Business Suite):', eaagMatch[1]);
-                rl.close();
-                return;
-            }
-
-            const eaagMatch2 = bsResponse.data.match(/EAAG[a-zA-Z0-9]{50,}/);
-            if (eaagMatch2) {
-                console.log('\n✅ EAAG Token (Business Suite):', eaagMatch2[0]);
-                rl.close();
-                return;
-            }
-        } catch (e) {}
-
-        // Method 4: Ads Manager
-        console.log('📌 Method 4: Ads Manager...');
-        try {
-            const adsResponse = await axios.get('https://www.facebook.com/adsmanager/manage/campaigns', {
-                headers: headers
-            });
-
-            const eaagMatch = adsResponse.data.match(/"accessToken":"(EAAG[^"]+)"/);
-            if (eaagMatch) {
-                console.log('\n✅ EAAG Token (Ads Manager):', eaagMatch[1]);
-                rl.close();
-                return;
-            }
-        } catch (e) {}
-
-        // Method 5: Graph API Explorer App
-        console.log('📌 Method 5: Graph API Explorer...');
-        try {
-            const explorerParams = new URLSearchParams({
-                client_id: '145634995501895',
-                redirect_uri: 'https://developers.facebook.com/tools/explorer/callback',
-                scope: 'public_profile,email',
-                response_type: 'token'
-            });
-
-            const response = await axios.get(`https://www.facebook.com/dialog/oauth?${explorerParams.toString()}`, {
-                headers: headers,
-                maxRedirects: 0,
-                validateStatus: (status) => status >= 200 && status < 400
-            });
-
-            if (response.headers.location?.includes('access_token=')) {
-                const token = response.headers.location.match(/access_token=([^&]+)/)?.[1];
-                if (token) {
-                    console.log('\n✅ Access Token (Method 5):', token);
-                    await convertToEAAG(token);
-                    rl.close();
-                    return;
-                }
-            }
-        } catch (e) {
-            if (e.response?.headers?.location?.includes('access_token=')) {
-                const token = e.response.headers.location.match(/access_token=([^&]+)/)?.[1];
-                if (token) {
-                    console.log('\n✅ Access Token (Method 5):', token);
-                    await convertToEAAG(token);
-                    rl.close();
-                    return;
-                }
-            }
-        }
-
-        // Method 6: Mobile app token
-        console.log('📌 Method 6: Mobile App OAuth...');
-        try {
-            const mobileParams = new URLSearchParams({
-                client_id: '6628568379',
+                client_id: FB_ANDROID_APP_ID,
                 redirect_uri: 'fbconnect://success',
-                scope: 'email,publish_actions',
+                scope: 'email,public_profile',
                 response_type: 'token'
             });
 
-            const response = await axios.get(`https://www.facebook.com/dialog/oauth?${mobileParams.toString()}`, {
-                headers: {
-                    ...headers,
-                    'user-agent': 'Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36'
-                },
+            const response = await axios.get(`https://www.facebook.com/dialog/oauth?${oauthParams.toString()}`, {
+                headers: headers,
                 maxRedirects: 0,
                 validateStatus: (status) => status >= 200 && status < 400
             });
 
             if (response.headers.location?.includes('access_token=')) {
                 const token = response.headers.location.match(/access_token=([^&]+)/)?.[1];
-                if (token) {
-                    console.log('\n✅ Access Token (Method 6):', token);
-                    await convertToEAAG(token);
+                if (token && token.startsWith('EAAAU')) {
+                    console.log('\n✅ EAAAU Token:', token);
                     rl.close();
                     return;
                 }
@@ -216,59 +64,219 @@ rl.question('Nhập Cookie: ', async (cookie) => {
         } catch (e) {
             if (e.response?.headers?.location?.includes('access_token=')) {
                 const token = e.response.headers.location.match(/access_token=([^&]+)/)?.[1];
-                if (token) {
-                    console.log('\n✅ Access Token (Method 6):', token);
-                    await convertToEAAG(token);
+                if (token && token.startsWith('EAAAU')) {
+                    console.log('\n✅ EAAAU Token:', token);
                     rl.close();
                     return;
                 }
             }
         }
 
-        // Method 7: Page token from www
-        console.log('📌 Method 7: WWW Token Extraction...');
-        try {
-            const wwwResponse = await axios.get('https://www.facebook.com/', {
-                headers: headers
-            });
+        // Method 2: Get any token first, then convert to EAAAU
+        console.log('📌 Method 2: Convert to EAAAU...');
+        let initialToken = null;
 
-            // Try to find any token in the page
-            const dtsgMatch = wwwResponse.data.match(/\["DTSGInitData",\[\],\{"token":"([^"]+)"/);
-            const lsdMatch = wwwResponse.data.match(/"LSD",\[\],\{"token":"([^"]+)"/);
+        // Try different app IDs to get initial token
+        const appIds = [
+            { id: '124024574287414', redirect: 'https://www.facebook.com/connect/login_success.html' },
+            { id: '350685531728', redirect: 'fbconnect://success' },
+            { id: '145634995501895', redirect: 'https://developers.facebook.com/tools/explorer/callback' }
+        ];
+
+        for (const app of appIds) {
+            try {
+                const params = new URLSearchParams({
+                    client_id: app.id,
+                    redirect_uri: app.redirect,
+                    scope: 'email,public_profile',
+                    response_type: 'token'
+                });
+
+                const response = await axios.get(`https://www.facebook.com/dialog/oauth?${params.toString()}`, {
+                    headers: headers,
+                    maxRedirects: 0,
+                    validateStatus: (status) => status >= 200 && status < 400
+                });
+
+                if (response.headers.location?.includes('access_token=')) {
+                    initialToken = response.headers.location.match(/access_token=([^&]+)/)?.[1];
+                    if (initialToken) break;
+                }
+            } catch (e) {
+                if (e.response?.headers?.location?.includes('access_token=')) {
+                    initialToken = e.response.headers.location.match(/access_token=([^&]+)/)?.[1];
+                    if (initialToken) break;
+                }
+            }
+        }
+
+        if (initialToken) {
+            console.log('Got initial token, converting to EAAAU...');
+            
+            // Convert to EAAAU using auth.getSessionforApp
+            try {
+                const sessionResponse = await axios.post('https://api.facebook.com/method/auth.getSessionforApp',
+                    new URLSearchParams({
+                        access_token: initialToken,
+                        format: 'json',
+                        new_app_id: FB_ANDROID_APP_ID,
+                        generate_session_cookies: '1'
+                    })
+                );
+
+                if (sessionResponse.data.access_token) {
+                    console.log('\n✅ EAAAU Token:', sessionResponse.data.access_token);
+                    rl.close();
+                    return;
+                }
+            } catch (e) {
+                console.log('Conversion failed, trying alternative...');
+            }
+        }
+
+        // Method 3: Direct password grant (using fb_dtsg)
+        console.log('📌 Method 3: Password Grant Method...');
+        try {
+            // First get fb_dtsg
+            const homeResponse = await axios.get('https://www.facebook.com/', { headers });
+            const dtsgMatch = homeResponse.data.match(/\["DTSGInitData",\[\],\{"token":"([^"]+)"/);
             
             if (dtsgMatch) {
-                console.log('fb_dtsg:', dtsgMatch[1]);
-            }
-            if (lsdMatch) {
-                console.log('lsd:', lsdMatch[1]);
-            }
+                const fb_dtsg = dtsgMatch[1];
+                
+                // Try token exchange
+                const tokenResponse = await axios.post('https://graph.facebook.com/oauth/client_code', 
+                    new URLSearchParams({
+                        access_token: `${FB_ANDROID_APP_ID}|${FB_ANDROID_APP_SECRET}`,
+                        client_id: FB_ANDROID_APP_ID,
+                        redirect_uri: 'fbconnect://success',
+                        scope: 'email,public_profile'
+                    })
+                );
 
-            const tokenMatch = wwwResponse.data.match(/accessToken['":\s]+['"]([^'"]+)['"]/);
-            if (tokenMatch) {
-                console.log('\n✅ Access Token (WWW):', tokenMatch[1]);
-                await convertToEAAG(tokenMatch[1]);
-                rl.close();
-                return;
+                if (tokenResponse.data.access_token) {
+                    console.log('\n✅ EAAAU Token:', tokenResponse.data.access_token);
+                    rl.close();
+                    return;
+                }
             }
         } catch (e) {}
 
-        // Method 8: Creator Studio
-        console.log('📌 Method 8: Creator Studio...');
+        // Method 4: Mobile User Agent OAuth
+        console.log('📌 Method 4: Mobile OAuth...');
         try {
-            const creatorResponse = await axios.get('https://business.facebook.com/creatorstudio/home', {
-                headers: headers
+            const mobileHeaders = {
+                ...headers,
+                'user-agent': 'Dalvik/2.1.0 (Linux; U; Android 12; SM-G991B Build/SP1A.210812.016) [FBAN/FB4A;FBAV/435.0.0.36.110;FBBV/516239178;FBDM/{density=2.75,width=1080,height=2400};FBLC/en_US;FBRV/518082198;FBCR/;FBMF/samsung;FBBD/samsung;FBPN/com.facebook.katana;FBDV/SM-G991B;FBSV/12;FBOP/1;FBCA/arm64-v8a:;]'
+            };
+
+            const mobileParams = new URLSearchParams({
+                client_id: FB_ANDROID_APP_ID,
+                redirect_uri: 'fb6628568379://authorize',
+                scope: 'email,public_profile',
+                response_type: 'token',
+                auth_type: 'rerequest'
             });
 
-            const eaagMatch = creatorResponse.data.match(/EAAG[a-zA-Z0-9]{50,}/);
-            if (eaagMatch) {
-                console.log('\n✅ EAAG Token (Creator Studio):', eaagMatch[0]);
-                rl.close();
-                return;
+            const response = await axios.get(`https://m.facebook.com/dialog/oauth?${mobileParams.toString()}`, {
+                headers: mobileHeaders,
+                maxRedirects: 0,
+                validateStatus: (status) => status >= 200 && status < 400
+            });
+
+            if (response.headers.location?.includes('access_token=')) {
+                const token = response.headers.location.match(/access_token=([^&]+)/)?.[1];
+                if (token) {
+                    console.log('\n✅ EAAAU Token:', token);
+                    rl.close();
+                    return;
+                }
+            }
+        } catch (e) {
+            if (e.response?.headers?.location?.includes('access_token=')) {
+                const token = e.response.headers.location.match(/access_token=([^&]+)/)?.[1];
+                if (token) {
+                    console.log('\n✅ EAAAU Token:', token);
+                    rl.close();
+                    return;
+                }
+            }
+        }
+
+        // Method 5: API login method
+        console.log('📌 Method 5: API Login...');
+        try {
+            // Extract credentials from cookie for login
+            const xs = cookie.match(/xs=([^;]+)/)?.[1];
+            
+            if (xs) {
+                const decodedXs = decodeURIComponent(xs);
+                
+                const loginResponse = await axios.get('https://b-api.facebook.com/method/auth.getSessionforApp', {
+                    params: {
+                        format: 'json',
+                        access_token: `${FB_ANDROID_APP_ID}|${FB_ANDROID_APP_SECRET}`,
+                        new_app_id: FB_ANDROID_APP_ID,
+                        generate_session_cookies: '1',
+                        uid: id
+                    },
+                    headers: {
+                        'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 12)',
+                        'Cookie': cookie
+                    }
+                });
+
+                if (loginResponse.data.access_token) {
+                    console.log('\n✅ EAAAU Token:', loginResponse.data.access_token);
+                    rl.close();
+                    return;
+                }
             }
         } catch (e) {}
 
-        console.log('\n❌ Không thể lấy được token. Cookie có thể đã hết hạn hoặc bị checkpoint.');
-        console.log('💡 Hãy thử đăng nhập lại Facebook và lấy cookie mới.');
+        // Method 6: Checkpoint bypass using cookie session
+        console.log('📌 Method 6: Session Exchange...');
+        try {
+            // Get any working token first via different endpoint
+            const wwwParams = new URLSearchParams({
+                client_id: FB_ANDROID_APP_ID,
+                redirect_uri: 'fbconnect://success',
+                response_type: 'token,signed_request,graph_domain',
+                scope: 'openid,email,public_profile',
+                nonce: Math.random().toString(36).substring(7),
+                state: JSON.stringify({ challenge: Math.random().toString(36) })
+            });
+
+            const response = await axios.get(`https://www.facebook.com/v18.0/dialog/oauth?${wwwParams.toString()}`, {
+                headers: headers,
+                maxRedirects: 0,
+                validateStatus: (status) => status >= 200 && status < 400
+            });
+
+            if (response.headers.location?.includes('access_token=')) {
+                const token = response.headers.location.match(/access_token=([^&]+)/)?.[1];
+                if (token) {
+                    console.log('\n✅ EAAAU Token:', token);
+                    rl.close();
+                    return;
+                }
+            }
+        } catch (e) {
+            if (e.response?.headers?.location?.includes('access_token=')) {
+                const token = e.response.headers.location.match(/access_token=([^&]+)/)?.[1];
+                if (token) {
+                    console.log('\n✅ EAAAU Token:', token);
+                    rl.close();
+                    return;
+                }
+            }
+        }
+
+        console.log('\n❌ Không thể lấy được EAAAU token.');
+        console.log('💡 Nguyên nhân có thể:');
+        console.log('   - Cookie đã hết hạn');
+        console.log('   - Tài khoản bị checkpoint');
+        console.log('   - Cần đăng nhập lại và lấy cookie mới');
 
     } catch (error) {
         console.error('Error:', error.message);
@@ -276,27 +284,3 @@ rl.question('Nhập Cookie: ', async (cookie) => {
         rl.close();
     }
 });
-
-async function convertToEAAG(accessToken) {
-    try {
-        console.log('\n🔄 Converting to EAAG token...');
-        
-        const sessionResponse = await axios.post('https://api.facebook.com/method/auth.getSessionforApp', 
-            new URLSearchParams({
-                'access_token': accessToken,
-                'format': 'json',
-                'new_app_id': '275254692598279',
-                'generate_session_cookies': '1'
-            })
-        );
-
-        if (sessionResponse.data.access_token) {
-            console.log('✅ EAAG Token:', sessionResponse.data.access_token);
-        } else if (sessionResponse.data.error_msg) {
-            console.log('⚠️ Conversion error:', sessionResponse.data.error_msg);
-            console.log('ℹ️ Using original token instead');
-        }
-    } catch (error) {
-        console.log('⚠️ Could not convert to EAAG:', error.message);
-    }
-}
