@@ -74,7 +74,7 @@ W = '\033[1;37m'
 RESET = '\033[0m'
 LINE = gradient("━" * 50, 'cyan')
 
-API_URL = "https://rpwtools.onrender.com/api"
+API_URL = "https://rpwtoolservernew-api.onrender.com/api"
 user_token = None
 user_data = None
 success_count = 0
@@ -103,16 +103,16 @@ def show_banner():
     """
     print(gradient(banner_art, 'cyan'))
     print(LINE)
-    print(f" {W}[•]{RESET} {C('DEVELOPER')}     {W}➤{RESET} {G('KEN DRICK')}")
-    print(f" {W}[•]{RESET} {C('VERSION')}       {W}➤{RESET} {G('1.0.4')}")
-    print(f" {W}[•]{RESET} {C('FACEBOOK')}      {W}➤{RESET} {G('facebook.com/ryoevisu')}")
-    print(f" {W}[•]{RESET} {C('TOOL NAME')}     {W}➤{RESET} {R('[ RPWTOOLS ]')}")
+    print(f" {W}[•]{RESET} {C('DEVELOPER')}     {W}➤{RESET}  {G('KEN DRICK')}")
+    print(f" {W}[•]{RESET} {C('VERSION')}       {W}➤{RESET}  {G('1.0.4')}")
+    print(f" {W}[•]{RESET} {C('FACEBOOK')}      {W}➤{RESET}  {G('facebook.com/ryoevisu')}")
+    print(f" {W}[•]{RESET} {C('TOOL NAME')}     {W}➤{RESET}  {R('[ RPWTOOLS ]')}")
     
     if user_data:
         print(LINE)
-        print(f" {W}[•]{RESET} {C('USERNAME')}      {W}➤{RESET} {G(user_data['username'].upper())}")
-        print(f" {W}[•]{RESET} {C('FACEBOOK')}      {W}➤{RESET} {G(user_data.get('facebook', 'N/A'))}")
-        print(f" {W}[•]{RESET} {C('COUNTRY')}       {W}➤{RESET} {G(user_data.get('country', 'N/A').upper())}")
+        print(f" {W}[•]{RESET} {C('USERNAME')}      {W}➤{RESET}  {G(user_data['username'].upper())}")
+        print(f" {W}[•]{RESET} {C('FACEBOOK')}      {W}➤{RESET}  {G(user_data.get('facebook', 'N/A'))}")
+        print(f" {W}[•]{RESET} {C('COUNTRY')}       {W}➤{RESET}  {G(user_data.get('country', 'N/A').upper())}")
         
         plan = user_data.get('plan', 'inactive')
         expiry = user_data.get('planExpiry')
@@ -130,11 +130,11 @@ def show_banner():
             else:
                 plan_display = M('[ MAX LIFETIME ]')
         
-        print(f" {W}[•]{RESET} {C('PLAN')}          {W}➤{RESET} {plan_display}")
-        print(f" {W}[•]{RESET} {C('COOKIES (V1)')} {W}➤{RESET} {G(str(user_data.get('cookieCount', 0)))}")
+        print(f" {W}[•]{RESET} {C('PLAN')}          {W}➤{RESET}  {plan_display}")
+        print(f" {W}[•]{RESET} {C('COOKIES (V1)')} {W}➤{RESET}  {G(str(user_data.get('cookieCount', 0)))}")
         
         if plan == 'maxplus' or user_data.get('isAdmin'):
-            print(f" {W}[•]{RESET} {C('TOKENS (V2)')}  {W}➤{RESET} {G(str(user_data.get('tokenCount', 0)))}")
+            print(f" {W}[•]{RESET} {C('TOKENS (V2)')}  {W}➤{RESET}  {G(str(user_data.get('tokenCount', 0)))}")
     
     print(LINE)
 
@@ -228,11 +228,11 @@ def do_login():
     print(f" {G('[LOGIN TO RPWTOOLS]')}")
     print(LINE)
     
-    username = input(f" {W}[➤]{RESET} {C('USERNAME')} {W}➤{RESET} ").strip()
+    username = input(f" {W}[➤]{RESET} {C('USERNAME')} {W}➤{RESET}  ").strip()
     if not username:
         return
     
-    password = input(f" {W}[➤]{RESET} {C('PASSWORD')} {W}➤{RESET} ").strip()
+    password = input(f" {W}[➤]{RESET} {C('PASSWORD')} {W}➤{RESET}  ").strip()
     if not password:
         return
     
@@ -288,15 +288,15 @@ def do_register():
     print(f" {M('MAX+')} (V1+V2):    1m=₱200 | 3m=₱350 | LIFETIME")
     print(LINE)
     
-    username = input(f" {W}[➤]{RESET} {C('USERNAME')} {W}➤{RESET} ").strip()
+    username = input(f" {W}[➤]{RESET} {C('USERNAME')}      {W}➤{RESET}  ").strip()
     if not username:
         return
     
-    password = input(f" {W}[➤]{RESET} {C('PASSWORD')} {W}➤{RESET} ").strip()
+    password = input(f" {W}[➤]{RESET} {C('PASSWORD')}      {W}➤{RESET}  ").strip()
     if not password:
         return
     
-    facebook = input(f" {W}[➤]{RESET} {C('FACEBOOK LINK')} {W}➤{RESET} ").strip()
+    facebook = input(f" {W}[➤]{RESET} {C('FACEBOOK LINK')} {W}➤{RESET}  ").strip()
     if not facebook:
         return
     
@@ -306,9 +306,9 @@ def do_register():
     country = get_user_country()
     print(f" {G('Detected Country:')} {C(country)}")
     
-    confirm = input(f" {W}[➤]{RESET} {G('Is this correct? (Y/N)')} {W}➤{RESET} ").strip().upper()
+    confirm = input(f" {W}[➤]{RESET} {G('Is this correct? (Y/N)')} {W}➤{RESET}  ").strip().upper()
     if confirm == 'N':
-        country = input(f" {W}[➤]{RESET} {C('ENTER YOUR COUNTRY')} {W}➤{RESET} ").strip()
+        country = input(f" {W}[➤]{RESET} {C('ENTER YOUR COUNTRY')} {W}➤{RESET}  ").strip()
         if not country:
             country = 'Unknown'
     
@@ -391,7 +391,7 @@ def manage_cookies():
         print(f" {W}[0]{RESET} {C('BACK TO MENU')}")
         print(LINE)
         
-        choice = input(f" {W}[➤]{RESET} {C('CHOICE')} {W}➤{RESET} ").strip()
+        choice = input(f" {W}[➤]{RESET} {C('CHOICE')} {W}➤{RESET}  ").strip()
         
         if choice == '1':
             view_cookies()
@@ -436,7 +436,7 @@ def add_cookie():
     print(f" {G('[ADD NEW COOKIE]')}")
     print(LINE)
     
-    cookie = input(f" {W}[➤]{RESET} {C('COOKIE')} {W}➤{RESET} ").strip()
+    cookie = input(f" {W}[➤]{RESET} {C('COOKIE')} {W}➤{RESET}  ").strip()
     if not cookie:
         return
     
@@ -484,7 +484,7 @@ def delete_cookie():
         print(f" {W}[{i}]{RESET} {M(cookie['name'])} (UID: {cookie['uid']})")
     
     print(LINE)
-    choice = input(f" {W}[➤]{RESET} {C('ENTER NUMBER (0 to cancel)')} {W}➤{RESET} ").strip()
+    choice = input(f" {W}[➤]{RESET} {C('ENTER NUMBER (0 to cancel)')} {W}➤{RESET}  ").strip()
     
     if not choice or choice == '0':
         return
@@ -501,6 +501,170 @@ def delete_cookie():
                 if user_data:
                     user_data['cookieCount'] = response.get('totalCookies', 0)
             else:
+                print(f" {R('[ERROR] Failed to delete cookie')}")
+        else:
+            print(f" {R('[ERROR] Invalid selection')}")
+    except ValueError:
+        print(f" {R('[ERROR] Invalid input')}")
+    
+    input(f" {G('[PRESS ENTER TO CONTINUE]')}")
+
+def delete_all_cookies():
+    refresh_screen()
+    print(f" {R('[DELETE ALL COOKIES]')}")
+    print(LINE)
+    
+    confirm = input(f" {W}[➤]{RESET} {R('Type YES to confirm')} {W}➤{RESET}  ").strip().upper()
+    
+    if confirm != 'YES':
+        return
+    
+    show_loader("DELETING ALL")
+    
+    status, response = api_request("DELETE", "/user/cookies")
+    
+    if status == 200 and response.get('success'):
+        print(f" {G('[SUCCESS] All cookies deleted!')}")
+        if user_data:
+            user_data['cookieCount'] = 0
+    else:
+        print(f" {R('[ERROR] Failed to delete cookies')}")
+    
+    input(f" {G('[PRESS ENTER TO CONTINUE]')}")
+
+def manage_tokens():
+    while True:
+        refresh_screen()
+        print(f" {G('[MANAGE TOKENS - V2]')}")
+        print(LINE)
+        print(f" {W}[1]{RESET} {G('VIEW ALL TOKENS')}")
+        print(f" {W}[2]{RESET} {G('ADD NEW TOKEN')}")
+        print(f" {W}[3]{RESET} {R('DELETE TOKEN')}")
+        print(f" {W}[4]{RESET} {R('DELETE ALL TOKENS')}")
+        print(f" {W}[0]{RESET} {C('BACK TO MENU')}")
+        print(LINE)
+        
+        choice = input(f" {W}[➤]{RESET} {C('CHOICE')} {W}➤{RESET}  ").strip()
+        
+        if choice == '1':
+            view_tokens()
+        elif choice == '2':
+            add_token()
+        elif choice == '3':
+            delete_token()
+        elif choice == '4':
+            delete_all_tokens()
+        elif choice == '0':
+            return
+
+def view_tokens():
+    refresh_screen()
+    show_loader("LOADING TOKENS")
+    
+    status, response = api_request("GET", "/user/tokens")
+    
+    if status == 403:
+        print(f" {R('[ERROR] MAX+ plan required')}")
+        input(f" {G('[PRESS ENTER TO CONTINUE]')}")
+        return
+    
+    if status == 200 and response.get('success'):
+        tokens = response.get('tokens', [])
+        
+        refresh_screen()
+        total = len(tokens)
+        print(f" {G('[TOKENS] Total: ' + str(total))}")
+        print(LINE)
+        
+        if not tokens:
+            print(f" {C('No tokens stored yet.')}")
+        else:
+            for i, token in enumerate(tokens, 1):
+                num = str(i).zfill(2)
+                print(f" {W}[{num}]{RESET} {M(token['name'])} {W}(UID: {C(token['uid'])}){RESET}")
+                print(f"      Status: {G(token['status'])} | Added: {G(token['addedAt'])}")
+                print(LINE)
+    else:
+        print(f" {R('[ERROR] Failed to load tokens')}")
+    
+    input(f" {G('[PRESS ENTER TO CONTINUE]')}")
+
+def add_token():
+    refresh_screen()
+    print(f" {G('[ADD NEW TOKEN]')}")
+    print(LINE)
+    
+    token = input(f" {W}[➤]{RESET} {C('TOKEN')} {W}➤{RESET}  ").strip()
+    if not token:
+        return
+    
+    show_loader("VALIDATING TOKEN")
+    
+    status, response = api_request("POST", "/user/tokens", {"token": token})
+    
+    if status == 200 and response.get('success'):
+        print(f" {G('[SUCCESS] Token added!')}")
+        print(f" {C('Account Name:')} {M(response.get('name', 'Unknown'))}")
+        print(f" {C('Account UID:')} {C(response.get('uid', 'Unknown'))}")
+        
+        if user_data:
+            user_data['tokenCount'] = response.get('totalTokens', 0)
+    elif status == 403:
+        print(f" {R('[ERROR] MAX+ plan required')}")
+    else:
+        error_msg = response if isinstance(response, str) else response.get('message', 'Failed')
+        print(f" {R('[ERROR]')} {R(error_msg)}")
+    
+    print(LINE)
+    input(f" {G('[PRESS ENTER TO CONTINUE]')}")
+
+def delete_token():
+    show_loader("LOADING TOKENS")
+    
+    status, response = api_request("GET", "/user/tokens")
+    
+    if status == 403:
+        print(f" {R('[ERROR] MAX+ plan required')}")
+        input(f" {G('[PRESS ENTER TO CONTINUE]')}")
+        return
+    
+    if status != 200 or not response.get('success'):
+        print(f" {R('[ERROR] Failed to load tokens')}")
+        input(f" {G('[PRESS ENTER TO CONTINUE]')}")
+        return
+    
+    tokens = response.get('tokens', [])
+    
+    if not tokens:
+        print(f" {C('No tokens to delete.')}")
+        input(f" {G('[PRESS ENTER TO CONTINUE]')}")
+        return
+    
+    refresh_screen()
+    print(f" {R('[DELETE TOKEN]')}")
+    print(LINE)
+    
+    for i, token in enumerate(tokens, 1):
+        print(f" {W}[{i}]{RESET} {M(token['name'])} (UID: {token['uid']})")
+    
+    print(LINE)
+    choice = input(f" {W}[➤]{RESET} {C('ENTER NUMBER (0 to cancel)')} {W}➤{RESET}  ").strip()
+    
+    if not choice or choice == '0':
+        return
+    
+    try:
+        index = int(choice) - 1
+        if 0 <= index < len(tokens):
+            show_loader("DELETING")
+            token_id = tokens[index]['id']
+            status, response = api_request("DELETE", "/user/tokens/" + token_id)
+            
+            if status == 200 and response.get('success'):
+                print(f" {G('[SUCCESS] Token deleted!')}")
+                if user_data:
+                    user_data['tokenCount'] = response.get('totalTokens', 0)
+            else:
                 print(f" {R('[ERROR] Failed to delete token')}")
         else:
             print(f" {R('[ERROR] Invalid selection')}")
@@ -514,7 +678,7 @@ def delete_all_tokens():
     print(f" {R('[DELETE ALL TOKENS]')}")
     print(LINE)
     
-    confirm = input(f" {W}[➤]{RESET} {R('Type YES to confirm')} {W}➤{RESET} ").strip().upper()
+    confirm = input(f" {W}[➤]{RESET} {R('Type YES to confirm')} {W}➤{RESET}  ").strip().upper()
     
     if confirm != 'YES':
         return
@@ -544,7 +708,7 @@ def admin_panel():
         print(f" {W}[0]{RESET} {C('BACK TO MENU')}")
         print(LINE)
         
-        choice = input(f" {W}[➤]{RESET} {C('CHOICE')} {W}➤{RESET} ").strip()
+        choice = input(f" {W}[➤]{RESET} {C('CHOICE')} {W}➤{RESET}  ").strip()
         
         if choice == '1':
             admin_view_users()
@@ -625,7 +789,7 @@ def admin_activate_plan():
         print(f" {W}[{i}]{RESET} {C(uname)} - {status_str}")
     
     print(LINE)
-    choice = input(f" {W}[➤]{RESET} {C('USER NUMBER (0 to cancel)')} {W}➤{RESET} ").strip()
+    choice = input(f" {W}[➤]{RESET} {C('USER NUMBER (0 to cancel)')} {W}➤{RESET}  ").strip()
     
     if not choice or choice == '0':
         return
@@ -654,7 +818,7 @@ def admin_activate_plan():
     print(f" {W}[3]{RESET} {R('DEACTIVATE')} - Set to INACTIVE")
     print(LINE)
     
-    plan_choice = input(f" {W}[➤]{RESET} {C('PLAN TYPE')} {W}➤{RESET} ").strip()
+    plan_choice = input(f" {W}[➤]{RESET} {C('PLAN TYPE')} {W}➤{RESET}  ").strip()
     
     if plan_choice == '3':
         show_loader("DEACTIVATING")
@@ -676,7 +840,7 @@ def admin_activate_plan():
     print(f" {W}[4]{RESET} LIFETIME (No expiry)")
     print(LINE)
     
-    duration_choice = input(f" {W}[➤]{RESET} {C('DURATION')} {W}➤{RESET} ").strip()
+    duration_choice = input(f" {W}[➤]{RESET} {C('DURATION')} {W}➤{RESET}  ").strip()
     
     duration_map = {'1': 1, '2': 2, '3': 3, '4': None}
     if duration_choice not in duration_map:
@@ -719,7 +883,7 @@ def admin_delete_user():
         print(f" {W}[{i}]{RESET} {C(uname)}{admin_badge}")
     
     print(LINE)
-    choice = input(f" {W}[➤]{RESET} {C('USER NUMBER (0 to cancel)')} {W}➤{RESET} ").strip()
+    choice = input(f" {W}[➤]{RESET} {C('USER NUMBER (0 to cancel)')} {W}➤{RESET}  ").strip()
     
     if not choice or choice == '0':
         return
@@ -925,7 +1089,7 @@ def select_display_mode():
     print(LINE)
     
     while True:
-        choice = input(f" {W}[➤]{RESET} {C('CHOICE')} {W}➤{RESET} ").strip()
+        choice = input(f" {W}[➤]{RESET} {C('CHOICE')} {W}➤{RESET}  ").strip()
         if choice == '1':
             return 'minimal'
         elif choice == '2':
@@ -957,7 +1121,7 @@ def select_cookies_for_sharing():
         print(f" {W}[{i}]{RESET} {M(cookie['name'])} (UID: {cookie['uid']})")
     
     print(LINE)
-    selection = input(f" {W}[➤]{RESET} {C('Selection (ALL or 1,2,3)')} {W}➤{RESET} ").strip().upper()
+    selection = input(f" {W}[➤]{RESET} {C('Selection (ALL or 1,2,3)')} {W}➤{RESET}  ").strip().upper()
     
     if not selection:
         return None
@@ -1007,7 +1171,7 @@ def select_tokens_for_sharing():
         print(f" {W}[{i}]{RESET} {M(token['name'])} (UID: {token['uid']})")
     
     print(LINE)
-    selection = input(f" {W}[➤]{RESET} {C('Selection (ALL or 1,2,3)')} {W}➤{RESET} ").strip().upper()
+    selection = input(f" {W}[➤]{RESET} {C('Selection (ALL or 1,2,3)')} {W}➤{RESET}  ").strip().upper()
     
     if not selection:
         return None
@@ -1134,7 +1298,7 @@ async def run_auto_share_v2(link, tokens):
 
 def auto_share_v1():
     refresh_screen()
-    print(f" {C('[AUTO SHARE V1 - COOKIE/EAAG METHOD]')}")
+    print(f" {C('[AUTO SHARE V1 - NORM]')}")
     print(LINE)
     print(f" {G('• Post must be set to PUBLIC')}")
     print(f" {G('• Uses EAAG tokens extracted from cookies')}")
@@ -1151,7 +1315,7 @@ def auto_share_v1():
     print(f" {G('[SELECTED] ' + str(cookie_count) + ' cookie(s)')}")
     print(LINE)
     
-    link = input(f" {W}[➤]{RESET} {C('POST LINK OR ID')} {W}➤{RESET} ").strip()
+    link = input(f" {W}[➤]{RESET} {C('POST LINK OR ID')} {W}➤{RESET}  ").strip()
     if not link:
         return
     
@@ -1175,7 +1339,7 @@ def auto_share_v2():
         return
     
     refresh_screen()
-    print(f" {C('[AUTO SHARE V2 - TOKEN METHOD]')}")
+    print(f" {C('[AUTO SHARE V2 - NORM FAST]')}")
     print(LINE)
     print(f" {G('• Post must be set to PUBLIC')}")
     print(f" {G('• Uses direct Facebook access tokens')}")
@@ -1192,7 +1356,7 @@ def auto_share_v2():
     print(f" {G('[SELECTED] ' + str(token_count) + ' token(s)')}")
     print(LINE)
     
-    link = input(f" {W}[➤]{RESET} {C('POST LINK OR ID')} {W}➤{RESET} ").strip()
+    link = input(f" {W}[➤]{RESET} {C('POST LINK OR ID')} {W}➤{RESET}  ").strip()
     if not link:
         return
     
@@ -1216,7 +1380,7 @@ def main():
         refresh_screen()
         
         try:
-            choice = input(f" {W}[➤]{RESET} {C('CHOICE')} {W}➤{RESET} ").strip().upper()
+            choice = input(f" {W}[➤]{RESET} {C('CHOICE')} {W}➤{RESET}  ").strip().upper()
         except KeyboardInterrupt:
             print(f"\n {R('[!] Goodbye!')}")
             sys.exit(0)
@@ -1226,7 +1390,7 @@ def main():
                 do_login()
             elif choice in ['2', '02', 'B']:
                 do_register()
-            elif choice in ['0', '00', 'X']:
+            el            if choice in ['0', '00', 'X']:
                 print(f" {R('[!] Goodbye!')}")
                 sys.exit(0)
         
@@ -1274,168 +1438,4 @@ def main():
                 user_data = None
 
 if __name__ == "__main__":
-    main() {R('[ERROR] Failed to delete cookie')}")
-        else:
-            print(f" {R('[ERROR] Invalid selection')}")
-    except ValueError:
-        print(f" {R('[ERROR] Invalid input')}")
-    
-    input(f" {G('[PRESS ENTER TO CONTINUE]')}")
-
-def delete_all_cookies():
-    refresh_screen()
-    print(f" {R('[DELETE ALL COOKIES]')}")
-    print(LINE)
-    
-    confirm = input(f" {W}[➤]{RESET} {R('Type YES to confirm')} {W}➤{RESET} ").strip().upper()
-    
-    if confirm != 'YES':
-        return
-    
-    show_loader("DELETING ALL")
-    
-    status, response = api_request("DELETE", "/user/cookies")
-    
-    if status == 200 and response.get('success'):
-        print(f" {G('[SUCCESS] All cookies deleted!')}")
-        if user_data:
-            user_data['cookieCount'] = 0
-    else:
-        print(f" {R('[ERROR] Failed to delete cookies')}")
-    
-    input(f" {G('[PRESS ENTER TO CONTINUE]')}")
-
-def manage_tokens():
-    while True:
-        refresh_screen()
-        print(f" {G('[MANAGE TOKENS - V2]')}")
-        print(LINE)
-        print(f" {W}[1]{RESET} {G('VIEW ALL TOKENS')}")
-        print(f" {W}[2]{RESET} {G('ADD NEW TOKEN')}")
-        print(f" {W}[3]{RESET} {R('DELETE TOKEN')}")
-        print(f" {W}[4]{RESET} {R('DELETE ALL TOKENS')}")
-        print(f" {W}[0]{RESET} {C('BACK TO MENU')}")
-        print(LINE)
-        
-        choice = input(f" {W}[➤]{RESET} {C('CHOICE')} {W}➤{RESET} ").strip()
-        
-        if choice == '1':
-            view_tokens()
-        elif choice == '2':
-            add_token()
-        elif choice == '3':
-            delete_token()
-        elif choice == '4':
-            delete_all_tokens()
-        elif choice == '0':
-            return
-
-def view_tokens():
-    refresh_screen()
-    show_loader("LOADING TOKENS")
-    
-    status, response = api_request("GET", "/user/tokens")
-    
-    if status == 403:
-        print(f" {R('[ERROR] MAX+ plan required')}")
-        input(f" {G('[PRESS ENTER TO CONTINUE]')}")
-        return
-    
-    if status == 200 and response.get('success'):
-        tokens = response.get('tokens', [])
-        
-        refresh_screen()
-        total = len(tokens)
-        print(f" {G('[TOKENS] Total: ' + str(total))}")
-        print(LINE)
-        
-        if not tokens:
-            print(f" {C('No tokens stored yet.')}")
-        else:
-            for i, token in enumerate(tokens, 1):
-                num = str(i).zfill(2)
-                print(f" {W}[{num}]{RESET} {M(token['name'])} {W}(UID: {C(token['uid'])}){RESET}")
-                print(f"      Status: {G(token['status'])} | Added: {G(token['addedAt'])}")
-                print(LINE)
-    else:
-        print(f" {R('[ERROR] Failed to load tokens')}")
-    
-    input(f" {G('[PRESS ENTER TO CONTINUE]')}")
-
-def add_token():
-    refresh_screen()
-    print(f" {G('[ADD NEW TOKEN]')}")
-    print(LINE)
-    
-    token = input(f" {W}[➤]{RESET} {C('TOKEN')} {W}➤{RESET} ").strip()
-    if not token:
-        return
-    
-    show_loader("VALIDATING TOKEN")
-    
-    status, response = api_request("POST", "/user/tokens", {"token": token})
-    
-    if status == 200 and response.get('success'):
-        print(f" {G('[SUCCESS] Token added!')}")
-        print(f" {C('Account Name:')} {M(response.get('name', 'Unknown'))}")
-        print(f" {C('Account UID:')} {C(response.get('uid', 'Unknown'))}")
-        
-        if user_data:
-            user_data['tokenCount'] = response.get('totalTokens', 0)
-    elif status == 403:
-        print(f" {R('[ERROR] MAX+ plan required')}")
-    else:
-        error_msg = response if isinstance(response, str) else response.get('message', 'Failed')
-        print(f" {R('[ERROR]')} {R(error_msg)}")
-    
-    print(LINE)
-    input(f" {G('[PRESS ENTER TO CONTINUE]')}")
-
-def delete_token():
-    show_loader("LOADING TOKENS")
-    
-    status, response = api_request("GET", "/user/tokens")
-    
-    if status == 403:
-        print(f" {R('[ERROR] MAX+ plan required')}")
-        input(f" {G('[PRESS ENTER TO CONTINUE]')}")
-        return
-    
-    if status != 200 or not response.get('success'):
-        print(f" {R('[ERROR] Failed to load tokens')}")
-        input(f" {G('[PRESS ENTER TO CONTINUE]')}")
-        return
-    
-    tokens = response.get('tokens', [])
-    
-    if not tokens:
-        print(f" {C('No tokens to delete.')}")
-        input(f" {G('[PRESS ENTER TO CONTINUE]')}")
-        return
-    
-    refresh_screen()
-    print(f" {R('[DELETE TOKEN]')}")
-    print(LINE)
-    
-    for i, token in enumerate(tokens, 1):
-        print(f" {W}[{i}]{RESET} {M(token['name'])} (UID: {token['uid']})")
-    
-    print(LINE)
-    choice = input(f" {W}[➤]{RESET} {C('ENTER NUMBER (0 to cancel)')} {W}➤{RESET} ").strip()
-    
-    if not choice or choice == '0':
-        return
-    
-    try:
-        index = int(choice) - 1
-        if 0 <= index < len(tokens):
-            show_loader("DELETING")
-            token_id = tokens[index]['id']
-            status, response = api_request("DELETE", "/user/tokens/" + token_id)
-            
-            if status == 200 and response.get('success'):
-                print(f" {G('[SUCCESS] Token deleted!')}")
-                if user_data:
-                    user_data['tokenCount'] = response.get('totalTokens', 0)
-            else:
-                print(f"
+    main()
