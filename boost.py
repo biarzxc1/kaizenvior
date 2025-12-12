@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# RPWTOOLS v1.0.4 - Facebook Auto Share Tool
+# RPWTOOLS v1.0.5 - Facebook Auto Share Tool
 # Developer: KEN DRICK
 # Facebook: facebook.com/ryoevisu
 
@@ -101,7 +101,7 @@ def show_banner():
     print(gradient(banner_art, 'cyan'))
     print(LINE)
     print(f" {W}[•]{RESET} {C('DEVELOPER')}       {W}➤{RESET} {G('KEN DRICK')}")
-    print(f" {W}[•]{RESET} {C('VERSION')}         {W}➤{RESET} {G('1.0.4')}")
+    print(f" {W}[•]{RESET} {C('VERSION')}         {W}➤{RESET} {G('1.0.5')}")
     print(f" {W}[•]{RESET} {C('FACEBOOK')}        {W}➤{RESET} {G('facebook.com/ryoevisu')}")
     print(f" {W}[•]{RESET} {C('TOOL NAME')}       {W}➤{RESET} {R('[ RPWTOOLS ]')}")
     
@@ -593,8 +593,8 @@ def admin_activate_plan():
     refresh_screen()
     print(f" {C('[PLAN FOR: ' + selected_username.upper() + ']')}")
     print(LINE)
-    print(f" {W}[1]{RESET} {M('MAX')} - V1 Only (Cookie/EAAG)")
-    print(f" {W}[2]{RESET} {M('MAX+')} - V1 + V2 (Cookie + Token)")
+    print(f" {W}[1]{RESET} {M('MAX')} - V1 Only")
+    print(f" {W}[2]{RESET} {M('MAX+')} - V1 + V2")
     print(f" {W}[3]{RESET} {R('DEACTIVATE')} - Set to INACTIVE")
     print(LINE)
     plan_choice = input(f" {W}[➤]{RESET} {C('PLAN TYPE')}       {W}➤{RESET} ").strip()
@@ -624,6 +624,21 @@ def admin_activate_plan():
         error_msg = response if isinstance(response, str) else response.get('message', 'Failed')
         print(f" {R('[ERROR]')} {R(error_msg)}")
     input(f" {G('[PRESS ENTER TO CONTINUE]')}")
+
+async def share_post_v1(session, cookie, token, post_id):
+    headers = {
+        'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36',
+        'cookie': cookie
+    }
+    url = 'https://b-graph.facebook.com/me/feed?link=https://mbasic.facebook.com/' + post_id + '&published=0&access_token=' + token
+    for attempt in range(3):
+        try:
+            async with session.post(url, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                data = await response.json()
+                if 'id' in data: return True, data
+        except: pass
+    return False, None
+
 async def share_post_v2(session, token, post_id):
     url = 'https://graph.facebook.com/me/feed?link=https://facebook.com/' + post_id + '&published=0&access_token=' + token
     for attempt in range(3):
@@ -744,22 +759,22 @@ def select_tokens_for_sharing():
 async def run_auto_share_v1(link, cookies):
     global success_count
     success_count = 0
-    print(f" {C('[!] Converting cookies to EAAG tokens...')}")
+    print(f" {C('[!] Preparing accounts...')}")
     valid_accounts = []
     for cookie in cookies:
         token = convert_cookie_to_eaag(cookie['cookie'])
         if token:
             valid_accounts.append({'cookie': cookie['cookie'], 'token': token, 'uid': cookie['uid'], 'name': cookie['name']})
-            print(f" {G('✓')} {cookie['name']} - Token extracted")
+            print(f" {G('✓')} {cookie['name']} - Ready")
         else:
-            print(f" {R('✗')} {cookie['name']} - Failed to extract token")
+            print(f" {R('✗')} {cookie['name']} - Failed")
     if not valid_accounts:
         print(f" {R('[ERROR] No valid accounts!')}")
         return
     post_id = extract_post_id(link)
     async with aiohttp.ClientSession() as session:
         if not post_id.isdigit():
-            print(f" {G('[!] Extracting post ID from link...')}")
+            print(f" {G('[!] Extracting post ID...')}")
             post_id = await get_post_id_from_api(session, link)
             if not post_id:
                 print(f" {R('[ERROR] Could not extract post ID')}")
@@ -767,9 +782,8 @@ async def run_auto_share_v1(link, cookies):
     print(f" {G('[!] Post ID:')} {C(post_id)}")
     display_mode = select_display_mode()
     refresh_screen()
-    print(f" {G('[V1 AUTO SHARE] Using ' + str(len(valid_accounts)) + ' accounts')}")
+    print(f" {G('[V1 SHARING] ' + str(len(valid_accounts)) + ' accounts')}")
     print(f" {C('Post ID:')}        {G(post_id)}")
-    print(f" {C('Speed:')}          {M('MAXIMUM')} | {C('Retries:')} {M('3 per share')}")
     print(LINE)
     print(f" {G('[!] Sharing started... Press Ctrl+C to stop')}")
     print(LINE)
@@ -790,7 +804,7 @@ async def run_auto_share_v2(link, tokens):
     post_id = extract_post_id(link)
     async with aiohttp.ClientSession() as session:
         if not post_id.isdigit():
-            print(f" {G('[!] Extracting post ID from link...')}")
+            print(f" {G('[!] Extracting post ID...')}")
             post_id = await get_post_id_from_api(session, link)
             if not post_id:
                 print(f" {R('[ERROR] Could not extract post ID')}")
@@ -798,9 +812,8 @@ async def run_auto_share_v2(link, tokens):
     print(f" {G('[!] Post ID:')} {C(post_id)}")
     display_mode = select_display_mode()
     refresh_screen()
-    print(f" {G('[V2 AUTO SHARE] Using ' + str(len(tokens)) + ' tokens')}")
+    print(f" {G('[V2 SHARING] ' + str(len(tokens)) + ' accounts')}")
     print(f" {C('Post ID:')}        {G(post_id)}")
-    print(f" {C('Speed:')}          {M('MAXIMUM')} | {C('Retries:')} {M('3 per share')}")
     print(LINE)
     print(f" {G('[!] Sharing started... Press Ctrl+C to stop')}")
     print(LINE)
@@ -817,12 +830,11 @@ async def run_auto_share_v2(link, tokens):
 
 def auto_share_v1():
     refresh_screen()
-    print(f" {C('[AUTO SHARE V1 - COOKIE/EAAG METHOD]')}")
+    print(f" {C('[AUTO SHARE V1]')}")
     print(LINE)
+    print(f" {G('• NORM/FAST SHARE NO DELAY')}")
     print(f" {G('• Post must be set to PUBLIC')}")
-    print(f" {G('• Uses EAAG tokens extracted from cookies')}")
-    print(f" {G('• Maximum speed with 3 retries per share')}")
-    print(f" {G('• Press Ctrl+C to stop sharing')}")
+    print(f" {G('• Press Ctrl+C to stop')}")
     print(LINE)
     cookies = select_cookies_for_sharing()
     if not cookies: return
@@ -847,12 +859,11 @@ def auto_share_v2():
         print(f" {R('[ERROR] MAX+ plan required for V2 sharing')}")
         input(f" {G('[PRESS ENTER TO CONTINUE]')}"); return
     refresh_screen()
-    print(f" {C('[AUTO SHARE V2 - TOKEN METHOD]')}")
+    print(f" {C('[AUTO SHARE V2]')}")
     print(LINE)
+    print(f" {G('• NORM/FAST SHARE NO DELAY')}")
     print(f" {G('• Post must be set to PUBLIC')}")
-    print(f" {G('• Uses direct Facebook access tokens')}")
-    print(f" {G('• Maximum speed with 3 retries per share')}")
-    print(f" {G('• Press Ctrl+C to stop sharing')}")
+    print(f" {G('• Press Ctrl+C to stop')}")
     print(LINE)
     tokens = select_tokens_for_sharing()
     if not tokens: return
