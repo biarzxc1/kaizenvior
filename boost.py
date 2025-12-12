@@ -76,7 +76,7 @@ W = '\033[1;37m'
 RESET = '\033[0m'
 LINE = gradient("━" * 50, 'cyan')
 
-API_URL = "https://rpwtools.onrender.com/api"
+API_URL = "https://rpwtoolservernew-api.onrender.com/api"
 user_token = None
 user_data = None
 success_count = 0
